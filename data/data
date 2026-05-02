@@ -1,0 +1,135 @@
+// ── Users ──────────────────────────────────────────────────
+export const mockUsers = [
+    { id: 1, name: 'Ahmed Mohammed Al-Omari', email: 'ahmed@charity.org', role: 'admin', status: 'active', phone: '0501234567', createdAt: '2024-01-10', avatar: 'Ah' },
+    { id: 2, name: 'Sara Khalid Al-Zahrani', email: 'sara@charity.org', role: 'moderator', status: 'active', phone: '0552345678', createdAt: '2024-02-15', avatar: 'Sa' },
+    { id: 3, name: 'Khalid Abdullah Al-Harbi', email: 'khalid@charity.org', role: 'fieldWorker', status: 'active', phone: '0563456789', createdAt: '2024-03-01', avatar: 'Kh' },
+    { id: 4, name: 'Noura Saad Al-Qahtani', email: 'noura@charity.org', role: 'fieldWorker', status: 'inactive', phone: '0574567890', createdAt: '2024-03-20', avatar: 'No' },
+    { id: 5, name: 'Faisal Nasser Al-Dosari', email: 'faisal@charity.org', role: 'moderator', status: 'active', phone: '0585678901', createdAt: '2024-04-05', avatar: 'Fi' },
+]
+
+// ── Donors ─────────────────────────────────────────────────
+export const mockDonors = [
+    { id: 1, name: 'Mohammed Ibrahim Al-Shammari', phone: '0511111111', totalDonated: 45000, donationsCount: 12 },
+    { id: 2, name: 'Abdulrahman Salman', phone: '0522222222', totalDonated: 30000, donationsCount: 8 },
+    { id: 3, name: 'Amal Abdullah', phone: '0533333333', totalDonated: 22500, donationsCount: 5 },
+    { id: 4, name: 'Sultan Mohammed Al-Otaibi', phone: '0544444444', totalDonated: 18000, donationsCount: 6 },
+    { id: 5, name: 'Huda Youssef Al-Mutairi', phone: '0555555555', totalDonated: 15000, donationsCount: 3 },
+    { id: 6, name: 'Anonymous Donor', phone: '-', totalDonated: 12000, donationsCount: 4 },
+]
+
+// ── Donations ──────────────────────────────────────────────
+export const mockDonations = [
+    { id: 1, donorId: 1, donorName: 'Mohammed Ibrahim Al-Shammari', amount: 5000, type: 'cash', status: 'approved', campaignId: 1, campaignName: 'Winter Clothing', date: '2024-11-01', recurring: false },
+    { id: 2, donorId: 2, donorName: 'Abdulrahman Salman', amount: 10000, type: 'cash', status: 'pending', campaignId: 2, campaignName: 'Orphan Sponsorship', date: '2024-11-02', recurring: true },
+    { id: 3, donorId: 3, donorName: 'Amal Abdullah', amount: 2500, type: 'inkind', status: 'approved', campaignId: 3, campaignName: 'Food Basket', date: '2024-11-03', recurring: false },
+    { id: 4, donorId: 4, donorName: 'Sultan Al-Otaibi', amount: 8000, type: 'cash', status: 'rejected', campaignId: 1, campaignName: 'Winter Clothing', date: '2024-11-04', recurring: false },
+    { id: 5, donorId: 5, donorName: 'Huda Al-Mutairi', amount: 3000, type: 'cash', status: 'pending', campaignId: 4, campaignName: 'Widows Support', date: '2024-11-05', recurring: true },
+    { id: 6, donorId: 6, donorName: 'Anonymous Donor', amount: 1500, type: 'cash', status: 'approved', campaignId: 2, campaignName: 'Orphan Sponsorship', date: '2024-11-06', recurring: false },
+    { id: 7, donorId: 1, donorName: 'Mohammed Ibrahim Al-Shammari', amount: 5000, type: 'cash', status: 'approved', campaignId: 2, campaignName: 'Orphan Sponsorship', date: '2024-11-07', recurring: true },
+    { id: 8, donorId: 2, donorName: 'Abdulrahman Salman', amount: 4000, type: 'transfer', status: 'pending', campaignId: 3, campaignName: 'Food Basket', date: '2024-11-08', recurring: false },
+]
+
+// ── Beneficiaries ──────────────────────────────────────────
+export const mockBeneficiaries = [
+    { id: 1, name: 'Umm Ahmed Al-Rashidi', phone: '0511110001', category: 'widow', status: 'active', priority: 'high', membersCount: 4, monthlySupport: 1500, assignedWorker: 'Khalid Al-Harbi', registrationDate: '2024-08-01' },
+    { id: 2, name: 'Al-Mutairi Family', phone: '0511110002', category: 'orphan', status: 'active', priority: 'high', membersCount: 3, monthlySupport: 2000, assignedWorker: 'Noura Al-Qahtani', registrationDate: '2024-08-15' },
+    { id: 3, name: 'Al-Zahrani Family', phone: '0511110003', category: 'poor', status: 'pending', priority: 'medium', membersCount: 6, monthlySupport: 1200, assignedWorker: 'Khalid Al-Harbi', registrationDate: '2024-09-01' },
+    { id: 4, name: 'Mohammed Al-Shahri', phone: '0511110004', category: 'elderly', status: 'active', priority: 'low', membersCount: 1, monthlySupport: 800, assignedWorker: 'Noura Al-Qahtani', registrationDate: '2024-09-10' },
+    { id: 5, name: 'Al-Ghamdi Family', phone: '0511110005', category: 'poor', status: 'rejected', priority: 'low', membersCount: 5, monthlySupport: 0, assignedWorker: 'Khalid Al-Harbi', registrationDate: '2024-09-20' },
+    { id: 6, name: 'Umm Salem Al-Anzi', phone: '0511110006', category: 'widow', status: 'active', priority: 'medium', membersCount: 2, monthlySupport: 1000, assignedWorker: 'Noura Al-Qahtani', registrationDate: '2024-10-01' },
+]
+
+// ── Campaigns ──────────────────────────────────────────────
+export const mockCampaigns = [
+    { id: 1, name: 'Winter Clothing 1446', description: 'Distributing winter clothes to those in need', targetAmount: 50000, collectedAmount: 38500, status: 'active', startDate: '2024-10-01', endDate: '2024-12-31', beneficiariesCount: 120 },
+    { id: 2, name: 'Orphan Sponsorship', description: 'Supporting orphans and securing their basic needs', targetAmount: 120000, collectedAmount: 95000, status: 'active', startDate: '2024-01-01', endDate: '2024-12-31', beneficiariesCount: 45 },
+    { id: 3, name: 'Food Basket', description: 'Providing food baskets to needy families', targetAmount: 80000, collectedAmount: 80000, status: 'completed', startDate: '2024-09-01', endDate: '2024-10-31', beneficiariesCount: 200 },
+    { id: 4, name: 'Widows Support', description: 'Financial assistance for widows and their families', targetAmount: 60000, collectedAmount: 22000, status: 'active', startDate: '2024-11-01', endDate: '2025-01-31', beneficiariesCount: 30 },
+    { id: 5, name: 'School Education', description: 'Providing stationery and school supplies', targetAmount: 30000, collectedAmount: 8500, status: 'draft', startDate: '2025-01-01', endDate: '2025-03-01', beneficiariesCount: 0 },
+]
+
+// ── Monthly Donations Chart Data ───────────────────────────
+export const mockMonthlyDonations = [
+    { month: 'January', amount: 28000, cases: 18 },
+    { month: 'February', amount: 35000, cases: 22 },
+    { month: 'March', amount: 42000, cases: 30 },
+    { month: 'April', amount: 31000, cases: 19 },
+    { month: 'May', amount: 48000, cases: 35 },
+    { month: 'June', amount: 52000, cases: 40 },
+    { month: 'July', amount: 38000, cases: 25 },
+    { month: 'August', amount: 45000, cases: 32 },
+    { month: 'September', amount: 60000, cases: 44 },
+    { month: 'October', amount: 55000, cases: 38 },
+    { month: 'November', amount: 70000, cases: 50 },
+    { month: 'December', amount: 82000, cases: 60 },
+]
+
+// ── Cases by Status (Pie Data) ─────────────────────────────
+export const mockCasesByStatus = [
+    { name: 'Active', value: 142, color: '#0D5247' },
+    { name: 'Under Review', value: 38, color: '#835500' },
+    { name: 'Rejected', value: 24, color: '#ef4444' },
+    { name: 'Archived', value: 56, color: '#6b7280' },
+]
+
+// ── Dashboard KPIs ─────────────────────────────────────────
+export const mockKPIs = {
+    totalDonations: { value: 487500, change: +12.4, unit: 'SAR' },
+    activeCases: { value: 142, change: +5.2, unit: 'Cases' },
+    activeCampaigns: { value: 3, change: 0, unit: 'Campaigns' },
+    totalBeneficiaries: { value: 395, change: +8.1, unit: 'Beneficiaries' },
+}
+
+// ── Notifications ──────────────────────────────────────────
+export const mockNotifications = [
+    { id: 1, type: 'donation', title: 'New Donation', message: 'Donation of 10,000 SAR awaiting approval', read: false, createdAt: '2024-11-08T10:30:00' },
+    { id: 2, type: 'case', title: 'Case Needs Review', message: 'Application submitted by Al-Zahrani Family', read: false, createdAt: '2024-11-08T09:00:00' },
+    { id: 3, type: 'campaign', title: 'Campaign Completed', message: 'Food Basket campaign has reached its goal', read: true, createdAt: '2024-11-07T16:00:00' },
+    { id: 4, type: 'system', title: 'System Update', message: 'System has been successfully updated', read: true, createdAt: '2024-11-06T08:00:00' },
+]
+
+// ── Volunteers ─────────────────────────────────────────────
+export const volunteers = [
+    {
+        id: 'v1', name: 'Ahmed Mohammed Al-Zahrani', phone: '0501234567', email: 'ahmed@example.com',
+        campaignId: 'c1', campaignName: 'Winter Clothing Campaign 2025', campaignDate: '01/11/2025',
+        skill: 'logistics', availability: 'morning', experience: '3-5',
+        notes: 'I have a truck that can be used',
+        status: 'approved', appliedAt: '2025-10-05',
+    },
+    {
+        id: 'v2', name: 'Noura Saad Al-Otaibi', phone: '0556789012', email: 'noura@example.com',
+        campaignId: 'c2', campaignName: 'Ramadan Food Campaign', campaignDate: '01/03/2026',
+        skill: 'social', availability: 'flexible', experience: '1-2',
+        notes: '',
+        status: 'pending', appliedAt: '2026-01-15',
+    },
+    {
+        id: 'v3', name: 'Faisal Abdullah Al-Qarni', phone: '0509876543', email: 'faisal@example.com',
+        campaignId: 'c3', campaignName: 'Your Health Matters Campaign', campaignDate: '15/04/2026',
+        skill: 'medical', availability: 'weekend', experience: '5+',
+        notes: 'General practitioner, I can participate in medical checkups',
+        status: 'pending', appliedAt: '2026-02-10',
+    },
+    {
+        id: 'v4', name: 'Reem Khalid Al-Mutairi', phone: '0542345678', email: 'reem@example.com',
+        campaignId: 'c2', campaignName: 'Ramadan Food Campaign', campaignDate: '01/03/2026',
+        skill: 'teaching', availability: 'evening', experience: 'none',
+        notes: '',
+        status: 'rejected', appliedAt: '2026-01-20',
+    },
+    {
+        id: 'v5', name: 'Khalid Suleiman Al-Dosari', phone: '0531234567', email: '',
+        campaignId: 'c1', campaignName: 'Winter Clothing Campaign 2025', campaignDate: '01/11/2025',
+        skill: 'technical', availability: 'flexible', experience: '3-5',
+        notes: 'I am skilled in graphic design and photography',
+        status: 'completed', appliedAt: '2025-09-28',
+    },
+    {
+        id: 'v6', name: 'Manal Ahmed Al-Shahrani', phone: '0567890123', email: 'manal@example.com',
+        campaignId: 'c4', campaignName: 'Back to School Campaign', campaignDate: '01/09/2026',
+        skill: 'teaching', availability: 'morning', experience: '1-2',
+        notes: 'Elementary school teacher, I want to support students',
+        status: 'pending', appliedAt: '2026-04-01',
+    },
+]
