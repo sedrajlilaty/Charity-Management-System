@@ -1,46 +1,100 @@
-
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { PageHeader } from '../../ui/PageHeader'
-import {  Card } from '../../ui/Card'
-
-
-
+import { Card } from '../../ui/Card'
 import { useTheme } from '../../context/ThemeContext'
-import { Settings as SettingsIcon, Globe, Moon, Sun, Bell, Shield, Save, DollarSign, Users, Check } from 'lucide-react'
-import { CardHeader } from '../../ui/Card'
 
-function SettingRow({ label, description, children }) {
-  return (
-    <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'14px 0', borderBottom:'1px solid var(--border-subtle)', gap:'16px' }}>
-      <div style={{ flex:1 }}>
-        <p style={{ fontSize:'0.875rem', fontWeight:600, color:'var(--text-primary)' }}>{label}</p>
-        {description && <p style={{ fontSize:'0.75rem', color:'var(--text-muted)', marginTop:'2px' }}>{description}</p>}
-      </div>
-      <div style={{ flexShrink:0 }}>{children}</div>
-    </div>
-  )
-}
+import {
+  Globe,
+  Bell,
+  Shield,
+  Save,
+  DollarSign,
+  Users,
+  Check,
+} from 'lucide-react'
 
 function Toggle({ on, onChange }) {
   return (
     <button
       onClick={() => onChange(!on)}
       style={{
-        width:'44px', height:'24px', borderRadius:'99px', border:'none', cursor:'pointer',
-        background: on ? '#0D5247' : 'var(--border-default)',
-        position:'relative', transition:'background 0.2s ease',
-        padding:0,
+        width: '48px',
+        height: '26px',
+        borderRadius: '999px',
+        border: 'none',
+        cursor: 'pointer',
+        background: on
+          ? 'var(--color-primary-500)'
+          : 'var(--bg-muted)',
+        position: 'relative',
+        transition: '0.25s',
       }}
     >
-      <span style={{
-        position:'absolute', top:'3px',
-        right: on ? '3px' : '23px',
-        width:'18px', height:'18px', borderRadius:'50%', background:'white',
-        transition:'right 0.2s ease',
-        boxShadow:'0 1px 3px rgba(0,0,0,0.2)',
-      }} />
+      <span
+        style={{
+          position: 'absolute',
+          top: '3px',
+          insetInlineStart: on ? '25px' : '3px',
+          width: '20px',
+          height: '20px',
+          borderRadius: '50%',
+          background: '#fff',
+          transition: '0.25s',
+          boxShadow: '0 2px 6px rgba(0,0,0,0.2)',
+        }}
+      />
     </button>
+  )
+}
+
+
+function SettingRow({
+  title,
+  description,
+  children,
+  noBorder = false,
+}) {
+  return (
+    <div
+      style={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        gap: '20px',
+        padding: '22px 0',
+        borderBottom: noBorder
+          ? 'none'
+          : '1px solid var(--border-subtle)',
+          
+      }}
+    >
+      <div style={{ flex: 1 }}>
+        <h4
+          style={{
+            margin: 0,
+            fontSize: '0.96rem',
+            fontWeight: 700,
+            color: 'var(--text-primary)',
+          }}
+        >
+          {title}
+        </h4>
+
+        <p
+          style={{
+            marginTop: '6px',
+            fontSize: '0.84rem',
+            color: 'var(--text-muted)',
+            lineHeight: 1.7,
+          }}
+        >
+          {description}
+        </p>
+      </div>
+
+      <div>{children}</div>
+    </div>
   )
 }
 
@@ -50,152 +104,503 @@ export default function Settings() {
 
   const [saved, setSaved] = useState(false)
 
-  // Financial settings
-  const [orphanAmount, setOrphanAmount] = useState(500)
-  const [minNights,    setMinNights]    = useState(1)
-  const [maxMembers,   setMaxMembers]   = useState(10)
-  const [currency,     setCurrency]     = useState('SAR')
+  const [activeSection, setActiveSection] =
+    useState('appearance')
 
-  // Notification settings
-  const [notifDonation, setNotifDonation] = useState(true)
-  const [notifCase,     setNotifCase]     = useState(true)
-  const [notifCampaign, setNotifCampaign] = useState(false)
+  const [currency, setCurrency] = useState('SAR')
+  const [orphanAmount, setOrphanAmount] =
+    useState(500)
+
+  const [maxMembers, setMaxMembers] =
+    useState(10)
+
+  const [reviewCycle, setReviewCycle] =
+    useState(3)
+
+  const [notifDonation, setNotifDonation] =
+    useState(true)
+
+  const [notifCase, setNotifCase] =
+    useState(true)
+
+  const [notifCampaign, setNotifCampaign] =
+    useState(false)
+
+  const isAr = i18n.language?.startsWith('ar')
 
   const toggleLang = () => {
-    const next = i18n.language === 'ar' ? 'en' : 'ar'
+    const next = isAr ? 'en' : 'ar'
+
     i18n.changeLanguage(next)
-    document.documentElement.lang = next
-    document.documentElement.dir  = next === 'ar' ? 'rtl' : 'ltr'
-    document.body.dir = next === 'ar' ? 'rtl' : 'ltr'
+
     localStorage.setItem('charity-lang', next)
   }
 
   const handleSave = () => {
     setSaved(true)
+
     setTimeout(() => setSaved(false), 2500)
   }
 
-  const inputNum = { width:'120px', textAlign:'center', fontWeight:700 }
+  const inputStyle = {
+    width: '120px',
+    height: '42px',
+    borderRadius: '12px',
+    border: '1px solid var(--border-default)',
+    background: 'var(--bg-muted)',
+    color: 'var(--text-primary)',
+    textAlign: 'center',
+    fontWeight: 700,
+    fontSize: '0.92rem',
+    outline: 'none',
+    transition: '0.2s',
+  }
+
+  const selectStyle = {
+    width: '180px',
+    height: '42px',
+    borderRadius: '12px',
+    border: '1px solid var(--border-default)',
+    background: 'var(--bg-muted)',
+    color: 'var(--text-primary)',
+    paddingInline: '12px',
+    fontWeight: 600,
+    outline: 'none',
+  }
+
+  const sections = useMemo(
+    () => [
+      {
+        key: 'appearance',
+        label: t('settings.appearance.title'),
+        icon: Globe,
+      },
+
+      {
+        key: 'notifications',
+        label: t('settings.notifications.title'),
+        icon: Bell,
+      },
+
+      {
+        key: 'security',
+        label: t('settings.security.title'),
+        icon: Shield,
+      },
+
+      {
+        key: 'financial',
+        label: t('settings.financial.title'),
+        icon: DollarSign,
+      },
+
+      {
+        key: 'beneficiary',
+        label: t('settings.beneficiary.title'),
+        icon: Users,
+      },
+    ],
+    [t]
+  )
 
   return (
-    <div style={{ display:'flex', flexDirection:'column', gap:'1.25rem', maxWidth:'900px' }}>
-      <PageHeader title="Settings" subtitle="System preferences and app behavior" />
+    <div
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '24px',
+        background: 'var(--bg-page)',
+        minHeight: '100%',
+      }}
+    >
+      {/* Header */}
+      <PageHeader
+        title={t('settings.title')}
+        subtitle={t('settings.subtitle')}
+      />
 
-      {/* ── Financial Settings ── */}
-      <Card>
-        <CardHeader title="Financial Settings">
-          <div style={{ padding:'6px', background:'#e6f0ee', borderRadius:'8px' ,marginTop:'13px' , fontWeight:'bold'}}>
-            <DollarSign size={15} color="#0D5247" />
-          </div>
-        </CardHeader>
-        <div className="card-body" style={{ padding:'0 20px' }}>
-          <SettingRow label="Monthly orphan sponsorship amount" description="Used as the default amount for new sponsorship entries.">
-            <div style={{ display:'flex', alignItems:'center', gap:'8px' }}>
-              <input className="input" type="number" min={100} step={50} style={inputNum}
-                value={orphanAmount} onChange={e => setOrphanAmount(Number(e.target.value))} />
-              <span style={{ fontSize:'0.8rem', fontWeight:600, color:'var(--text-muted)' }}>SAR</span>
-            </div>
-          </SettingRow>
-          <SettingRow label="System currency" description="Currency used across all financial operations.">
-            <select className="input" style={{ width:'160px', fontSize:'0.85rem' }} value={currency} onChange={e => setCurrency(e.target.value)}>
-              <option value="SAR">Saudi Riyal (SAR)</option>
-              <option value="AED">UAE Dirham (AED)</option>
-              <option value="KWD">Kuwaiti Dinar (KWD)</option>
-              <option value="USD">US Dollar (USD)</option>
-            </select>
-          </SettingRow>
+      {/* Navigation */}
+      <Card
+        style={{
+          padding: '16px',
+          borderRadius: '24px',
+          background: 'var(--bg-surface)',
+          border:
+            '1px solid var(--border-subtle)',
+        }}
+      >
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '12px',
+            flexWrap: 'wrap',
+          }}
+        >
+          {sections.map((section) => {
+            const Icon = section.icon
+
+            return (
+              <button
+                key={section.key}
+                onClick={() =>
+                  setActiveSection(section.key)
+                }
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '10px',
+                  padding: '12px 18px',
+                  borderRadius: '14px',
+                  border:
+                    activeSection === section.key
+                      ? '1px solid var(--border-default)'
+                      : '1px solid var(--border-subtle)',
+                  background:
+                    activeSection === section.key
+                      ? 'var(--bg-muted)'
+                      : 'transparent',
+                  color:
+                    activeSection === section.key
+                      ? 'var(--text-primary)'
+                      : 'var(--text-secondary)',
+                  fontWeight:
+                    activeSection === section.key
+                      ? 700
+                      : 500,
+                  cursor: 'pointer',
+                  transition: '0.2s',
+                }}
+              >
+                <Icon size={17} />
+                <span>{section.label}</span>
+              </button>
+            )
+          })}
         </div>
       </Card>
 
-      {/* ── Beneficiary Settings ── */}
-      <Card>
-        <CardHeader title="Beneficiary Rules">
-          <div style={{ padding:'6px', background:'#fef9c3', borderRadius:'8px',marginTop:'13px' , fontWeight:'bold' }}>
-            <Users size={15} color="#a16207" />
-          </div>
-        </CardHeader>
-        <div className="card-body" style={{ padding:'0 20px' }}>
-          <SettingRow label="Maximum family members" description="Upper limit allowed while registering a new case.">
-            <input className="input" type="number" min={1} max={20} style={inputNum}
-              value={maxMembers} onChange={e => setMaxMembers(Number(e.target.value))} />
-          </SettingRow>
-          <SettingRow label="Case review cycle (months)" description="Months before beneficiary case review refresh.">
-            <input className="input" type="number" min={1} max={12} style={inputNum}
-              value={minNights} onChange={e => setMinNights(Number(e.target.value))} />
-          </SettingRow>
-        </div>
-      </Card>
+      {/* Content */}
+      <Card
+        style={{
+          padding: '30px',
+          borderRadius: '24px',
+          background: 'var(--bg-surface)',
+          border:
+            '1px solid var(--border-subtle)',
+        }}
+      >
+        {/* Header */}
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginBottom: '28px',
+            gap: '16px',
+            flexWrap: 'wrap',
+          }}
+        >
+          <div>
+            <h2
+              style={{
+                margin: 0,
+                fontSize: '1.25rem',
+                fontWeight: 800,
+                color: 'var(--text-primary)',
+              }}
+            >
+              {
+                sections.find(
+                  (s) =>
+                    s.key === activeSection
+                )?.label
+              }
+            </h2>
 
-      {/* ── Appearance ── */}
-      <Card>
-        <CardHeader title="Appearance & Language">
-          <div style={{ padding:'6px', background:'#f3e8ff', borderRadius:'8px',marginTop:'13px' , fontWeight:'bold' }}>
-            <Globe size={15} color="#7c3aed" />
+            <p
+              style={{
+                marginTop: '8px',
+                color: 'var(--text-muted)',
+                fontSize: '0.9rem',
+              }}
+            >
+              Manage and customize your dashboard
+              settings.
+            </p>
           </div>
-        </CardHeader>
-        <div className="card-body" style={{ padding:'0 20px' }}>
-          <SettingRow label="Dark mode" description="Switch between light and dark themes.">
-            <Toggle on={isDark} onChange={toggleTheme} />
-          </SettingRow>
-          <SettingRow label="System language" description={`Current language: ${i18n.language === 'ar' ? 'Arabic' : 'English'}`}>
-            <button className="btn-outline" style={{ fontSize:'0.82rem', padding:'7px 14px' }} onClick={toggleLang}>
-              <Globe size={13} />
-              {i18n.language === 'ar' ? 'Switch to English' : 'Switch to Arabic'}
-            </button>
-          </SettingRow>
-        </div>
-      </Card>
 
-      {/* ── Notifications ── */}
-      <Card>
-        <CardHeader title="Notifications">
-          <div style={{ padding:'6px', background:'#fce7f3', borderRadius:'8px',marginTop:'13px' , fontWeight:'bold' }}>
-            <Bell size={15} color="#be185d" />
-          </div>
-        </CardHeader>
-        <div className="card-body" style={{ padding:'0 20px' }}>
-          <SettingRow label="Donation alerts" description="Notify when a new donation is submitted.">
-            <Toggle on={notifDonation} onChange={setNotifDonation} />
-          </SettingRow>
-          <SettingRow label="Case alerts" description="Notify when a new beneficiary case is submitted.">
-            <Toggle on={notifCase} onChange={setNotifCase} />
-          </SettingRow>
-          <SettingRow label="Campaign alerts" description="Notify when campaign reaches goal or completes.">
-            <Toggle on={notifCampaign} onChange={setNotifCampaign} />
-          </SettingRow>
+          <button
+            onClick={handleSave}
+            className="btn-primary"
+            style={{
+              padding: '11px 22px',
+              borderRadius: '14px',
+              background:
+                'var(--color-primary-500)',
+            }}
+          >
+            <Save size={16} />
+            {t('settings.save')}
+          </button>
         </div>
-      </Card>
 
-      {/* ── Security ── */}
-      <Card>
-        <CardHeader title="Security & Session">
-          <div style={{ padding:'6px', background:'#dcfce7', borderRadius:'8px' ,marginTop:'13px' , fontWeight:'bold'}}>
-            <Shield size={15} color="#16a34a" />
-          </div>
-        </CardHeader>
-        <div className="card-body" style={{ padding:'0 20px' }}>
-          <SettingRow label="Auto sign-out" description="Automatically sign out after inactivity.">
-            <Toggle on={true} onChange={() => {}} />
-          </SettingRow>
-          <SettingRow label="Session timeout (minutes)" description="How long user stays signed in without activity.">
-            <input className="input" type="number" min={15} max={480} step={15} style={inputNum} defaultValue={60} />
-          </SettingRow>
-        </div>
-      </Card>
+        {/* APPEARANCE */}
+        {activeSection === 'appearance' && (
+          <>
+            <SettingRow
+              title={t(
+                'settings.appearance.darkMode'
+              )}
+              description={t(
+                'settings.appearance.darkDesc'
+              )}
+            >
+              <Toggle
+                on={isDark}
+                onChange={toggleTheme}
+              />
+            </SettingRow>
 
-      {/* Save */}
-      <div style={{ display:'flex', alignItems:'center', gap:'12px', paddingBottom:'2rem' }}>
-        <button onClick={handleSave} className="btn-primary" style={{ padding:'10px 28px' }}>
-          <Save size={15} />
-          Save settings
-        </button>
+            <SettingRow
+              title={t(
+                'settings.appearance.language'
+              )}
+              description={t(
+                'settings.appearance.langDesc',
+                {
+                  lang: isAr
+                    ? 'العربية'
+                    : 'English',
+                }
+              )}
+              noBorder
+            >
+              <button
+                onClick={toggleLang}
+                style={{
+                  height: '42px',
+                  paddingInline: '18px',
+                  borderRadius: '12px',
+                  border:
+                    '1px solid var(--border-default)',
+                  background:
+                    'var(--bg-muted)',
+                  color:
+                    'var(--text-primary)',
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                }}
+              >
+                {isAr
+                  ? 'Switch to English'
+                  : 'التبديل للعربية'}
+              </button>
+            </SettingRow>
+          </>
+        )}
+
+        {/* NOTIFICATIONS */}
+        {activeSection === 'notifications' && (
+          <>
+            <SettingRow
+              title={t(
+                'settings.notifications.donation'
+              )}
+              description={t(
+                'settings.notifications.donationDesc'
+              )}
+            >
+              <Toggle
+                on={notifDonation}
+                onChange={setNotifDonation}
+              />
+            </SettingRow>
+
+            <SettingRow
+              title={t(
+                'settings.notifications.case'
+              )}
+              description={t(
+                'settings.notifications.caseDesc'
+              )}
+            >
+              <Toggle
+                on={notifCase}
+                onChange={setNotifCase}
+              />
+            </SettingRow>
+
+            <SettingRow
+              title={t(
+                'settings.notifications.campaign'
+              )}
+              description={t(
+                'settings.notifications.campaignDesc'
+              )}
+              noBorder
+            >
+              <Toggle
+                on={notifCampaign}
+                onChange={setNotifCampaign}
+              />
+            </SettingRow>
+          </>
+        )}
+
+        {/* SECURITY */}
+        {activeSection === 'security' && (
+          <>
+            <SettingRow
+              title={t(
+                'settings.security.autoSignOut'
+              )}
+              description={t(
+                'settings.security.autoSignOutDesc'
+              )}
+            >
+              <Toggle
+                on={true}
+                onChange={() => {}}
+              />
+            </SettingRow>
+
+            <SettingRow
+              title={t(
+                'settings.security.timeout'
+              )}
+              description={t(
+                'settings.security.timeoutDesc'
+              )}
+              noBorder
+            >
+              <input
+                type="number"
+                defaultValue={60}
+                style={inputStyle}
+              />
+            </SettingRow>
+          </>
+        )}
+
+        {/* FINANCIAL */}
+        {activeSection === 'financial' && (
+          <>
+            <SettingRow
+              title={t(
+                'settings.financial.currency'
+              )}
+              description={t(
+                'settings.financial.currencyDesc'
+              )}
+            >
+              <select
+                value={currency}
+                onChange={(e) =>
+                  setCurrency(e.target.value)
+                }
+                style={selectStyle}
+              >
+                <option value="SAR">SAR</option>
+                <option value="USD">USD</option>
+                <option value="AED">AED</option>
+                <option value="KWD">KWD</option>
+              </select>
+            </SettingRow>
+
+            <SettingRow
+              title={t(
+                'settings.financial.orphanAmount'
+              )}
+              description={t(
+                'settings.financial.orphanDesc'
+              )}
+              noBorder
+            >
+              <input
+                type="number"
+                value={orphanAmount}
+                onChange={(e) =>
+                  setOrphanAmount(
+                    Number(e.target.value)
+                  )
+                }
+                style={inputStyle}
+              />
+            </SettingRow>
+          </>
+        )}
+
+        {/* BENEFICIARY */}
+        {activeSection === 'beneficiary' && (
+          <>
+            <SettingRow
+              title={t(
+                'settings.beneficiary.maxMembers'
+              )}
+              description={t(
+                'settings.beneficiary.maxMembersDesc'
+              )}
+            >
+              <input
+                type="number"
+                value={maxMembers}
+                onChange={(e) =>
+                  setMaxMembers(
+                    Number(e.target.value)
+                  )
+                }
+                style={inputStyle}
+              />
+            </SettingRow>
+
+            <SettingRow
+              title={t(
+                'settings.beneficiary.reviewCycle'
+              )}
+              description={t(
+                'settings.beneficiary.reviewDesc'
+              )}
+              noBorder
+            >
+              <input
+                type="number"
+                value={reviewCycle}
+                onChange={(e) =>
+                  setReviewCycle(
+                    Number(e.target.value)
+                  )
+                }
+                style={inputStyle}
+              />
+            </SettingRow>
+          </>
+        )}
+
+        {/* Success Message */}
         {saved && (
-          <div className="animate-fade-in" style={{ display:'flex', alignItems:'center', gap:'6px', fontSize:'0.85rem', fontWeight:600, color:'#16a34a' }}>
-            <Check size={16} />
-            Saved successfully
+          <div
+            style={{
+              marginTop: '24px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '10px',
+              background:
+                'var(--bg-subtle)',
+              color:
+                'var(--text-primary)',
+              border:
+                '1px solid var(--border-default)',
+              padding: '14px 18px',
+              borderRadius: '16px',
+              fontWeight: 700,
+            }}
+          >
+            <Check size={18} />
+            {t('settings.saved')}
           </div>
         )}
-      </div>
+      </Card>
     </div>
   )
 }

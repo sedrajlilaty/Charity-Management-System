@@ -1,458 +1,624 @@
-import { useState } from 'react'
+import { useState, lazy, Suspense, useMemo } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
 import { useSearchParams } from 'react-router-dom'
-import { Search, Plus, MoreVertical } from 'lucide-react'
+import { Search, Plus, MoreVertical, MapPin, Map, TableIcon } from 'lucide-react'
 import { beneficiariesService } from '../../service/ServiceLayer'
-
 import { PageHeader } from '../../ui/PageHeader'
 import { Card } from '../../ui/Card'
 import { Badge } from '../../ui/Badge'
 import { Avatar } from '../../ui/Avatar'
+import DataTable from '../../ui/DataTable'
 import Pagination from '../../ui/Pagination'
 import { SpinnerPage } from '../../ui/Spinner'
 import { EmptyState } from '../../ui/EmptyState'
-
 import BeneficiaryModal from './BeneficairiesModal'
 import { ActionModal } from '../../ui/ActionModal'
+import ExportPDFButton from '../../ui/Pdfexportbutton'
+import { usePDFReport } from '../../hooks/Usepdfexport'
+import { formatCurrency } from '../../utlis/helper'
 
-import { CATEGORY_LABEL, PRIORITY_LABEL, formatCurrency } from '../../utlis/helper'
+// Lazy load Map
+const BeneficiaryMap = lazy(() => import('./BeneficiaryMap'))
 
 const LIMIT = 10
 
-// تبويبات الحالة (مطابقة لتبويبات المتطوعين)
-const STATUS_TABS = [
-  { key: '', label: 'All' },
-  { key: 'active', label: 'Active' },
-  { key: 'pending', label: 'Pending' },
-  { key: 'rejected', label: 'Rejected' },
-  { key: 'archived', label: 'Archived' },
-]
-
-// خيارات الفئات (التعليمي، الصحي، الأيتام، إلخ)
-const CATEGORY_OPTIONS = [
-  { value: '', label: 'All categories' },
-  { value: 'orphan', label: 'Orphan' },
-  { value: 'widow', label: 'Widow' },
-  { value: 'poor', label: 'Low-income Family' },
-  { value: 'elderly', label: 'Elderly' },
-  { value: 'educational', label: 'Educational' },  // تعليمي
-  { value: 'health', label: 'Health' },            // صحي
-]
-
-// خيارات الحملات (يمكن جلبها من API، لكنني وضعت نموذج ثابت)
-// يمكنك تعديلها لتناسب نظامك أو جلبها من useQuery
-const CAMPAIGN_OPTIONS = [
-  { value: '', label: 'All campaigns' },
-  { value: 'camp_1', label: 'Winter Clothing' },
-  { value: 'camp_2', label: 'Orphan Sponsorship' },
-  { value: 'camp_3', label: 'Food Basket' },
-  { value: 'camp_4', label: 'Widows Support' },
-  { value: 'camp_5', label: 'Back to School' },    // تعليمي
-  { value: 'camp_6', label: 'Medical Aid' },        // صحي
-]
-
 const PRI_STYLE = {
-  high: { bg: '#fee2e2', color: '#dc2626' },
+  high:   { bg: '#fee2e2', color: '#dc2626' },
   medium: { bg: '#fef9c3', color: '#a16207' },
-  low: { bg: '#f3f4f6', color: '#6b7280' },
+  low:    { bg: '#f3f4f6', color: '#6b7280' },
 }
 
 export default function Beneficiaries() {
+  const { t } = useTranslation()
   const qc = useQueryClient()
   const [params, setParams] = useSearchParams()
+  const { exportBeneficiaries, isExporting } = usePDFReport()
 
-  // حالة الفلاتر
-  const search = params.get('search') || ''
-  const status = params.get('status') || ''
+  const search   = params.get('search')   || ''
+  const status   = params.get('status')   || ''
   const category = params.get('category') || ''
-  const campaign = params.get('campaign') || ''  // فلتر الحملات الجديد
-  const page = Number(params.get('page') || 1)
+  const campaign = params.get('campaign') || ''
+  const page     = Number(params.get('page') || 1)
 
-  const [modalOpen, setModalOpen] = useState(false)
-  const [editItem, setEditItem] = useState(null)
-  const [actionModalOpen, setActionModalOpen] = useState(false)
-  const [selectedRow, setSelectedRow] = useState(null)
+  const [view,               setView]               = useState('table')  // 'table' | 'map'
+  const [modalOpen,          setModalOpen]          = useState(false)
+  const [editItem,           setEditItem]           = useState(null)
+  const [actionModalOpen,    setActionModalOpen]    = useState(false)
+  const [selectedRow,        setSelectedRow]        = useState(null)
 
-  // جلب البيانات مع إضافة campaign إلى queryKey و queryFn
+  const STATUS_TABS = [
+    { key:'',         label:t('beneficiaries.tabs.all')      },
+    { key:'active',   label:t('beneficiaries.tabs.active')   },
+    { key:'pending',  label:t('beneficiaries.tabs.pending')  },
+    { key:'rejected', label:t('beneficiaries.tabs.rejected') },
+    { key:'archived', label:t('beneficiaries.tabs.archived') },
+  ]
+
+  const CATEGORY_OPTIONS = [
+    { value:'',            label:t('beneficiaries.filters.allCategories') },
+    { value:'orphan',      label:t('beneficiaries.categories.orphan')      },
+    { value:'educational', label:t('beneficiaries.categories.educational') },
+    { value:'medical',     label:t('beneficiaries.categories.medical')     },
+    { value:'widow',       label:t('beneficiaries.categories.widow')       },
+    { value:'poor',        label:t('beneficiaries.categories.poor')        },
+  ]
+
+  const CAMPAIGN_OPTIONS = [
+    { value:'',       label:t('beneficiaries.filters.allCampaigns') },
+    { value:'camp_1', label:t('beneficiaries.campaigns.camp_1') },
+    { value:'camp_2', label:t('beneficiaries.campaigns.camp_2') },
+    { value:'camp_3', label:t('beneficiaries.campaigns.camp_3') },
+    { value:'camp_4', label:t('beneficiaries.campaigns.camp_4') },
+    { value:'camp_5', label:t('beneficiaries.campaigns.camp_5') },
+    { value:'camp_6', label:t('beneficiaries.campaigns.camp_6') },
+  ]
+
+  // تعريف الأعمدة للـ DataTable
+  const columns = useMemo(() => [
+    {
+      title: t('beneficiaries.table.beneficiary'),
+      key: 'name',
+      textAlign: 'center',
+      align:'center',
+      render: (_, row) => (
+        <div style={{ display:'flex', gap:10, alignItems: 'center' }}>
+          <Avatar name={row.name} size={34} />
+          <div style={{ textAlign: 'right' }}>
+            <div style={{ fontWeight:600 }}>{row.name}</div>
+            <div style={{ fontSize:12, color:'gray' }}>{row.phone}</div>
+          </div>
+        </div>
+      )
+    },
+    {
+      title: t('beneficiaries.table.location'),
+      key: 'governorate',
+      textAlign: 'center',
+      align:'center',
+      render: (_, row) => (
+        <div style={{ display:'flex', flexDirection: 'column', textAlign: 'right' }}>
+          <div style={{ display:'flex', alignItems:'center', gap:'4px', fontWeight: 600, color: 'var(--text-primary)' }}>
+            <MapPin size={14} className="text-emerald-600" />
+            {t(`beneficiaries.modal.governorates.${row.governorate}`)}
+          </div>
+          <div style={{ fontSize:'0.875rem', color:'var(--text-muted)', marginRight: '18px' }}>
+            {row.region}
+          </div>
+        </div>
+      )
+    },
+    {
+      title: t('beneficiaries.table.category'),
+      key: 'category',
+      textAlign: 'center',
+      align:'center',
+      render: (val) => (
+        <span style={{ fontSize:'0.82rem', color:'var(--text-secondary)', fontWeight:500 }}>
+          {t(`beneficiaries.categories.${val}`, { defaultValue: val })}
+        </span>
+      )
+    },
+    {
+      title: t('beneficiaries.table.priority'),
+      key: 'priority',
+      textAlign: 'center',
+      align:'center',
+      render: (val) => val ? (
+        <span style={{ padding:'3px 10px', borderRadius:'99px', fontSize:'0.72rem', fontWeight:700, background:PRI_STYLE[val]?.bg, color:PRI_STYLE[val]?.color }}>
+          {t(`beneficiaries.priority.${val}`, { defaultValue: val })}
+        </span>
+      ) : '—'
+    },
+    {
+      title: t('beneficiaries.table.support'),
+      key: 'monthlySupport',
+      textAlign: 'center',
+      align:'center',
+      render: (val) => (
+        <span style={{ fontWeight:700, color: val > 0 ? '#094037' : 'var(--text-hint)' }}>
+          {val > 0 ? formatCurrency(val) : '—'}
+        </span>
+      )
+    },
+    {
+      title: t('beneficiaries.table.status'),
+      key: 'status',
+      render: (val) => <Badge status={val} />
+    },
+    {
+      title: t('beneficiaries.table.actions'),
+      key: 'actions',
+      align: 'center',
+      textAlign: 'center',
+      render: (_, row) => (
+        <button onClick={() => { setSelectedRow(row); setActionModalOpen(true) }}
+          style={{ width:32, height:32, borderRadius:8, border:'none', cursor:'pointer', background:'var(--bg-muted)', display:'inline-flex', alignItems:'center', justifyContent:'center' }}>
+          <MoreVertical size={16} />
+        </button>
+      )
+    }
+  ], [t])
+
   const { data, isLoading } = useQuery({
     queryKey: ['beneficiaries', status, category, campaign, search, page],
-    queryFn: () =>
-      beneficiariesService.getList({
-        status,
-        category,
-        campaign,   // تمرير الحملة للـ API
-        search,
-        page,
-        limit: LIMIT,
-      }),
+    queryFn:  () => beneficiariesService.getList({ status, category, campaign, search, page, limit: LIMIT }),
     keepPreviousData: true,
   })
 
-  // متغيرات الـ Mutations (لم تتغير)
-  const changeStatus = useMutation({
-    mutationFn: ({ id, s }) => beneficiariesService.changeStatus(id, s),
-    onSuccess: () => qc.invalidateQueries(['beneficiaries']),
-  })
-  const archive = useMutation({
-    mutationFn: (id) => beneficiariesService.archive(id),
-    onSuccess: () => qc.invalidateQueries(['beneficiaries']),
-  })
-  const createMut = useMutation({
-    mutationFn: (payload) =>
-      beneficiariesService.create({
-        ...payload,
-        status: 'pending',
-        registrationDate: new Date().toISOString().split('T')[0],
-      }),
-    onSuccess: () => qc.invalidateQueries(['beneficiaries']),
-  })
-  const updateMut = useMutation({
-    mutationFn: ({ id, ...rest }) => beneficiariesService.update(id, rest),
-    onSuccess: () => qc.invalidateQueries(['beneficiaries']),
-  })
-  const deleteMut = useMutation({
-    mutationFn: (id) => beneficiariesService.archive(id),
-    onSuccess: () => qc.invalidateQueries(['beneficiaries']),
-  })
+  const changeStatus = useMutation({ mutationFn: ({ id,s }) => beneficiariesService.changeStatus(id,s), onSuccess: () => qc.invalidateQueries(['beneficiaries']) })
+  const createMut    = useMutation({ mutationFn: (p) => beneficiariesService.create({ ...p, status:'pending', registrationDate: new Date().toISOString().split('T')[0] }), onSuccess: () => qc.invalidateQueries(['beneficiaries']) })
+  const updateMut    = useMutation({ mutationFn: ({ id, ...r }) => beneficiariesService.update(id,r), onSuccess: () => qc.invalidateQueries(['beneficiaries']) })
+  const deleteMut    = useMutation({ mutationFn: (id) => beneficiariesService.archive(id), onSuccess: () => qc.invalidateQueries(['beneficiaries']) })
 
   const handleSave = (form) => {
-    if (editItem) updateMut.mutate({ ...form, id: editItem.id })
-    else createMut.mutate(form)
-    setModalOpen(false)
-    setEditItem(null)
+    if (editItem) updateMut.mutate({ ...form, id:editItem.id })
+    else          createMut.mutate(form)
+    setModalOpen(false); setEditItem(null)
   }
 
   const handleAction = (action, row) => {
     switch (action) {
-      case 'approve':
-        changeStatus.mutate({ id: row.id, s: 'active' })
-        break
-      case 'reject':
-        changeStatus.mutate({ id: row.id, s: 'rejected' })
-        break
-      case 'archive':
-        archive.mutate(row.id)
-        break
-      case 'edit':
-        setEditItem(row)
-        setModalOpen(true)
-        break
-      case 'delete':
-        if (window.confirm('Are you sure you want to delete this beneficiary?')) {
-          deleteMut.mutate(row.id)
-        }
-        break
-      default:
-        break
+      case 'approve': changeStatus.mutate({ id:row.id, s:'active'   }); break
+      case 'reject':  changeStatus.mutate({ id:row.id, s:'rejected' }); break
+      case 'archive': deleteMut.mutate(row.id);                         break
+      case 'edit':    setEditItem(row); setModalOpen(true);             break
+      case 'delete':  if (window.confirm(t('beneficiaries.deleteConfirm'))) deleteMut.mutate(row.id); break
+      default: break
     }
     setActionModalOpen(false)
   }
 
-  // زر القائمة (ثلاث نقاط) مطابق لصفحة المتطوعين
-  const ActionBtn = ({ row }) => (
-    <button
-      onClick={() => {
-        setSelectedRow(row)
-        setActionModalOpen(true)
-      }}
-      style={{
-        width: 32,
-        height: 32,
-        borderRadius: 8,
-        border: 'none',
-        cursor: 'pointer',
-        background: 'var(--bg-muted)',
-        display: 'inline-flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        margin: '0 auto',
-      }}
-    >
-      <MoreVertical size={16} />
-    </button>
-  )
+  const setParam = (key, value) => setParams(prev => {
+    const n = new URLSearchParams(prev)
+    if (value) n.set(key, value); else n.delete(key)
+    n.set('page','1'); return n
+  })
+
+  const viewBtn = (active) => ({
+    display:'flex', alignItems:'center', justifyContent:'center',
+    width:'34px', height:'34px', borderRadius:'8px', border:'none', cursor:'pointer',
+    background: active ? '#094037' : 'transparent',
+    color: active ? '#fff' : 'var(--text-muted)', transition:'all 0.15s',
+  })
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-      {/* Header */}
-      <PageHeader title="Beneficiaries" subtitle={`${data?.total ?? 0} cases`}>
-        <button className="btn-primary" onClick={() => setModalOpen(true)}>
-          <Plus size={15} /> Add case
-        </button>
-      </PageHeader>
-
-      {/* Filters Card - بنفس شكل المتطوعين */}
-      <Card className="bg-[#e6f0ee]" style={{ backgroundColor: '#e6f0ee' }}>
-        {/* الصف الأول: Search + Category + Campaign (نفس أسلوب المتطوعين) */}
+  <div
+    style={{
+      display: 'flex',
+      flexDirection: 'column',
+      gap: '24px',
+      background: 'var(--bg-base)',
+    }}
+  >
+    {/* Header */}
+    <PageHeader
+      title={t('beneficiaries.title')}
+      subtitle={t('beneficiaries.subtitle', {
+        count: data?.total ?? 0,
+      })}
+    >
+      <div
+        style={{
+          display: 'flex',
+          gap: '10px',
+          alignItems: 'center',
+        }}
+      >
+        {/* View Toggle */}
         <div
           style={{
-            padding: '12px 16px',
             display: 'flex',
-            flexWrap: 'wrap',
-            gap: '12px',
-            alignItems: 'center',
-            borderBottom: '1px solid var(--border-default)',
+            gap: '4px',
+            padding: '4px',
+            borderRadius: '12px',
+            background: 'var( --bg-base)',
+            border:
+              '1px solid var(--border-default)',
           }}
         >
-          {/* Search Box */}
+          <button
+            style={viewBtn(view === 'table')}
+            onClick={() => setView('table')}
+          >
+            <TableIcon size={15} />
+          </button>
+
+          <button
+            style={viewBtn(view === 'map')}
+            onClick={() => setView('map')}
+          >
+            <Map size={15} />
+          </button>
+        </div>
+
+        <ExportPDFButton
+          onClick={() =>
+            exportBeneficiaries(data?.data ?? [])
+          }
+          loading={isExporting}
+          label={t('common.export')}
+        />
+
+        <button
+          className="btn-primary"
+          onClick={() => {
+            setEditItem(null)
+            setModalOpen(true)
+          }}
+          style={{
+            background:
+              'var(--color-secondary-500)',
+color:'#111',
+            borderRadius: '14px',
+            padding: '10px 18px',
+          }}
+        >
+          <Plus size={15} />
+          {t('beneficiaries.addBtn')}
+        </button>
+      </div>
+    </PageHeader>
+
+    {view === 'map' ? (
+      <Suspense fallback={<SpinnerPage />}>
+        <BeneficiaryMap />
+      </Suspense>
+    ) : (
+      <>
+        {/* Filter Card */}
+        <Card
+          style={{
+            padding: '16px',
+            borderRadius: '24px',
+            background: 'var( --bg-base)',
+          }}
+        >
           <div
             style={{
               display: 'flex',
-              alignItems: 'center',
-              gap: '8px',
-              background: 'var(--bg-muted)',
-              border: '1px solid var(--border-default)',
-              borderRadius: '10px',
-              padding: '8px 12px',
-              minWidth: '220px',
-              flex: 1,
+              flexDirection: 'column',
+              gap: '16px',
             }}
           >
-            <Search size={14} style={{ color: 'var(--text-muted)', flexShrink: 0 }} />
-            <input
-              placeholder="Search by name or phone..."
-              value={search}
-              onChange={(e) =>
-                setParams((prev) => {
-                  const n = new URLSearchParams(prev)
-                  if (e.target.value) n.set('search', e.target.value)
-                  else n.delete('search')
-                  n.set('page', '1')
-                  return n
-                })
-              }
+            {/* Top Filters */}
+            <div
               style={{
-                background: 'transparent',
-                border: 'none',
-                outline: 'none',
-                fontSize: '0.85rem',
-                color: 'var(--text-primary)',
-                width: '100%',
-                fontFamily: 'Cairo,sans-serif',
-              }}
-            />
-          </div>
-
-          {/* Category Filter */}
-          <select
-  className="input"
-  style={{
-    background: 'var(--bg-muted)',
-    border: '1px solid var(--border-default)',
-    borderRadius: '10px',
-    padding: '8px 12px',
-    fontSize: '0.85rem',
-    minWidth: '160px',
-    color: 'var(--text-primary)',
-    cursor: 'pointer',
-    transition: 'all 0.2s ease',
-    outline: 'none',
-  }}
-  value={category}
-  onChange={(e) =>
-    setParams((prev) => {
-      const n = new URLSearchParams(prev)
-      if (e.target.value) n.set('category', e.target.value)
-      else n.delete('category')
-      n.set('page', '1')
-      return n
-    })
-  }
-  onMouseEnter={(e) => {
-    e.currentTarget.style.borderColor = '#0D5247'
-    e.currentTarget.style.boxShadow = '0 0 0 2px rgba(13, 82, 71, 0.1)'
-  }}
-  onMouseLeave={(e) => {
-    e.currentTarget.style.borderColor = 'var(--border-default)'
-    e.currentTarget.style.boxShadow = 'none'
-  }}
-  onFocus={(e) => {
-    e.currentTarget.style.borderColor = '#0D5247'
-    e.currentTarget.style.boxShadow = '0 0 0 2px rgba(13, 82, 71, 0.2)'
-  }}
-  onBlur={(e) => {
-    e.currentTarget.style.borderColor = 'var(--border-default)'
-    e.currentTarget.style.boxShadow = 'none'
-  }}
->
-  {CATEGORY_OPTIONS.map((opt) => (
-    <option key={opt.value} value={opt.value} style={{ color: 'var(--text-primary)' }}>
-      {opt.label}
-    </option>
-  ))}
-</select>
-
-{/* Campaign Filter */}
-<select
-  className="input"
-  style={{
-    background: 'var(--bg-muted)',
-    border: '1px solid var(--border-default)',
-    borderRadius: '10px',
-    padding: '8px 12px',
-    fontSize: '0.85rem',
-    minWidth: '180px',
-    color: 'var(--text-primary)',
-    cursor: 'pointer',
-    transition: 'all 0.2s ease',
-    outline: 'none',
-  }}
-  value={campaign}
-  onChange={(e) =>
-    setParams((prev) => {
-      const n = new URLSearchParams(prev)
-      if (e.target.value) n.set('campaign', e.target.value)
-      else n.delete('campaign')
-      n.set('page', '1')
-      return n
-    })
-  }
-  onMouseEnter={(e) => {
-    e.currentTarget.style.borderColor = '#0D5247'
-    e.currentTarget.style.boxShadow = '0 0 0 2px rgba(13, 82, 71, 0.1)'
-  }}
-  onMouseLeave={(e) => {
-    e.currentTarget.style.borderColor = 'var(--border-default)'
-    e.currentTarget.style.boxShadow = 'none'
-  }}
-  onFocus={(e) => {
-    e.currentTarget.style.borderColor = '#0D5247'
-    e.currentTarget.style.boxShadow = '0 0 0 2px rgba(13, 82, 71, 0.2)'
-  }}
-  onBlur={(e) => {
-    e.currentTarget.style.borderColor = 'var(--border-default)'
-    e.currentTarget.style.boxShadow = 'none'
-  }}
->
-  {CAMPAIGN_OPTIONS.map((opt) => (
-    <option key={opt.value} value={opt.value} style={{ color: 'var(--text-primary)' }}>
-      {opt.label}
-    </option>
-  ))}
-</select>س
-        </div>
-
-        {/* الصف الثاني: Status Tabs (مطابق تماماً للمتطوعين) */}
-        <div style={{ padding: '10px 16px', display: 'flex', gap: '4px', borderBottom: '1px solid var(--border-default)' }}>
-          {STATUS_TABS.map((tab) => (
-            <button
-              key={tab.key}
-              onClick={() =>
-                setParams((prev) => {
-                  const n = new URLSearchParams(prev)
-                  if (tab.key) n.set('status', tab.key)
-                  else n.delete('status')
-                  n.set('page', '1')
-                  return n
-                })
-              }
-              style={{
-                padding: '6px 16px',
-                borderRadius: '8px',
-                fontSize: '0.82rem',
-                fontWeight: 600,
-                border: 'none',
-                cursor: 'pointer',
-                fontFamily: 'Cairo,sans-serif',
-                transition: 'all 0.15s',
-                background: status === tab.key ? '#0D5247' : 'transparent',
-                color: status === tab.key ? '#fff' : 'var(--text-muted)',
+                display: 'flex',
+                flexWrap: 'wrap',
+                alignItems: 'center',
+                justifyContent:
+                  'space-between',
+                gap: '16px',
               }}
             >
-              {tab.label}
-            </button>
-          ))}
-        </div>
-
-        {/* Table - بنفس شكل المتطوعين مع أعمدة المستفيدين */}
-        <div style={{ overflowX: 'auto', backgroundColor: '#fff' }}>
-          {isLoading ? (
-            <SpinnerPage />
-          ) : data?.data.length === 0 ? (
-            <EmptyState title="No data" description="No matching cases found" />
-          ) : (
-            <table className="data-table" style={{ backgroundColor: '#fff', width: '100%' }}>
-              <thead>
-                <tr>
-                  <th style={{ padding: '12px 16px', color: '#0D5247', fontWeight: 'bold' }}>Beneficiary</th>
-                  <th style={{ padding: '12px 16px', color: '#0D5247', fontWeight: 'bold' }}>Category</th>
-                  <th style={{ padding: '12px 16px', color: '#0D5247', fontWeight: 'bold' }}>Priority</th>
-                  <th style={{ padding: '12px 16px', color: '#0D5247', fontWeight: 'bold' }}>Support</th>
-                  <th style={{ padding: '12px 16px', color: '#0D5247', fontWeight: 'bold' }}>Status</th>
-                  <th style={{ padding: '12px 16px', textAlign: 'center', color: '#0D5247', fontWeight: 'bold' }}>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {data?.data.map((row) => (
-                  <tr key={row.id}>
-                    <td style={{ padding: '12px 16px' }}>
-                      <div style={{ display: 'flex', gap: 10 }}>
-                        <Avatar name={row.name} size={34} />
-                        <div>
-                          <div style={{ fontWeight: 600 }}>{row.name}</div>
-                          <div style={{ fontSize: 12, color: 'gray' }}>{row.phone}</div>
-                        </div>
-                      </div>
-                    </td>
-                    <td style={{ padding: '12px 16px' }}>
-                      <span style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', fontWeight: 500 }}>
-                        {CATEGORY_LABEL[row.category] ?? row.category}
-                      </span>
-                    </td>
-                    <td style={{ padding: '12px 16px' }}>
-                      {row.priority ? (
-                        <span
-                          style={{
-                            padding: '3px 10px',
-                            borderRadius: '99px',
-                            fontSize: '0.72rem',
-                            fontWeight: 700,
-                            background: PRI_STYLE[row.priority]?.bg || '#f3f4f6',
-                            color: PRI_STYLE[row.priority]?.color || '#6b7280',
-                          }}
-                        >
-                          {PRIORITY_LABEL[row.priority]}
-                        </span>
-                      ) : (
-                        '—'
-                      )}
-                    </td>
-                    <td style={{ padding: '12px 16px', fontWeight: 700, color: row.monthlySupport > 0 ? '#0D5247' : 'var(--text-hint)' }}>
-                      {row.monthlySupport > 0 ? formatCurrency(row.monthlySupport) : '—'}
-                    </td>
-                    <td style={{ padding: '12px 16px' }}>
-                      <Badge status={row.status} />
-                    </td>
-                    <td style={{ padding: '12px 16px', textAlign: 'center' }}>
-                      <ActionBtn row={row} />
-                    </td>
-                  </tr>
+              {/* Status Tabs */}
+              <div
+                style={{
+                  display: 'flex',
+                  flexWrap: 'wrap',
+                  gap: '10px',
+                }}
+              >
+                {STATUS_TABS.map((tab) => (
+                  <button
+                    key={tab.key}
+                    onClick={() =>
+                      setParam(
+                        'status',
+                        tab.key
+                      )
+                    }
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent:
+                        'center',
+                      padding: '10px 18px',
+                      borderRadius: '14px',
+                      border:
+                        status === tab.key
+                          ? '1px solid var(--color-primary-100)'
+                          : '1px solid var(--border-subtle)',
+                      background:
+                        status === tab.key
+                          ? 'var(--color-primary-50)'
+                          : 'transparent',
+                      color:
+                        status === tab.key
+                          ? 'var(--color-primary-700)'
+                          : 'var(--text-secondary)',
+                      fontWeight:
+                        status === tab.key
+                          ? 700
+                          : 500,
+                      fontSize: '0.88rem',
+                      cursor: 'pointer',
+                      transition: '0.2s',
+                      fontFamily:
+                        'Cairo,sans-serif',
+                    }}
+                  >
+                    {tab.label}
+                  </button>
                 ))}
-              </tbody>
-            </table>
-          )}
-        </div>
-      </Card>
+              </div>
 
-      {/* Pagination */}
-      <Card>
-        <Pagination
-          page={page}
-          total={data?.total ?? 0}
-          limit={LIMIT}
-          onPageChange={(next) => {
-            setParams((prev) => {
-              const n = new URLSearchParams(prev)
-              n.set('page', String(next))
-              return n
-            })
+              {/* Search */}
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '10px',
+                  minWidth: '260px',
+                  height: '46px',
+                  borderRadius: '14px',
+                  border:
+                    '1px solid var(--border-default)',
+                  background:
+                    'var(--bg-muted)',
+                  paddingInline: '14px',
+                }}
+              >
+                <Search
+                  size={16}
+                  style={{
+                    color:
+                      'var(--text-muted)',
+                    flexShrink: 0,
+                  }}
+                />
+
+                <input
+                  placeholder={t(
+                    'beneficiaries.filters.searchPlaceholder'
+                  )}
+                  value={search}
+                  onChange={(e) =>
+                    setParam(
+                      'search',
+                      e.target.value
+                    )
+                  }
+                  style={{
+                    background:
+                      'transparent',
+                    border: 'none',
+                    outline: 'none',
+                    width: '100%',
+                    fontSize: '0.9rem',
+                    color:
+                      'var(--text-primary)',
+                    fontFamily:
+                      'Cairo,sans-serif',
+                  }}
+                />
+              </div>
+            </div>
+
+            {/* Select Filters */}
+            <div
+              style={{
+                display: 'flex',
+                flexWrap: 'wrap',
+                gap: '12px',
+              }}
+            >
+              {/* Category */}
+              <select
+                value={category}
+                onChange={(e) =>
+                  setParam(
+                    'category',
+                    e.target.value
+                  )
+                }
+                style={{
+                  minWidth: '220px',
+                  height: '46px',
+                  borderRadius: '14px',
+                  border:
+                    '1px solid var(--border-default)',
+                  background:
+                    'var(--bg-muted)',
+                  color:
+                    'var(--text-primary)',
+                  paddingInline: '14px',
+                  fontSize: '0.88rem',
+                  fontFamily:
+                    'Cairo,sans-serif',
+                  cursor: 'pointer',
+                }}
+              >
+                {CATEGORY_OPTIONS.map(
+                  (opt) => (
+                    <option
+                      key={opt.value}
+                      value={opt.value}
+                    >
+                      {opt.label}
+                    </option>
+                  )
+                )}
+              </select>
+
+              {/* Campaign */}
+              <select
+                value={campaign}
+                onChange={(e) =>
+                  setParam(
+                    'campaign',
+                    e.target.value
+                  )
+                }
+                style={{
+                  minWidth: '240px',
+                  height: '46px',
+                  borderRadius: '14px',
+                  border:
+                    '1px solid var(--border-default)',
+                  background:
+                    'var(--bg-muted)',
+                  color:
+                    'var(--text-primary)',
+                  paddingInline: '14px',
+                  fontSize: '0.88rem',
+                  fontFamily:
+                    'Cairo,sans-serif',
+                  cursor: 'pointer',
+                }}
+              >
+                {CAMPAIGN_OPTIONS.map(
+                  (opt) => (
+                    <option
+                      key={opt.value}
+                      value={opt.value}
+                    >
+                      {opt.label}
+                    </option>
+                  )
+                )}
+              </select>
+            </div>
+          </div>
+        </Card>
+
+        {/* Table Card */}
+        <Card
+          style={{
+            borderRadius: '24px',
+            overflow: 'hidden',
+            padding: 0,
+            background: 'var( --bg-base)',
           }}
-        />
-      </Card>
+        >
+          {/* Card Header */}
+          <div
+            style={{
+              padding: '22px 24px',
+              borderBottom:
+                '1px solid var(--border-subtle)',
+            }}
+          >
+            <h3
+              style={{
+                margin: 0,
+                fontSize: '1.05rem',
+                fontWeight: 800,
+                color:
+                  'var(--text-primary)',
+              }}
+            >
+              {t(
+                'beneficiaries.tableTitle'
+              )}
+            </h3>
 
-      {/* Modals */}
-      <BeneficiaryModal open={modalOpen} onClose={() => setModalOpen(false)} onSave={handleSave} editItem={editItem} />
-      <ActionModal isOpen={actionModalOpen} onClose={() => setActionModalOpen(false)} onAction={handleAction} row={selectedRow} />
-    </div>
-  )
+            <p
+              style={{
+                marginTop: '6px',
+                fontSize: '0.88rem',
+                color:
+                  'var(--text-muted)',
+              }}
+            >
+              إدارة وعرض بيانات
+              المستفيدين
+            </p>
+          </div>
+
+          {/* Table */}
+          <DataTable
+            columns={columns}
+            data={data?.data}
+            isLoading={isLoading}
+            loadingComponent={
+              <SpinnerPage />
+            }
+            EmptyComponent={
+              <EmptyState
+                title={t(
+                  'beneficiaries.empty.title'
+                )}
+                description={t(
+                  'beneficiaries.empty.description'
+                )}
+              />
+            }
+          />
+
+          {/* Pagination */}
+          <div
+            style={{
+              padding: '20px 24px',
+              borderTop:
+                '1px solid var(--border-subtle)',
+            }}
+          >
+            <Pagination
+              page={page}
+              total={data?.total ?? 0}
+              limit={LIMIT}
+              onPageChange={(next) =>
+                setParams((prev) => {
+                  const n =
+                    new URLSearchParams(
+                      prev
+                    )
+
+                  n.set(
+                    'page',
+                    String(next)
+                  )
+
+                  return n
+                })
+              }
+            />
+          </div>
+        </Card>
+      </>
+    )}
+
+    {/* Modals */}
+    <BeneficiaryModal
+      open={modalOpen}
+      onClose={() => {
+        setModalOpen(false)
+        setEditItem(null)
+      }}
+      onSave={handleSave}
+      editItem={editItem}
+    />
+
+    <ActionModal
+      isOpen={actionModalOpen}
+      onClose={() =>
+        setActionModalOpen(false)
+      }
+      onAction={handleAction}
+      row={selectedRow}
+    />
+  </div>
+)
 }

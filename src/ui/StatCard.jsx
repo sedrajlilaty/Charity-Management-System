@@ -22,7 +22,7 @@ export function StatCard({ label, value, change, unit, icon: Icon, color = 'prim
       </div>
       <p className="text-2xl font-bold text-amber-50 mb-1">
         {value}
-        {unit && <span className="text-sm font-medium text-gray-400 mr-1">{unit}</span>}
+        {unit && <span className="text-base font-medium text-gray-400 mr-1">{unit}</span>}
       </p>
       {change !== undefined && (
         <p className={cn('text-xs font-medium', positive ? 'text-green-600' : 'text-red-500')}>

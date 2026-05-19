@@ -11,7 +11,7 @@ const AVATAR_COLORS = [
  
 export function Avatar({ name, initials, size = 'md' }) {
   const idx = (name?.charCodeAt(0) ?? 0) % AVATAR_COLORS.length
-  const sizeClass = { sm: 'w-7 h-7 text-xs', md: 'w-9 h-9 text-sm', lg: 'w-12 h-12 text-base' }[size]
+  const sizeClass = { sm: 'w-7 h-7 text-xs', md: 'w-9 h-9 text-base', lg: 'w-12 h-12 text-base' }[size]
   const text = initials ?? (name ? name.slice(0, 2) : '؟؟')
   return (
     <div className={cn('rounded-full flex items-center justify-center font-semibold flex-shrink-0', sizeClass, AVATAR_COLORS[idx])}>

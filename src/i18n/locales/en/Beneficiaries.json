@@ -1,0 +1,585 @@
+
+Claude finished the response
+You said: لنكمل عمل هذا المشروع باضافة صفحة لقبول طلبات التطوع للقيام بحملة معينة بحيث تتضمن اسم
+
+charity-dashboard-documentation.md
+md
+
+لنكمل عمل هذا المشروع باضافة صفحة لقبول طلبات التطوع للقيام بحملة معينة بحيث تتضمن اسم 
+
+return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+      <PageHeader title="Beneficiaries" subtitle={`${data?.total ?? 0} cases`}>
+        <button className="btn-primary" onClick={() => { setEditItem(null); setModalOpen(true) }}>
+          <Plus size={15} />Add case
+        </button>
+      </PageHeader>
+
+      <Card className='bg-[#e6f0ee]' style={{ backgroundColor: '#e6f0ee' }}>
+        {/* Filters */}
+        <div style={{ padding: '12px 16px', display: 'flex', flexWrap: 'wrap', gap: '12px', alignItems: 'center', borderBottom: '1px solid var(--border-default)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'var(--bg-muted)', border: '1px solid var(--border-default)', borderRadius: '10px', padding: '8px 12px', minWidth: '220px' }}>
+            <Search size={14} style={{ color: 'var(--text-muted)', flexShrink: 0 }} />
+            <input placeholder="Search by name..." value={search} onChange={e => setParams(prev => {
+              const n = new URLSearchParams(prev)
+              if (e.target.value) n.set('search', e.target.value)
+              else n.delete('search')
+              n.set('page', '1')
+              return n
+            })}
+              style={{ background: 'transparent', border: 'none', outline: 'none', fontSize: '0.85rem', color: 'var(--text-primary)', width: '100%', fontFamily: 'Cairo,sans-serif' }} />
+          </div>
+          <select className="input" style={{ width: '160px', fontSize: '0.85rem' }} value={category} onChange={e => setParams(prev => {
+            const n = new URLSearchParams(prev)
+            if (e.target.value) n.set('category', e.target.value)
+            else n.delete('category')
+            n.set('page', '1')
+            return n
+          })}>
+            <option value="">All categories</option>
+            <option value="orphan">Orphan</option>
+            <option value="widow">Widow</option>
+            <option value="poor">Low-income Family</option>
+            <option value="elderly">Elderly</option>
+          </select>
+        </div>
+        {/* Status Tabs */}
+        <div style={{ padding: '10px 16px', display: 'flex', gap: '4px', borderBottom: '1px solid var(--border-default)' }}>
+          {STATUS_TABS.map(tab => (
+            <button key={tab.key} onClick={() => setParams(prev => {
+              const n = new URLSearchParams(prev)
+              if (tab.key) n.set('status', tab.key)
+              else n.delete('status')
+              n.set('page', '1')
+              return n
+            })}
+              style={{ padding: '6px 16px', borderRadius: '8px', fontSize: '0.82rem', fontWeight: 600, border: 'none', cursor: 'pointer', fontFamily: 'Cairo,sans-serif', transition: 'all 0.15s', background: status === tab.key ? '#0D5247' : 'transparent', color: status === tab.key ? '#fff' : 'var(--text-muted)' }}>
+              {tab.label}
+            </button>
+          ))}
+        </div>
+        {/* Table with white background */}
+        <div style={{ overflowX: 'auto', backgroundColor: '#fff' }}>
+          <DataTable 
+            columns={columns} 
+            data={data?.data} 
+            loading={isLoading} 
+            emptyText="No matching cases."
+            style={{ backgroundColor: '#fff' }}
+          />
+        </div>
+      </Card>
+      
+      <Card>
+        <Pagination page={page} total={data?.total ?? 0} limit={LIMIT} onPageChange={(next) => {
+          setParams(prev => {
+            const n = new URLSearchParams(prev)
+            n.set('page', String(next))
+            return n
+          })
+        }} />
+      </Card>
+
+      <BeneficiaryModal open={modalOpen} onClose={() => setModalOpen(false)} onSave={handleSave} editItem={editItem} />
+      
+      <ActionModal 
+        isOpen={actionModalOpen}
+        onClose={() => setActionModalOpen(false)}
+        onAction={handleAction}
+        row={selectedRow}
+      />
+    </div>
+  )
+}
+المتطوع والحملة وموعدها والمعلزمات التي تخص هذه الموضوع ولنضيفها على المشروع 
+ولنكن بشكل مشابه للصفحات السابقة التي قمنا بها واقترح علي اضافات نقوم بها للمشروع ليكن اكثر احترافية
+
+Show more
+May 1
+Claude responded: ممتاز!
+
+صاغ صفحة متطوعين وحدد إضافات احترافية للمشروع
+صاغ صفحة متطوعين وحدد إضافات احترافية للمشروع
+ممتاز! اطلعت على التوثيق الكامل للمشروع. سأبني صفحة التطوع بنفس نمط الصفحات السابقة تماماً مع اقتراح تحسينات احترافية.
+
+سأبني ملفات صفحة التطوع الكاملة الآن:
+
+
+Created 4 files, ran a command, read a file
+Created 4 files, ran a command, read a file
+تم إنشاء 4 ملفات كاملة جاهزة للإضافة للمشروع. إليك ملخص ما تم بناؤه وخطوات الربط:
+
+📁 الملفات المُنشأة
+الملف	المسار في المشروع
+Volunteers.jsx	src/features/volunteers/Volunteers.jsx
+VolunteerModal.jsx	src/features/volunteers/VolunteerModal.jsx
+VolunteerActionModal.jsx	src/features/volunteers/VolunteerActionModal.jsx
+volunteers-data-service.js	يحتوي على كود Mock Data + Service Layer + تعليمات الربط
+✅ ما تم بناؤه في الصفحة
+ميزات مطابقة لصفحاتك السابقة تماماً:
+
+جدول بيانات موحد DataTable بنفس الأسلوب
+تبويبات الحالة: الكل / قيد الانتظار / مقبولة / مرفوضة / مكتملة
+فلترة بالاسم + الحملة + التخصص
+أزرار قبول / رفض / اكتمال مع modal تأكيد
+Pagination كامل + URL params
+إضافات خاصة بصفحة التطوع:
+
+صف إحصائيات فوق الجدول (4 بطاقات: الكل / انتظار / مقبول / مكتمل)
+النموذج يتضمن: الاسم + الهاتف + الإيميل + الحملة + التخصص + وقت الإتاحة + سنوات الخبرة + ملاحظات
+Avatar للمتطوع في الجدول
+🚀 اقتراحات لتطوير المشروع
+إليك أبرز الإضافات التي ستجعل المشروع أكثر احترافية:
+
+1. تقارير PDF قابلة للتصدير — تصدير قوائم المستفيدين والتبرعات والمتطوعين كتقرير PDF
+
+2. لوحة Kanban لمتابعة طلبات التطوع — عرض مرئي بالأعمدة بدلاً من الجدول فقط
+
+3. جدول زمني للحملات (Timeline View) — عرض الحملات على خط زمني تفاعلي
+
+4. خريطة جغرافية للمستفيدين — توزيع الحالات على مناطق المدينة عبر خريطة
+
+5. نظام رسائل داخلي — تواصل بين الموظفين الميدانيين داخل النظام
+
+6. تقرير أداء شهري تلقائي — ملخص شهري بالأرقام والرسوم البيانية
+
+أيٌّ من هذه تريد نبدأ بها؟
+
+
+Volunteers
+Code · JSX 
+
+Volunteermodal
+Code · JSX 
+
+Volunteeractionmodal
+Code · JSX 
+
+Volunteers data service
+JS 
+You said: لقد قمنا ببناء مبف واحد للغة ولكن لم يتم تعميم اعديل اللغة على كل التطبيق ما رايك بان نقوم ببناء فايل خاص لكل صفحة ومن ثم استعماله بدالخلها وانا ارفق لك الكود …
+
+import i18n from 'i18next' import { initReactI18next } from 'react-i18next' import LanguageDetector from 'i18next-browser-languagedetector' const ar = { translation: { // Navigation nav: { dashboard: 'لوحة التحكم', users: 'المستخدمون',
+
+pasted
+
+لقد قمنا ببناء مبف واحد للغة ولكن لم يتم تعميم اعديل اللغة على كل التطبيق ما رايك بان نقوم ببناء فايل خاص لكل صفحة ومن ثم استعماله بدالخلها وانا ارفق لك الكود الخاص بكل صفحة اذا كنت تريد لنبدا
+
+3:55 PM
+Claude responded: رأيي أن الفكرة ممتازة من ناحية الهيكلة، لكن قبل أن نبدأ دعني أقترح عليك أفضل طريقة معمارياً:
+
+استحضر معمارية i18next وأوصى بنظام الـ namespaces
+استحضر معمارية i18next وأوصى بنظام الـ namespaces
+رأيي أن الفكرة ممتازة من ناحية الهيكلة، لكن قبل أن نبدأ دعني أقترح عليك أفضل طريقة معمارياً:
+
+الطريقة المثلى: i18next Namespaces
+بدلاً من ملف واحد ضخم أو ملفات مستقلة لكل صفحة تُدار بشكل منفصل، الأنسب لمشروعك هو نظام namespaces المدمج في i18next — وهو مصمم تحديداً لهذا الغرض:
+
+src/i18n/
+├── index.js              ← إعداد i18next الرئيسي (لا يتغير)
+└── locales/
+    ├── ar/
+    │   ├── common.json   ← مشترك (أزرار، تنبيهات، أدوار...)
+    │   ├── dashboard.json
+    │   ├── donations.json
+    │   ├── beneficiaries.json
+    │   ├── campaigns.json
+    │   ├── volunteers.json
+    │   └── ...
+    └── en/
+        ├── common.json
+        ├── dashboard.json
+        └── ...
+الاستخدام في المكوّن:
+
+jsx
+// تحميل namespace واحد أو أكثر
+const { t } = useTranslation(['volunteers', 'common'])
+
+// استخدام مفتاح من namespace محدد
+t('volunteers:modal.title')
+t('common:actions.save')
+المزايا مقارنة بالبدائل
+المعيار	ملف واحد (الحالي)	ملف JS لكل صفحة	Namespaces JSON
+سهولة الصيانة	❌ يكبر مع الوقت	⚠️ تحتاج import يدوي	✅ منظم تلقائياً
+Lazy Loading	❌ كل شيء يُحمّل	❌	✅ تحميل عند الحاجة
+جاهزية Backend	❌	❌	✅ JSON قابل للرفع مباشرة
+دعم i18next	—	⚠️ جزئي	✅ مدعوم أصلاً
+هل تريد نبدأ بهذا الأسلوب؟ أرسل لي كود الصفحة الأولى وسأبني لك:
+
+ملفات ar/pageName.json و en/pageName.json
+تحديث index.js ليدعم الـ namespaces
+تحديث المكوّن باستخدام useTranslation
+You said: لنبدا مثلا بهذه الصفحة والمودال الخاص بها ومن ثم الصفحة التالية والمودال الخاص فيها ايضا
+
+import { useState } from 'react' import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query' import { useTranslation } from 'react-i18next' import { useSearchParams } from 'react-router-dom' import { Check, X, Heart, Plus } from 'lucide-react' import { donationsService } from
+
+pasted
+
+
+import { useState } from 'react' import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query' import { useSearchParams } from 'react-router-dom' import { Search, Plus, MoreVertical, MapPin } from 'lucide-react' // أضفت MapPin للعنوان import { beneficiariesService } from '../../s
+
+pasted
+
+
+import { useState, useEffect } from 'react' import Modal, { FormRow, FieldError } from '../../ui/Modal' const EMPTY = { name:'', phone:'', category:'orphan', subCategory:'', priority:'medium', membersCount:1, monthlySupport:0, assignedWorker:'', address: '', academicYear: '',
+
+pasted
+
+import { useEffect, useState } from 'react'
+import Modal, { FieldError, FormRow } from '../../ui/Modal'
+
+const EMPTY_FORM = {
+  donorName: '',
+  amount: '',
+  type: 'cash',
+  campaignName: '',
+  recurring: false,
+}
+
+export default function DonationModal({ open, onClose, onSave }) {
+  const [form, setForm] = useState(EMPTY_FORM)
+  const [errors, setErrors] = useState({})
+
+  useEffect(() => {
+    if (!open) return
+    setForm(EMPTY_FORM)
+    setErrors({})
+  }, [open])
+
+  const set = (key, value) => setForm((prev) => ({ ...prev, [key]: value }))
+
+  const handleSubmit = async () => {
+    const nextErrors = {}
+    if (!form.donorName.trim()) nextErrors.donorName = 'اسم المتبرع مطلوب'
+    if (!form.amount || Number(form.amount) <= 0) nextErrors.amount = 'المبلغ يجب أن يكون أكبر من صفر'
+    setErrors(nextErrors)
+    if (Object.keys(nextErrors).length) return
+    await onSave({ ...form, amount: Number(form.amount), status: 'pending' })
+    onClose()
+  }
+
+  return (
+    <Modal
+      open={open}
+      onClose={onClose}
+      title="إضافة تبرع جديد"
+      footer={
+        <>
+          <button onClick={onClose} className="btn-outline">إلغاء</button>
+          <button onClick={handleSubmit} className="btn-primary">حفظ التبرع</button>
+        </>
+      }
+    >
+      <FormRow label="اسم المتبرع" required>
+        <input className="input" value={form.donorName} onChange={(e) => set('donorName', e.target.value)} />
+        <FieldError msg={errors.donorName} />
+      </FormRow>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+        <FormRow label="المبلغ" required>
+          <input className="input" type="number" min={1} value={form.amount} onChange={(e) => set('amount', e.target.value)} />
+          <FieldError msg={errors.amount} />
+        </FormRow>
+        <FormRow label="نوع التبرع">
+          <select className="input" value={form.type} onChange={(e) => set('type', e.target.value)}>
+            <option value="cash">نقدي</option>
+            <option value="transfer">تحويل</option>
+            <option value="inkind">عيني</option>
+          </select>
+        </FormRow>
+      </div>
+      <FormRow label="الحملة">
+        <input className="input" value={form.campaignName} onChange={(e) => set('campaignName', e.target.value)} />
+      </FormRow>
+      <FormRow label="متكرر">
+        <label style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <input type="checkbox" checked={form.recurring} onChange={(e) => set('recurring', e.target.checked)} />
+          نعم، تبرع متكرر
+        </label>
+      </FormRow>
+    </Modal>
+  )
+}
+لنبدا مثلا بهذه الصفحة والمودال الخاص بها ومن ثم الصفحة التالية والمودال الخاص فيها ايضا
+
+Show more
+3:58 PM
+Claude responded: ممتاز، سنبدأ بـ Donations.
+
+استخلص مفاتيح الترجمة وأعاد هيكلة المكونات
+استخلص مفاتيح الترجمة وأعاد هيكلة المكونات
+ممتاز، سنبدأ بـ Donations. سأبني 4 ملفات كاملة:
+
+
+Created 5 files, ran a command, read a file
+Created 5 files, ran a command, read a file
+تم! إليك ملخص ما تم بناؤه وكيفية تطبيقه:
+
+ما تم إنشاؤه
+الهيكل:
+
+src/i18n/
+├── index.js                  ← محدّث (يدعم namespaces الآن)
+└── locales/
+    ├── ar/donations.json     ← جديد
+    └── en/donations.json     ← جديد
+أبرز التغييرات في الكود
+الاستخدام في المكوّنات:
+
+jsx
+// تحميل namespace واحد
+const { t } = useTranslation('donations')
+
+// أو تحميل أكثر من namespace معاً
+const { t } = useTranslation(['donations', 'common'])
+
+// الاستخدام — namespace صريح
+t('donations:table.donor')
+
+// أو ضمني (إذا كان donations هو الـ namespace الأول في المصفوفة)
+t('table.donor')
+إصلاح خطأ في الكود الأصلي: كانت أزرار القبول والرفض معكوسة — الزر المكتوب عليه "Reject" كان يستدعي approve.mutate والعكس. تم تصحيحه.
+
+خطوات التطبيق
+ضع ملفات ar/donations.json و en/donations.json في مجلد src/i18n/locales/
+استبدل src/i18n/index.js بالملف الجديد
+استبدل Donations.jsx و DonationModal.jsx
+أرسل لي الصفحة التالية (Beneficiaries + BeneficiaryModal) وسأكملها بنفس النمط.
+
+
+Donations
+Code · JSON 
+
+Donations
+Code · JSON 
+
+I18n index
+JS 
+
+Donations
+Code · JSX 
+
+Donationmodal
+Code · JSX 
+You said: ولكن قدمت لك الاكواد الخاصة بصفحة المستفييدم لماا لم تقم ايضا بالتعديل عليها ؟
+ولكن قدمت لك الاكواد الخاصة بصفحة المستفييدم لماا لم تقم ايضا بالتعديل عليها ؟
+
+4:44 PM
+Claude responded: معك حق تماماً، أعتذر!
+
+استخلص الأكواد وحدد السلاسل النصية للترجمة
+استخلص الأكواد وحدد السلاسل النصية للترجمة
+معك حق تماماً، أعتذر! كانت موجودة في نفس الرسالة. لنكملها الآن:
+
+
+Created 5 files, edited 4 files, ran a command
+Created 5 files, edited 4 files, ran a command
+اعتذر على الإغفال! الآن اكتملت الصفحتان. ملخص التسليم:
+
+ما تم إنشاؤه لصفحة المستفيدين
+4 ملفات جديدة + تحديث i18n/index.js:
+
+src/i18n/locales/
+├── ar/beneficiaries.json   ← جديد
+└── en/beneficiaries.json   ← جديد
+
+src/features/beneficiaries/
+├── Beneficiaries.jsx       ← محدّث
+└── BeneficiaryModal.jsx    ← محدّث
+
+src/i18n/index.js           ← محدّث (يشمل الـ namespace الجديد)
+كل النصوص مترجمة بالكامل في الـ JSON:
+
+عناوين الصفحة والجدول
+تبويبات الحالة والفلاتر
+فئات المستفيدين والحملات
+مستويات الأولوية
+جميع حقول وأخطاء وأزرار الـ Modal
+الأقسام الديناميكية (التعليمي والطبي)
+أرسل لي الصفحة القادمة وأكملها فوراً.
+
+
+Beneficiaries
+Code · JSON 
+
+Beneficiaries
+Code · JSON 
+
+Beneficiaries
+Code · JSX 
+
+Beneficiarymodal
+Code · JSX 
+
+I18n index
+JS 
+You said: ولكن لماذا لم يتم قلب الترجمة عند الضفط على زر تغيير للغة ؟
+ولكن لماذا لم يتم قلب الترجمة عند الضفط على زر تغيير للغة ؟
+
+4:51 PM
+Claude responded: السبب في الغالب ليس واحداً بل ثلاثة أسباب مجتمعة.
+
+تحليل أسباب عدم تحديث الترجمة عند تغيير اللغة
+تحليل أسباب عدم تحديث الترجمة عند تغيير اللغة
+السبب في الغالب ليس واحداً بل ثلاثة أسباب مجتمعة. دعني أشرح المشكلة الجذرية أولاً:
+
+تشخيص المشكلة
+السبب الأول: زر التبديل في الـ Navbar على الأرجح يحفظ في localStorage فقط لكنه لا يستدعي i18n.changeLanguage() — فالـ i18n لا يعلم أن اللغة تغيرت.
+
+السبب الثاني: تحديث dir على الـ DOM يحدث مرة واحدة عند التهيئة فقط ولا يتكرر عند تغيير اللغة.
+
+السبب الثالث: الثوابت مثل TABS وCATEGORY_OPTIONS كانت تُعرَّف خارج المكوّن كنصوص ثابتة لا تتغير.
+
+
+Created 3 files, ran a command, read a file
+Created 3 files, ran a command, read a file
+تلخيص الأسباب والحلول
+3 مشاكل وحل واحد موحّد:
+
+المشكلة	السبب	الحل
+النصوص لا تتغير	الزر يحدّث state محلي فقط دون استدعاء i18n.changeLanguage()	useLanguage hook يستدعيها
+اتجاه الصفحة لا يتغير	dir يُضبط مرة عند التهيئة فقط	i18n.on('languageChanged', applyDirection)
+القوائم والتبويبات لا تتغير	ثوابت مثل TABS تُعرَّف خارج المكوّن كنصوص ثابتة	نقلناها داخل المكوّن لتُعاد بناؤها مع كل render
+خطوات التطبيق — ثلاث خطوات فقط:
+
+1. ضع useLanguage.js  في  src/hooks/useLanguage.js
+2. استبدل i18n/index.js بالملف المحدّث (يحتوي على i18n.on)
+3. في Navbar.jsx — استبدل منطق الزر الحالي بـ:
+      const { toggleLanguage } = useLanguage()
+      <button onClick={toggleLanguage}>...</button>
+أرسل لي كود Navbar.jsx الحالي وسأعدّله مباشرة بدلاً من الشرح.
+
+
+Uselanguage
+JS 
+
+I18n index fixed
+JS 
+
+Navbar example
+Code · JSX 
+
+
+
+
+
+Claude is AI and can make mistakes. Please double-check responses.
+Beneficiaries · JSON
+Copy
+
+{
+  "title": "Beneficiaries",
+  "subtitle": "{{count}} cases",
+  "addBtn": "Add case",
+  "tabs": {
+    "all": "All",
+    "active": "Active",
+    "pending": "Pending",
+    "rejected": "Rejected",
+    "archived": "Archived"
+  },
+  "filters": {
+    "searchPlaceholder": "Search by name or phone...",
+    "allCategories": "All categories",
+    "allCampaigns": "All campaigns"
+  },
+  "categories": {
+    "orphan": "Orphan Care",
+    "educational": "Educational Assistance",
+    "medical": "Medical Assistance",
+    "widow": "Widow Support",
+    "poor": "Low-income Family"
+  },
+  "campaigns": {
+    "camp_1": "Winter Clothing",
+    "camp_2": "Orphan Sponsorship",
+    "camp_3": "Food Basket",
+    "camp_4": "Widows Support",
+    "camp_5": "Back to School",
+    "camp_6": "Medical Aid"
+  },
+  "priority": {
+    "high": "High",
+    "medium": "Medium",
+    "low": "Low"
+  },
+  "table": {
+    "beneficiary": "Beneficiary",
+    "location": "Location",
+    "category": "Category",
+    "priority": "Priority",
+    "support": "Support",
+    "status": "Status",
+    "actions": "Actions",
+    "noAddress": "Not specified"
+  },
+  "empty": {
+    "title": "No data",
+    "description": "No matching cases found."
+  },
+  "deleteConfirm": "Are you sure you want to delete this beneficiary?",
+  "modal": {
+    "titleAdd": "New Support Request",
+    "titleEdit": "Edit Case Info",
+    "fields": {
+      "category": "Category",
+      "priority": "Priority",
+      "fullName": "Full Name (Legal)",
+      "fullNamePlaceholder": "Enter full name",
+      "phone": "Contact Number",
+      "phonePlaceholder": "+966 XXXXXXXX",
+      "address": "Residential Address",
+      "addressPlaceholder": "Street, Block, City",
+      "membersCount": "Family Members",
+      "monthlySupport": "Monthly Support (SAR)",
+      "needDescription": "Description of Need",
+      "needPlaceholder": "Briefly describe why this support is requested..."
+    },
+    "categories": {
+      "orphan": "Orphan Care",
+      "educational": "Educational Assistance",
+      "medical": "Medical Assistance"
+    },
+    "priority": {
+      "high": "High",
+      "medium": "Medium",
+      "low": "Low"
+    },
+    "educational": {
+      "sectionTitle": "Academic Details",
+      "academicYear": "Academic Year / Grade",
+      "academicPlaceholder": "e.g. 2nd Year",
+      "supportType": "Support Type",
+      "supportOptions": {
+        "laptop": "Laptop Support",
+        "tuition": "Tuition Assistance",
+        "stationary": "Stationary / Fees"
+      }
+    },
+    "medical": {
+      "sectionTitle": "Medical Situation",
+      "condition": "Condition Description",
+      "conditionPlaceholder": "Briefly describe the medical situation...",
+      "requiredAmount": "Required Amount (SAR)"
+    },
+    "buttons": {
+      "cancel": "Cancel",
+      "submit": "Submit Request",
+      "update": "Update Case"
+    },
+    "errors": {
+      "nameRequired": "Full name is required",
+      "phoneRequired": "Contact number is required",
+      "addressRequired": "Residential address is required"
+    }
+  }
+}
+
+
+
+
+
+
+
+
+

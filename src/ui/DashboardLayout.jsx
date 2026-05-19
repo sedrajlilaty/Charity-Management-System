@@ -3,6 +3,8 @@ import { Outlet } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import Sidebar from './Sidebar'
 import Navbar from './Navbar'
+import AIAssistant from '../features/ai/AIAssistant'
+
 
 export default function DashboardLayout() {
   const { i18n } = useTranslation()
@@ -46,6 +48,9 @@ export default function DashboardLayout() {
         >
           <Outlet />
         </main>
+        
+        <AIAssistant />
+
       </div>
     </div>
   )

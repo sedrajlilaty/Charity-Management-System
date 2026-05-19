@@ -1,14 +1,17 @@
-
-import { useState, useEffect } from 'react'
-import { User, Mail, Phone, Shield } from 'lucide-react'
+// ── UserModal.jsx ──────────────────────────────────────────────────────────────
+import { useState, useEffect, useRef } from 'react'
+import { useTranslation } from 'react-i18next'
+import { User, Mail, Phone, Camera, X } from 'lucide-react'
 import Modal, { FormRow, FieldError } from '../../ui/Modal'
 
-const EMPTY = { name:'', email:'', phone:'', role:'fieldWorker', status:'active' }
+const EMPTY = { name: '', email: '', phone: '', role: 'fieldWorker', status: 'active', image: null }
 
 export default function UserModal({ open, onClose, onSave, editUser }) {
+  const { t } = useTranslation()
   const [form,   setForm]   = useState(EMPTY)
   const [errors, setErrors] = useState({})
   const [saving, setSaving] = useState(false)
+  const fileInputRef = useRef(null)
 
   useEffect(() => {
     setForm(editUser ? { ...editUser } : EMPTY)
@@ -17,11 +20,20 @@ export default function UserModal({ open, onClose, onSave, editUser }) {
 
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }))
 
+  const handleImageChange = (e) => {
+    const file = e.target.files[0]
+    if (file) {
+      const reader = new FileReader()
+      reader.onloadend = () => set('image', reader.result)
+      reader.readAsDataURL(file)
+    }
+  }
+
   const validate = () => {
     const e = {}
-    if (!form.name.trim()) e.name = 'Name is required'
-    if (!form.email.trim()) e.email = 'Email is required'
-    if (!form.phone.trim()) e.phone = 'Phone is required'
+    if (!form.name.trim())  e.name  = t('users.modal.errors.nameRequired')
+    if (!form.email.trim()) e.email = t('users.modal.errors.emailRequired')
+    if (!form.phone.trim()) e.phone = t('users.modal.errors.phoneRequired')
     setErrors(e)
     return Object.keys(e).length === 0
   }
@@ -35,66 +47,70 @@ export default function UserModal({ open, onClose, onSave, editUser }) {
   }
 
   return (
-    <Modal
-      open={open}
-      onClose={onClose}
-      title={editUser ? 'Edit User' : 'New User'}
+    <Modal open={open} onClose={onClose}
+      title={editUser ? t('users.modal.titleEdit') : t('users.modal.titleAdd')}
       footer={
         <>
-          <button onClick={onClose} className="btn-outline" style={{ minWidth:'90px' }}>Cancel</button>
-          <button onClick={handleSave} disabled={saving} className="btn-primary" style={{ minWidth:'120px' }}>
-            {saving && <span style={{ width:'13px', height:'13px', border:'2px solid rgba(255,255,255,0.4)', borderTopColor:'white', borderRadius:'50%', animation:'spin 0.7s linear infinite', display:'inline-block' }}/>}
-            {editUser ? 'Save changes' : 'Create user'}
+          <button onClick={onClose} className="btn-outline" style={{ minWidth: '90px' }}>{t('users.modal.buttons.cancel')}</button>
+          <button onClick={handleSave} disabled={saving} className="btn-primary" style={{ minWidth: '120px' }}>
+            {saving && <span className="spinner-small" />}
+            {editUser ? t('users.modal.buttons.update') : t('users.modal.buttons.create')}
           </button>
         </>
       }
     >
-      {/* Avatar preview */}
-      <div style={{ display:'flex', justifyContent:'center', marginBottom:'20px' }}>
-        <div style={{ width:'60px', height:'60px', borderRadius:'50%', background:'#e6f0ee', color:'#0D5247', fontSize:'1.1rem', fontWeight:700, display:'flex', alignItems:'center', justifyContent:'center', border:'3px solid #c0d9d4' }}>
-          {form.name ? form.name.slice(0,2) : <User size={22} color="#0D5247"/>}
+      {/* Photo */}
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '24px', gap: '8px' }}>
+        <div onClick={() => fileInputRef.current.click()}
+          style={{ width: '80px', height: '80px', borderRadius: '50%', background: '#f0fdfa', color: '#094037', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '2px dashed #094037', cursor: 'pointer', position: 'relative', overflow: 'hidden' }}>
+          {form.image ? <img src={form.image} alt="Preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <Camera size={24} />}
+          <div style={{ position: 'absolute', bottom: 0, background: 'rgba(13,82,71,0.6)', width: '100%', textAlign: 'center', padding: '2px 0' }}>
+            <span style={{ fontSize: '10px', color: '#fff' }}>{editUser ? t('users.modal.changePhoto') : t('users.modal.uploadPhoto')}</span>
+          </div>
         </div>
+        <input type="file" ref={fileInputRef} hidden accept="image/*" onChange={handleImageChange} />
+        {form.image && (
+          <button onClick={() => set('image', null)} style={{ fontSize: '11px', color: '#ef4444', border: 'none', background: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '2px' }}>
+            <X size={12} />{t('users.modal.removePhoto')}
+          </button>
+        )}
       </div>
 
-      <FormRow label="Full name" required>
-        <div style={{ position:'relative' }}>
-          <User size={14} style={{ position:'absolute', top:'50%', right:'12px', transform:'translateY(-50%)', color:'var(--text-muted)' }}/>
-          <input className="input" style={{ paddingRight:'36px' }} placeholder="John Smith"
-            value={form.name} onChange={e => set('name', e.target.value)}/>
+      <FormRow label={t('users.modal.fullName')} required>
+        <div style={{ position: 'relative' }}>
+          <User size={14} style={{ position: 'absolute', top: '50%', insetInlineEnd: '12px', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+          <input className="input" style={{ paddingInlineEnd: '36px' }} placeholder={t('users.modal.namePlaceholder')} value={form.name} onChange={e => set('name', e.target.value)} />
         </div>
-        <FieldError msg={errors.name}/>
+        <FieldError msg={errors.name} />
       </FormRow>
 
-      <FormRow label="Email address" required>
-        <div style={{ position:'relative' }}>
-          <Mail size={14} style={{ position:'absolute', top:'50%', right:'12px', transform:'translateY(-50%)', color:'var(--text-muted)' }}/>
-          <input className="input" style={{ paddingRight:'36px' }} type="email" placeholder="user@charity.org"
-            value={form.email} onChange={e => set('email', e.target.value)} dir="ltr"/>
+      <FormRow label={t('users.modal.email')} required>
+        <div style={{ position: 'relative' }}>
+          <Mail size={14} style={{ position: 'absolute', top: '50%', insetInlineEnd: '12px', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+          <input className="input" style={{ paddingInlineEnd: '36px' }} type="email" placeholder={t('users.modal.emailPlaceholder')} value={form.email} onChange={e => set('email', e.target.value)} dir="ltr" />
         </div>
-        <FieldError msg={errors.email}/>
+        <FieldError msg={errors.email} />
       </FormRow>
 
-      <FormRow label="Phone number" required>
-        <div style={{ position:'relative' }}>
-          <Phone size={14} style={{ position:'absolute', top:'50%', right:'12px', transform:'translateY(-50%)', color:'var(--text-muted)' }}/>
-          <input className="input" style={{ paddingRight:'36px' }} type="tel" placeholder="05XXXXXXXX"
-            value={form.phone} onChange={e => set('phone', e.target.value)} dir="ltr"/>
+      <FormRow label={t('users.modal.phone')} required>
+        <div style={{ position: 'relative' }}>
+          <Phone size={14} style={{ position: 'absolute', top: '50%', insetInlineEnd: '12px', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+          <input className="input" style={{ paddingInlineEnd: '36px' }} type="tel" placeholder={t('users.modal.phonePlaceholder')} value={form.phone} onChange={e => set('phone', e.target.value)} dir="ltr" />
         </div>
-        <FieldError msg={errors.phone}/>
+        <FieldError msg={errors.phone} />
       </FormRow>
 
-      <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'1rem' }}>
-        <FormRow label="Role">
-          <select className="input" style={{ fontSize:'0.875rem' }} value={form.role} onChange={e => set('role', e.target.value)}>
-            <option value="admin">Admin</option>
-            <option value="moderator">Moderator</option>
-            <option value="fieldWorker">Field Worker</option>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+        <FormRow label={t('users.modal.role')}>
+          <select className="input" style={{ fontSize: '1rem' }} value={form.role} onChange={e => set('role', e.target.value)}>
+            <option value="admin">{t('users.modal.roles.admin')}</option>
+            <option value="fieldWorker">{t('users.modal.roles.fieldWorker')}</option>
           </select>
         </FormRow>
-        <FormRow label="Status">
-          <select className="input" style={{ fontSize:'0.875rem' }} value={form.status} onChange={e => set('status', e.target.value)}>
-            <option value="active">Active</option>
-            <option value="inactive">Inactive</option>
+        <FormRow label={t('users.modal.status')}>
+          <select className="input" style={{ fontSize: '1rem' }} value={form.status} onChange={e => set('status', e.target.value)}>
+            <option value="active">{t('users.modal.statuses.active')}</option>
+            <option value="inactive">{t('users.modal.statuses.inactive')}</option>
           </select>
         </FormRow>
       </div>

@@ -9,7 +9,7 @@ export function ActionModal({ row, isOpen, onClose, onAction }) {
     { key: 'approve', label: 'Approve', icon: <Check size={16} />, color: '#fff', bg: '#094037', show: row.status === 'pending' },
     { key: 'reject', label: 'Reject', icon: <X size={16} />, color: '#dc2626', bg: '#fee2e2', show: row.status === 'pending' },
     { key: 'archive', label: 'Archive', icon: <Archive size={16} />, color: 'var(--text-secondary)', bg: 'var(--bg-muted)', show: row.status === 'active' },
-    { key: 'edit', label: 'Edit', icon: <Edit2 size={16} />, color: '#fff', bg: '#835500', show: true },
+    { key: 'edit', label: 'Edit', icon: <Edit2 size={16} />, color: '#fff', bg: '#eab308', show: true },
     { key: 'delete', label: 'Delete', icon: <Trash2 size={16} />, color: '#dc2626', bg: '#fee2e2', show: true },
   ].filter(action => action.show)
 

@@ -1,36 +1,134 @@
-export default function DataTable({ columns = [], data = [], loading = false, emptyText = 'No data' }) {
-  if (loading) {
-    return <div style={{ padding: '1rem', color: 'var(--text-muted)' }}>Loading...</div>
+export default function DataTable({
+  columns = [],
+  data = [],
+  isLoading = false,
+  EmptyComponent,
+  loadingComponent,
+}) {
+  if (isLoading) {
+    return (
+      loadingComponent || (
+        <div
+          style={{
+            padding: '2rem',
+            textAlign: 'center',
+            color: 'var(--text-muted)',
+          }}
+        >
+          جاري التحميل...
+        </div>
+      )
+    );
   }
 
-  if (!data?.length) {
-    return <div style={{ padding: '1rem', color: 'var(--text-muted)' }}>{emptyText}</div>
+  if (!data || data.length === 0) {
+    return (
+      EmptyComponent || (
+        <div
+          style={{
+            padding: '2rem',
+            textAlign: 'center',
+            color: 'var(--text-muted)',
+          }}
+        >
+          لا توجد بيانات لعرضها
+        </div>
+      )
+    );
   }
 
   return (
-    <div style={{ overflowX: 'auto' }}>
-      <table className="data-table">
-        <thead>
-          <tr>
+  <div
+    style={{
+      overflowX: 'auto',
+      width: '100%',
+      borderRadius: '18px',
+
+      // 🔥 أهم تعديل: دمج الجدول مع الخلفية
+      background: 'var(--bg-base)',
+      border: 'none',
+    }}
+  >
+    <table
+      className="data-table"
+      style={{
+        width: '100%',
+        borderCollapse: 'separate',
+        borderSpacing: 0,
+      }}
+    >
+      {/* HEADER */}
+      <thead>
+        <tr
+          style={{
+            background: 'var(--border-subtle)', // 🔥 مهم
+          }}
+        >
+          {columns.map((col) => (
+            <th
+              key={col.key}
+              style={{
+                textAlign: col.align || 'right',
+                color: 'var(--text-primary)',
+                fontWeight: 800,
+                fontSize: '1rem',
+                padding: '14px 16px',
+                borderBottom:
+                  '1px solid var(--border-subtle)',
+                textTransform: 'uppercase',
+                letterSpacing: '0.5px',
+              }}
+            >
+              {col.title}
+            </th>
+          ))}
+        </tr>
+      </thead>
+
+      {/* BODY */}
+      <tbody>
+        {data.map((row, rowIndex) => (
+          <tr
+            key={row.id || rowIndex}
+            style={{
+              borderBottom:
+                '1px solid var(--border-subtle)',
+              transition: '0.2s',
+            }}
+
+            // 🔥 hover خفيف جدًا مثل الصورة
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background =
+                'var(--bg-muted)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background =
+                'var(--bg-base)';
+            }}
+          >
             {columns.map((col) => (
-              <th key={col.key} style={{ textAlign: col.align || 'right', color: '#0D5247', fontWeight:'bold', fontSize: '0.90rem', padding: '15px 20px' }}>
-                {col.title}
-              </th>
+              <td
+                key={col.key}
+                style={{
+                  textAlign: col.align || 'right',
+                  padding: '14px 16px',
+                  fontSize: '0.9rem',
+                  color: 'var(--text-primary)',
+                  verticalAlign: 'middle',
+                }}
+              >
+                {col.render
+                  ? col.render(
+                      row[col.key],
+                      row
+                    )
+                  : row[col.key] || '—'}
+              </td>
             ))}
           </tr>
-        </thead>
-        <tbody>
-          {data.map((row) => (
-            <tr key={row.id}>
-              {columns.map((col) => (
-                <td key={col.key} style={{ textAlign: col.align || 'right' }}>
-                  {col.render ? col.render(row[col.key], row) : row[col.key]}
-                </td>
-              ))}
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  )
+        ))}
+      </tbody>
+    </table>
+  </div>
+);
 }

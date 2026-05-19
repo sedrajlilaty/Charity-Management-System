@@ -14,6 +14,7 @@ const NavList = styled.ul`
   display: flex;
   flex-direction: column;
   gap: 0.8rem;
+  
 `;
 
 const StyledNavLink = styled(NavLink)`
@@ -115,6 +116,19 @@ export default function MainNav() {
           <StyledNavLink to="/settings">
             <Settings />
             <span>Settings</span>
+          </StyledNavLink>
+        </li>
+
+        <li>
+          <StyledNavLink to="/volunteers">
+            <Settings />
+            <span>Volunteers</span>
+          </StyledNavLink>
+        </li>
+        <li>
+          <StyledNavLink to="/volunteers">
+            <Settings />
+            <span>Volunteers</span>
           </StyledNavLink>
         </li>
       </NavList>

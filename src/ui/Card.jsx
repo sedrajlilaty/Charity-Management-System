@@ -15,7 +15,7 @@ export function Card({ children, className, style }) {
 export function CardHeader({ title, children }) {
   return (
     <div className="card-header">
-      <h3 className="card-title  text-[#835500] ">{title}</h3>
+      <h3 className="card-title  text-[#eab308] ">{title}</h3>
       {children}
     </div>
   )

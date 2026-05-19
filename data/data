@@ -31,12 +31,47 @@ export const mockDonations = [
 
 // ── Beneficiaries ──────────────────────────────────────────
 export const mockBeneficiaries = [
-    { id: 1, name: 'Umm Ahmed Al-Rashidi', phone: '0511110001', category: 'widow', status: 'active', priority: 'high', membersCount: 4, monthlySupport: 1500, assignedWorker: 'Khalid Al-Harbi', registrationDate: '2024-08-01' },
-    { id: 2, name: 'Al-Mutairi Family', phone: '0511110002', category: 'orphan', status: 'active', priority: 'high', membersCount: 3, monthlySupport: 2000, assignedWorker: 'Noura Al-Qahtani', registrationDate: '2024-08-15' },
-    { id: 3, name: 'Al-Zahrani Family', phone: '0511110003', category: 'poor', status: 'pending', priority: 'medium', membersCount: 6, monthlySupport: 1200, assignedWorker: 'Khalid Al-Harbi', registrationDate: '2024-09-01' },
-    { id: 4, name: 'Mohammed Al-Shahri', phone: '0511110004', category: 'elderly', status: 'active', priority: 'low', membersCount: 1, monthlySupport: 800, assignedWorker: 'Noura Al-Qahtani', registrationDate: '2024-09-10' },
-    { id: 5, name: 'Al-Ghamdi Family', phone: '0511110005', category: 'poor', status: 'rejected', priority: 'low', membersCount: 5, monthlySupport: 0, assignedWorker: 'Khalid Al-Harbi', registrationDate: '2024-09-20' },
-    { id: 6, name: 'Umm Salem Al-Anzi', phone: '0511110006', category: 'widow', status: 'active', priority: 'medium', membersCount: 2, monthlySupport: 1000, assignedWorker: 'Noura Al-Qahtani', registrationDate: '2024-10-01' },
+    {
+        id: 1,
+        name: 'أم أحمد الرشيدي',
+        phone: '0933111001',
+        category: 'orphan',
+        status: 'active',
+        priority: 'high',
+        monthlySupport: 150000,
+        governorate: 'دمشق',
+        region: 'المزة',
+        address: 'دمشق - المزة - الشيخ سعد',
+        needDescription: 'طلب كفالة أيتام مسكن ومعيشة'
+    },
+    {
+        id: 2,
+        name: 'عائلة محمود العلي',
+        phone: '0944111002',
+        category: 'educational',
+        status: 'pending',
+        priority: 'high',
+        monthlySupport: 200000,
+        governorate: 'حلب',
+        region: 'الحمدانية',
+        address: 'حلب - الحي الرابع',
+        academicYear: 'السنة الثانية',
+        supportType: 'Laptop Support'
+    },
+    {
+        id: 3,
+        name: 'أسرة الزهراني',
+        phone: '0955111003',
+        category: 'medical',
+        status: 'pending',
+        priority: 'medium',
+        monthlySupport: 120000,
+        governorate: 'حمص',
+        region: 'وعر',
+        address: 'حمص - حي الوعر - بجانب المشفى',
+        medicalCondition: 'Surgery required',
+        requiredAmount: 500000
+    }
 ]
 
 // ── Campaigns ──────────────────────────────────────────────
@@ -66,8 +101,8 @@ export const mockMonthlyDonations = [
 
 // ── Cases by Status (Pie Data) ─────────────────────────────
 export const mockCasesByStatus = [
-    { name: 'Active', value: 142, color: '#0D5247' },
-    { name: 'Under Review', value: 38, color: '#835500' },
+    { name: 'Active', value: 142, color: '#094037' },
+    { name: 'Under Review', value: 38, color: '#eab308' },
     { name: 'Rejected', value: 24, color: '#ef4444' },
     { name: 'Archived', value: 56, color: '#6b7280' },
 ]

@@ -1,0 +1,70 @@
+{
+  "title": "Donations",
+  "subtitle": "{{count}} donations",
+  "addBtn": "New donation",
+
+  "tabs": {
+    "all":      "All",
+    "pending":  "Pending",
+    "approved": "Approved",
+    "rejected": "Rejected"
+  },
+
+  "table": {
+    "id":        "#",
+    "donor":     "Donor",
+    "amount":    "Amount",
+    "type":      "Type",
+    "campaign":  "Campaign",
+    "recurring": "Recurring",
+    "date":      "Date",
+    "status":    "Status",
+    "actions":   "Actions",
+    "yes":       "Yes",
+    "no":        "No"
+  },
+
+  "types": {
+    "cash":     "Cash",
+    "inkind":   "In-kind",
+    "transfer": "Transfer"
+  },
+
+  "actions": {
+    "approve": "Approve",
+    "reject":  "Reject"
+  },
+
+  "empty": {
+    "title":       "No donations found",
+    "description": "No records match this filter."
+  },
+
+  "modal": {
+    "titleAdd":  "New Donation",
+    "titleEdit": "Edit Donation",
+
+    "donorName":          "Donor Name",
+    "donorPlaceholder":   "Enter donor name",
+    "amount":             "Amount",
+    "type":               "Donation Type",
+    "campaign":           "Campaign",
+    "campaignPlaceholder":"Campaign name (optional)",
+    "recurring":          "Recurring",
+    "recurringLabel":     "Yes, monthly recurring donation",
+
+    "save":   "Save Donation",
+    "cancel": "Cancel",
+
+    "types": {
+      "cash":     "Cash",
+      "transfer": "Bank Transfer",
+      "inkind":   "In-kind"
+    },
+
+    "errors": {
+      "donorRequired": "Donor name is required",
+      "amountInvalid": "Amount must be greater than zero"
+    }
+  }
+}

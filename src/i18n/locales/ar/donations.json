@@ -1,0 +1,70 @@
+{
+  "title": "التبرعات",
+  "subtitle": "{{count}} تبرع",
+  "addBtn": "تبرع جديد",
+
+  "tabs": {
+    "all":      "الكل",
+    "pending":  "قيد الانتظار",
+    "approved": "مقبولة",
+    "rejected": "مرفوضة"
+  },
+
+  "table": {
+    "id":        "#",
+    "donor":     "المتبرع",
+    "amount":    "المبلغ",
+    "type":      "النوع",
+    "campaign":  "الحملة",
+    "recurring": "متكرر",
+    "date":      "التاريخ",
+    "status":    "الحالة",
+    "actions":   "الإجراءات",
+    "yes":       "نعم",
+    "no":        "لا"
+  },
+
+  "types": {
+    "cash":     "نقدي",
+    "inkind":   "عيني",
+    "transfer": "تحويل"
+  },
+
+  "actions": {
+    "approve": "قبول",
+    "reject":  "رفض"
+  },
+
+  "empty": {
+    "title":       "لا توجد تبرعات",
+    "description": "لا توجد سجلات مطابقة لهذا الفلتر."
+  },
+
+  "modal": {
+    "titleAdd":  "إضافة تبرع جديد",
+    "titleEdit": "تعديل التبرع",
+
+    "donorName":          "اسم المتبرع",
+    "donorPlaceholder":   "أدخل اسم المتبرع",
+    "amount":             "المبلغ",
+    "type":               "نوع التبرع",
+    "campaign":           "الحملة",
+    "campaignPlaceholder":"اسم الحملة (اختياري)",
+    "recurring":          "متكرر",
+    "recurringLabel":     "نعم، تبرع متكرر شهري",
+
+    "save":   "حفظ التبرع",
+    "cancel": "إلغاء",
+
+    "types": {
+      "cash":     "نقدي",
+      "transfer": "تحويل بنكي",
+      "inkind":   "عيني"
+    },
+
+    "errors": {
+      "donorRequired":  "اسم المتبرع مطلوب",
+      "amountInvalid":  "المبلغ يجب أن يكون أكبر من صفر"
+    }
+  }
+}

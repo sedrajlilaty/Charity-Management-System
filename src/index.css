@@ -1,26 +1,30 @@
+
 @import "tailwindcss";
 
-/* 1. تعريف الـ Variant المخصص للوضع الليلي خارج بلوك الثيم */
+/* 1. Dark Variant */
 @custom-variant dark (&:where(.dark-mode, .dark-mode *));
 
-/* 2. بلوك الثيم: يحتوي فقط على المتغيرات والـ Keyframes */
+/* 2. Theme */
 @theme {
-  /* ألوان الهوية البصرية (جمعية عطاء) */
+
+  
+  /* ── Primary (متطابق مع Flutter) */
   --color-primary-50: #e6f0ee;
   --color-primary-100: #c0d9d4;
-  --color-primary-500: #0D5247; /* الأخضر الأساسي */
+  --color-primary-500: #094037;
   --color-primary-600: #0b4a40;
   --color-primary-700: #094037;
 
-  --color-secondary-500: #835500; /* الأصفر الخردلي */
-  --color-secondary-600: #835500;
+  /* ── Secondary */
+  --color-secondary-500: #eab308;
+  --color-secondary-600: #6b4500;
 
   --font-family-sans: 'Cairo', sans-serif;
   
   --sidebar-width: 260px;
   --navbar-height: 64px;
 
-  /* تعريف الأنيميشن */
+  /* Animations */
   @keyframes fade-in {
     from { opacity: 0; transform: translateY(8px); }
     to { opacity: 1; transform: translateY(0); }
@@ -32,51 +36,58 @@
   }
 }
 
-/* 3. متغيرات الـ CSS المتغيرة (Light/Dark) */
+/* 3. Variables */
 :root {
+  /* Light */
   --bg-base: #f8fafc;
   --bg-surface: #ffffff;
   --bg-muted: #f1f5f9;
   --bg-subtle: #f8fafc;
+
   --text-primary: #1e293b;
   --text-secondary: #64748b;
   --text-muted: #64748b;
   --text-hint: #94a3b8;
+
   --border-default: #e2e8f0;
   --border-subtle: #eef2f7;
-  --shadow-card: 0 1px 3px rgba(0,0,0,0.1);
+
+  --shadow-card: 0 1px 3px rgba(0,0,0,0.08);
 }
 
 .dark-mode {
-  /* ألوان الوضع الليلي: مستوحاة من الأخضر العميق للجمعية */
-  --bg-base: #041210;      /* أخضر مسود للبرمجيات الاحترافية */
-  --bg-surface: #0a2420;   /* أخضر داكن جداً للبطاقات */
+  /* Dark (محسّن ليكون أعمق وأنظف) */
+  --bg-base: #041210;
+  --bg-surface: #0a2420;
   --bg-muted: #11332d;
   --bg-subtle: #0d2b26;
+  
   --text-primary: #f1f5f9;
-  --text-secondary: #94a3b8;
+  --text-secondary: #9fb4b0;
   --text-muted: #9fb4b0;
   --text-hint: #6f8a84;
+
   --border-default: #143d37;
   --border-subtle: #12332d;
-  --shadow-card: 0 4px 10px rgba(0,0,0,0.4);
+
+  --shadow-card: 0 6px 18px rgba(0,0,0,0.45);
 }
 
-/* 4. الطبقة الأساسية */
+/* 4. Base */
 @layer base {
   body {
     background-color: var(--bg-base);
     color: var(--text-primary);
     direction: ltr;
     font-family: 'Cairo', sans-serif;
-    @apply transition-colors duration-300;
+   @apply transition-colors duration-300 
   }
 }
 
-/* 5. طبقة المكونات: تجنبنا استخدام @apply لكلاسات مخصصة داخل بعضها لمنع الأخطاء */
+/* 5. Components */
 @layer components {
-  
-  /* المكون الأساسي للأسطح */
+
+  /* ── Surface */
   .surface {
     background-color: var(--bg-surface);
     border: 1px solid var(--border-default);
@@ -84,7 +95,7 @@
     box-shadow: var(--shadow-card);
   }
 
-  /* تم فك الـ @apply surface هنا ووضع الخصائص مباشرة لضمان عدم حدوث خطأ Unknown Utility */
+  /* ── Stat Card (أخف في اللايت) */
   .stat-card {
     background-color: var(--bg-surface);
     border: 1px solid var(--border-default);
@@ -93,14 +104,15 @@
     @apply p-5 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg;
   }
 
+  /* ── Sidebar */
   .sidebar-link {
-    @apply flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium
+    @apply flex items-center gap-3 px-4 py-3 rounded-xl text-3xl font-medium
            transition-all duration-200 cursor-pointer select-none;
     color: var(--text-secondary);
   }
 
   .sidebar-link:hover {
-    background-color: var(--border-default);
+    background-color: var(--bg-muted);
     color: var(--text-primary);
   }
 
@@ -108,22 +120,22 @@
     @apply bg-primary-500 text-white shadow-lg;
   }
 
-  /* الأزرار */
+  /* ── Buttons */
   .btn-primary {
     @apply inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl
-           text-sm font-bold transition-all duration-150 cursor-pointer
-           bg-primary-500 text-white hover:bg-primary-600 active:scale-95;
+           text-base font-bold transition-all duration-150 cursor-pointer
+           bg-secondary-500 text-white hover:bg-secondary-600 active:scale-95;
   }
 
   .btn-secondary {
     @apply inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl
-           text-sm font-bold transition-all duration-150 cursor-pointer
-           bg-secondary-500 text-white hover:bg-secondary-600 active:scale-95;
+           text-base font-bold transition-all duration-150 cursor-pointer
+           bg-secondary-500 text-white hover:bg-secondary-600 active:scale-95  text-black
   }
 
-  /* الحقول الإدخالية */
+  /* ── Input */
   .input {
-    @apply w-full px-4 py-2.5 text-sm rounded-xl outline-none transition-all duration-200;
+    @apply w-full px-4 py-2.5 text-base rounded-xl outline-none transition-all duration-200;
     background-color: var(--bg-surface);
     border: 1px solid var(--border-default);
     color: var(--text-primary);
@@ -131,43 +143,43 @@
 
   .input:focus {
     @apply ring-4 ring-primary-500/10;
-    border-color: #0D5247;
+    border-color: #094037;
   }
 
-  /* الشارات (Badges) */
+  /* ── Badges */
   .badge {
     @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold;
   }
   
   .badge-success { 
-    @apply bg-[#0D5247] text-white dark:bg-[#0D5247]/30 dark:text-white; 
+    @apply bg-[#094037] text-white dark:bg-[#094037]/30; 
   }
   
   .badge-warning { 
-    @apply bg-[#835500] text-white dark:bg-[#835500]/30 dark:text-white; 
+    @apply bg-[#eab308] text-white dark:bg-[#eab308]/30; 
   }
 
+  /* ── Buttons Variants */
   .btn-outline {
-    @apply inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold cursor-pointer transition-all duration-150;
+    @apply inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl text-base font-semibold transition-all;
     background: var(--bg-surface);
     border: 1px solid var(--border-default);
     color: var(--text-secondary);
   }
 
   .btn-ghost {
-    @apply inline-flex items-center justify-center gap-2 text-sm font-semibold cursor-pointer transition-all duration-150;
-    background: transparent;
-    border: none;
+    @apply inline-flex items-center justify-center gap-2 text-base font-semibold transition-all;
     color: var(--text-secondary);
   }
 
   .btn-danger {
-    @apply inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold cursor-pointer transition-all duration-150;
+    @apply inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl text-base font-semibold transition-all;
     background: #dc2626;
     border: 1px solid #dc2626;
     color: #fff;
   }
 
+  /* ── Data Table (محسّنة) */
   .data-table {
     width: 100%;
     border-collapse: collapse;
@@ -175,37 +187,29 @@
   }
 
   .data-table th {
-    background: var(--bg-base);
+    background: var(--bg-muted);
     color: var(--text-secondary);
     font-size: 0.78rem;
     font-weight: 800;
     text-transform: uppercase;
-    letter-spacing: 0.04em;
     padding: 10px 14px;
     border-bottom: 1px solid var(--border-default);
-    border-right: 1px solid var(--border-default);
-    white-space: nowrap;
+    border-right: 1px solid var(--border-subtle);
   }
 
   .data-table td {
     padding: 11px 14px;
-    border-bottom: 1px solid var(--border-default);
-    border-right: 1px solid var(--border-default);
+    border-bottom: 1px solid var(--border-subtle);
+    border-right: 1px solid var(--border-subtle);
     color: var(--text-secondary);
-    vertical-align: middle;
-  }
-
-  .data-table th:last-child,
-  .data-table td:last-child {
-    border-right: none;
   }
 
   .data-table tbody tr:hover {
-    background: var(--bg-base);
+    background: var(--bg-muted);
   }
 }
 
-/* 6. تحسينات الأنيميشن والتشغيل */
+/* 6. Animations */
 .animate-fade-in {
   animation: fade-in 0.3s ease-out forwards;
 }
@@ -214,15 +218,11 @@
   animation: spin 3s linear infinite;
 }
 
-/* كلاس مساعد للـ Loading */
 .loader-spin {
   animation: spin 1s linear infinite;
 }
 
-
-@keyframes spin    { to { transform: rotate(360deg); } }
-@keyframes modalIn { from { opacity:0; transform:scale(0.94) translateY(10px); } to { opacity:1; transform:scale(1) translateY(0); } }
-/* في ملف CSS الخاص بك */
-.progress-success { background-color: #0D5247; }
-.progress-primary { background-color: #835500; }
+/* ── Progress */
+.progress-success { background-color: #094037; }
+.progress-primary { background-color: #eab308; }
 .progress-warning { background-color: #eab308; }

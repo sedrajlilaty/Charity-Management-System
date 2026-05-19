@@ -4,6 +4,7 @@ import { Suspense, lazy } from 'react'
 import DashboardLayout from './ui/DashboardLayout'
 import { SpinnerPage }  from './ui/Spinner'
 import { useAuth }      from './context/AuthContext'
+import AIPage from './features/ai/AIPage'
 
 
 const Dashboard     = lazy(() => import('./features/dashboard/Dashboard'))
@@ -66,6 +67,7 @@ export default function App() {
             <Route path="notifications"  element={<Notifications />} />
             <Route path="settings"       element={<Settings />}      />
             <Route path="volunteers" element={<Volunteers />} />
+           <Route path="ai-assistant" element={<AIPage />} />
           </Route>
 
         

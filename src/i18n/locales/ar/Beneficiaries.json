@@ -1,0 +1,123 @@
+{
+  "title": "المستفيدون",
+  "subtitle": "{{count}} حالة",
+  "addBtn": "إضافة حالة",
+
+  "tabs": {
+    "all":      "الكل",
+    "active":   "نشطة",
+    "pending":  "قيد الانتظار",
+    "rejected": "مرفوضة",
+    "archived": "مؤرشفة"
+  },
+
+  "filters": {
+    "searchPlaceholder": "ابحث بالاسم أو الهاتف...",
+    "allCategories":     "كل الفئات",
+    "allCampaigns":      "كل الحملات"
+  },
+
+  "categories": {
+    "orphan":      "كفالة يتيم",
+    "educational": "دعم تعليمي",
+    "medical":     "دعم طبي",
+    "widow":       "دعم أرملة",
+    "poor":        "أسرة محدودة الدخل"
+  },
+
+  "campaigns": {
+    "camp_1": "كسوة الشتاء",
+    "camp_2": "كفالة أيتام",
+    "camp_3": "سلة غذائية",
+    "camp_4": "دعم الأرامل",
+    "camp_5": "العودة للمدرسة",
+    "camp_6": "الإغاثة الطبية"
+  },
+
+  "priority": {
+    "high":   "عالية",
+    "medium": "متوسطة",
+    "low":    "منخفضة"
+  },
+
+  "table": {
+    "beneficiary": "المستفيد",
+    "location":    "الموقع",
+    "category":    "الفئة",
+    "priority":    "الأولوية",
+    "support":     "الدعم",
+    "status":      "الحالة",
+    "actions":     "الإجراءات",
+    "noAddress":   "غير محدد"
+  },
+
+  "empty": {
+    "title":       "لا توجد بيانات",
+    "description": "لا توجد حالات مطابقة للفلتر المحدد."
+  },
+
+  "deleteConfirm": "هل أنت متأكد من حذف هذا المستفيد؟",
+
+  "modal": {
+    "titleAdd":  "طلب دعم جديد",
+    "titleEdit": "تعديل بيانات الحالة",
+
+    "fields": {
+      "category":          "الفئة",
+      "priority":          "الأولوية",
+      "fullName":          "الاسم الكامل",
+      "fullNamePlaceholder":"أدخل الاسم الكامل",
+      "phone":             "رقم التواصل",
+      "phonePlaceholder":  "+966 XXXXXXXX",
+      "address":           "العنوان السكني",
+      "addressPlaceholder":"الحي، المدينة",
+      "membersCount":      "عدد أفراد الأسرة",
+      "monthlySupport":    "الدعم الشهري (ر.س)",
+      "needDescription":   "وصف الاحتياج",
+      "needPlaceholder":   "اشرح باختصار سبب طلب الدعم..."
+    },
+
+    "categories": {
+      "orphan":      "كفالة يتيم",
+      "educational": "دعم تعليمي",
+      "medical":     "دعم طبي"
+    },
+
+    "priority": {
+      "high":   "عالية",
+      "medium": "متوسطة",
+      "low":    "منخفضة"
+    },
+
+    "educational": {
+      "sectionTitle":    "التفاصيل الأكاديمية",
+      "academicYear":    "السنة / الصف الدراسي",
+      "academicPlaceholder": "مثال: الصف الثاني الثانوي",
+      "supportType":     "نوع الدعم التعليمي",
+      "supportOptions": {
+        "laptop":     "دعم بجهاز حاسوب",
+        "tuition":    "مساعدة في الرسوم",
+        "stationary": "قرطاسية ومستلزمات"
+      }
+    },
+
+    "medical": {
+      "sectionTitle":       "الوضع الطبي",
+      "condition":          "وصف الحالة المرضية",
+      "conditionPlaceholder":"اشرح الوضع الصحي باختصار...",
+      "requiredAmount":     "المبلغ المطلوب (ر.س)"
+    },
+
+    "buttons": {
+      "cancel": "إلغاء",
+      "submit": "إرسال الطلب",
+      "update": "حفظ التعديلات"
+    },
+
+    "errors": {
+      "nameRequired":    "الاسم الكامل مطلوب",
+      "phoneRequired":   "رقم التواصل مطلوب",
+      "addressRequired": "العنوان السكني مطلوب"
+    }
+  }
+}
