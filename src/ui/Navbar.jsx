@@ -5,6 +5,7 @@ import { useQuery } from '@tanstack/react-query'
 import { notificationsService } from '../service/ServiceLayer'
 import { useTheme } from '../context/ThemeContext'
 import { useAuth } from '../context/AuthContext' // استيراد السياق الخاص بالمستخدم
+import PermissionButton from './PermissionButton'
 
 export default function Navbar({ onMenuClick }) {
   const { t, i18n } = useTranslation()
@@ -66,7 +67,7 @@ export default function Navbar({ onMenuClick }) {
           className="lg:hidden"
         >
           <Menu size={20} />
-        </button>
+        </button >
 
         <div style={{
           display: 'flex', alignItems: 'center', gap: '8px',
@@ -90,7 +91,7 @@ export default function Navbar({ onMenuClick }) {
       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
         
         {/* Language Toggle */}
-        <button
+        <button 
           onClick={toggleLang}
           style={{ ...iconBtn, width: 'auto', padding: '0 10px', gap: '6px', fontSize: '0.8rem', fontWeight: 600 }}
           onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-muted)'}
@@ -101,17 +102,17 @@ export default function Navbar({ onMenuClick }) {
         </button>
 
         {/* Dark/Light Toggle */}
-        <button
+        <button 
           onClick={toggleTheme}
           style={iconBtn}
           onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-muted)'}
           onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
         >
           {isDark ? <Sun size={18} /> : <Moon size={18} />}
-        </button>
+        </button >
 
         {/* Notifications */}
-        <button
+        <button 
           style={iconBtn}
           onClick={() => navigate('/notifications')}
           onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-muted)'}
@@ -129,7 +130,7 @@ export default function Navbar({ onMenuClick }) {
               {unread > 9 ? '9+' : unread}
             </span>
           )}
-        </button>
+        </button >
 
         {/* فاصل بسيط */}
         <div style={{ width: '1px', height: '20px', background: 'var(--border-default)', margin: '0 4px' }} />

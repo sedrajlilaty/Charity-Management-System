@@ -1,6 +1,6 @@
 import styled from "styled-components";
 
-const ButtonIcon = styled.button`
+const PermissionButton Icon = styled.PermissionButton `
   background: none;
   border: none;
   padding: 0.6rem;
@@ -18,4 +18,4 @@ const ButtonIcon = styled.button`
   }
 `;
 
-export default ButtonIcon;
+export default PermissionButton Icon;

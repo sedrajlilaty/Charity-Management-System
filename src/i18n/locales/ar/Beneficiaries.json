@@ -108,7 +108,7 @@
       "requiredAmount":     "المبلغ المطلوب (ر.س)"
     },
 
-    "buttons": {
+    "PermissionButtons": {
       "cancel": "إلغاء",
       "submit": "إرسال الطلب",
       "update": "حفظ التعديلات"

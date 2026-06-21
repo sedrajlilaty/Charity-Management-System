@@ -9,7 +9,7 @@ import { donationsService }     from '../../service/ServiceLayer'
 import { beneficiariesService } from '../../service/ServiceLayer'
 import { campaignsService }     from '../../service/ServiceLayer'
 import { volunteersService }    from '../../service/ServiceLayer'
-
+import PermissionButton from '../../ui/PermissionButton'
 // ─── جلب بيانات الداشبورد ────────────────────────────────────────────────────
 function useDashboardContext() {
   const { data: kpis }    = useQuery({ queryKey: ['kpis'],               queryFn: dashboardService.getKPIs,                              staleTime: 2 * 60_000 })
@@ -119,12 +119,12 @@ function WelcomeScreen({ suggestions, onSuggest, isAr }) {
           {isAr ? 'أسئلة مقترحة:' : 'Suggested questions:'}
         </p>
         {suggestions.map((q, i) => (
-          <button key={i} onClick={() => onSuggest(q)}
+          <PermissionButton  key={i} onClick={() => onSuggest(q)}
             style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-default)', borderRadius: '10px', padding: '8px 12px', fontSize: '0.8rem', color: 'var(--text-secondary)', cursor: 'pointer', textAlign: isAr ? 'right' : 'left', transition: 'all 0.15s', fontFamily: 'Cairo, sans-serif' }}
             onMouseEnter={e => { e.currentTarget.style.background = '#e6f0ee'; e.currentTarget.style.color = '#094037'; e.currentTarget.style.borderColor = '#094037' }}
             onMouseLeave={e => { e.currentTarget.style.background = 'var(--bg-surface)'; e.currentTarget.style.color = 'var(--text-secondary)'; e.currentTarget.style.borderColor = 'var(--border-default)' }}>
             {q}
-          </button>
+          </PermissionButton >
         ))}
       </div>
     </div>
@@ -181,7 +181,7 @@ export default function AIAssistant() {
   return (
     <>
       {/* ── زر عائم ── */}
-      <button
+      <PermissionButton 
         onClick={() => setIsOpen(o => !o)}
         style={{
           position: 'fixed', bottom: '24px',
@@ -200,7 +200,7 @@ export default function AIAssistant() {
         {!isOpen && hasApiKey && (
           <span style={{ position: 'absolute', top: '4px', [isAr ? 'left' : 'right']: '4px', width: '10px', height: '10px', borderRadius: '50%', background: '#22c55e', border: '2px solid #fff' }} />
         )}
-      </button>
+      </PermissionButton >
 {/* أضف هذا مباشرة قبل نافذة الدردشة */}
 {isOpen && (
   <div
@@ -245,10 +245,10 @@ export default function AIAssistant() {
               </div>
             </div>
             {messages.length > 0 && (
-              <button onClick={clearChat}
+              <PermissionButton  onClick={clearChat}
                 style={{ width: '30px', height: '30px', borderRadius: '8px', border: 'none', background: 'rgba(255,255,255,0.12)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'rgba(255,255,255,0.75)' }}>
                 <Trash2 size={14} />
-              </button>
+              </PermissionButton >
             )}
           </div>
 
@@ -278,10 +278,10 @@ export default function AIAssistant() {
           </div>
 
           {showScroll && (
-            <button onClick={() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })}
+            <PermissionButton  onClick={() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })}
               style={{ position: 'absolute', bottom: '70px', [isAr ? 'left' : 'right']: '16px', width: '32px', height: '32px', borderRadius: '50%', background: 'var(--bg-surface)', border: '1px solid var(--border-default)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
               <ChevronDown size={16} color="var(--text-muted)" />
-            </button>
+            </PermissionButton >
           )}
 
           {/* Input */}
@@ -298,16 +298,16 @@ export default function AIAssistant() {
               onInput={e => { e.target.style.height = 'auto'; e.target.style.height = Math.min(e.target.scrollHeight, 100) + 'px' }}
             />
             {isLoading ? (
-              <button onClick={stopGeneration}
+              <PermissionButton  onClick={stopGeneration}
                 style={{ width: '38px', height: '38px', borderRadius: '12px', border: 'none', background: '#fee2e2', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                 <StopCircle size={18} color="#b91c1c" />
-              </button>
+              </PermissionButton >
             ) : (
-              <button onClick={() => handleSend()}
+              <PermissionButton  onClick={() => handleSend()}
                 disabled={!input.trim() || !hasApiKey}
                 style={{ width: '38px', height: '38px', borderRadius: '12px', border: 'none', background: input.trim() && hasApiKey ? '#094037' : 'var(--bg-muted)', cursor: input.trim() && hasApiKey ? 'pointer' : 'not-allowed', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, transition: 'background 0.15s' }}>
                 <Send size={16} color={input.trim() && hasApiKey ? '#fff' : 'var(--text-muted)'} style={{ transform: isAr ? 'scaleX(-1)' : 'none' }} />
-              </button>
+              </PermissionButton >
             )}
           </div>
 

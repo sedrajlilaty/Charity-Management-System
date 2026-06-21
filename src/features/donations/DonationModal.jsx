@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import Modal, { FieldError, FormRow } from '../../ui/Modal'
-
+import PermissionButton from '../../ui/PermissionButton'
 const EMPTY_FORM = {
   donorName:    '',
   amount:       '',
@@ -45,12 +45,12 @@ export default function DonationModal({ open, onClose, onSave }) {
       title={t('donations.modal.titleAdd')}
       footer={
         <>
-          <button onClick={onClose} className="btn-outline">
+          <PermissionButton  onClick={onClose} className="btn-outline">
             {t('donations.modal.cancel')}
-          </button>
-          <button onClick={handleSubmit} className="btn-primary">
+          </PermissionButton >
+          <PermissionButton  onClick={handleSubmit} className="btn-primary">
             {t('donations.modal.save')}
-          </button>
+          </PermissionButton >
         </>
       }
     >

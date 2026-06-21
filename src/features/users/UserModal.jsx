@@ -3,7 +3,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { User, Mail, Phone, Camera, X } from 'lucide-react'
 import Modal, { FormRow, FieldError } from '../../ui/Modal'
-
+import PermissionButton from '../../ui/PermissionButton'
 const EMPTY = { name: '', email: '', phone: '', role: 'fieldWorker', status: 'active', image: null }
 
 export default function UserModal({ open, onClose, onSave, editUser }) {
@@ -51,11 +51,11 @@ export default function UserModal({ open, onClose, onSave, editUser }) {
       title={editUser ? t('users.modal.titleEdit') : t('users.modal.titleAdd')}
       footer={
         <>
-          <button onClick={onClose} className="btn-outline" style={{ minWidth: '90px' }}>{t('users.modal.buttons.cancel')}</button>
-          <button onClick={handleSave} disabled={saving} className="btn-primary" style={{ minWidth: '120px' }}>
+          <PermissionButton  onClick={onClose} className="btn-outline" style={{ minWidth: '90px' }}>{t('users.modal.PermissionButtons.cancel')}</PermissionButton >
+          <PermissionButton  onClick={handleSave} disabled={saving} className="btn-primary" style={{ minWidth: '120px' }}>
             {saving && <span className="spinner-small" />}
-            {editUser ? t('users.modal.buttons.update') : t('users.modal.buttons.create')}
-          </button>
+            {editUser ? t('users.modal.PermissionButtons.update') : t('users.modal.PermissionButtons.create')}
+          </PermissionButton >
         </>
       }
     >
@@ -70,9 +70,9 @@ export default function UserModal({ open, onClose, onSave, editUser }) {
         </div>
         <input type="file" ref={fileInputRef} hidden accept="image/*" onChange={handleImageChange} />
         {form.image && (
-          <button onClick={() => set('image', null)} style={{ fontSize: '11px', color: '#ef4444', border: 'none', background: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '2px' }}>
+          <PermissionButton  onClick={() => set('image', null)} style={{ fontSize: '11px', color: '#ef4444', border: 'none', background: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '2px' }}>
             <X size={12} />{t('users.modal.removePhoto')}
-          </button>
+          </PermissionButton >
         )}
       </div>
 

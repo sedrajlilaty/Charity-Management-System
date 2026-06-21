@@ -1,91 +1,42 @@
+// layout/Sidebar.jsx
 import { NavLink, useNavigate, useLocation } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import {
-  LayoutDashboard,
-  Users,
-  Heart,
-  UserCheck,
-  Megaphone,
-  Handshake,
-  Settings,
-  Bell,
-  LogOut,
-  HeartHandshake,
-  Sparkles,
-  HandHeart,
-  X,
+  LayoutDashboard, Users, Heart, UserCheck,
+  Megaphone, Handshake, Settings, Bell, LogOut,
+  HeartHandshake, Sparkles, HandHeart, X,Wallet,Smartphone  
 } from 'lucide-react'
-
 import { useAuth } from '../context/AuthContext'
 import { ROLE_LABEL } from '../utlis/helper'
-
+import { Award } from 'lucide-react'
 const SIDEBAR_W = 260
 
-const COLORS = {
-  sidebarBg: 'var(--bg-surface)',
-  cardBg: '#ffffff',
-
-  primary: '#0b4b43',
-  primarySoft: '#e7f3ef',
-  primaryBorder: '#cfe5de',
-
-  text: '#16332d',
-  textSoft: '#5f746f',
-  textMuted: '#94a3a0',
-
-  hover: '#eef5f3',
-  active: '#0b4b43',
-
-  gold: '#d4a017',
-  danger: '#dc2626',
-
-  border: '#e3ece8',
-}
-
 const NAV_ITEMS = [
-  { key: 'dashboard', path: '/', icon: LayoutDashboard },
-  { key: 'donations', path: '/donations', icon: Heart },
-  { key: 'beneficiaries', path: '/beneficiaries', icon: UserCheck },
-  { key: 'campaigns', path: '/campaigns', icon: Megaphone },
-  { key: 'services', path: '/services', icon: Handshake },
-  { key: 'users', path: '/users', icon: Users },
-  { key: 'volunteers', path: '/volunteers', icon: HandHeart },
-  { key: 'notifications', path: '/notifications', icon: Bell },
-  { key: 'settings', path: '/settings', icon: Settings },
+  { key: 'dashboard',     path: '/',              icon: LayoutDashboard, routeKey: 'dashboard'     },
+  { key: 'donations',     path: '/donations',     icon: Heart,           routeKey: 'donations'     },
+  { key: 'beneficiaries', path: '/beneficiaries', icon: UserCheck,       routeKey: 'beneficiaries' },
+  { key: 'campaigns',     path: '/campaigns',     icon: Megaphone,       routeKey: 'campaigns'     },
+  { key: 'services',      path: '/services',      icon: Handshake,       routeKey: 'services'      },
+  { key: 'users',         path: '/users',         icon: Users,           routeKey: 'users'         },
+  { key: 'volunteers',    path: '/volunteers',    icon: HandHeart,     routeKey: 'volunteers'    },
+  { key: 'wallet',    path: '/wallet',     icon: Wallet,      routeKey: 'wallet'    },
+{ key: 'appUsers',  path: '/app-users',  icon: Smartphone,  routeKey: 'appUsers'  }, // ← جديد
+  // { key: 'certificates',  path: '/certificates',  icon: Award,           routeKey: 'certificates'  },
+  { key: 'notifications', path: '/notifications', icon: Bell,            routeKey: 'notifications' },
+  { key: 'settings',      path: '/settings',      icon: Settings,        routeKey: 'settings'      },
 ]
 
 const AV_COLORS = [
-  {
-    bg: 'rgba(234,179,8,0.16)',
-    text: '#d4a017',
-    border: 'rgba(234,179,8,0.28)',
-  },
-  {
-    bg: 'rgba(96,165,250,0.16)',
-    text: '#3b82f6',
-    border: 'rgba(96,165,250,0.28)',
-  },
-  {
-    bg: 'rgba(52,211,153,0.16)',
-    text: '#10b981',
-    border: 'rgba(52,211,153,0.28)',
-  },
-  {
-    bg: 'rgba(251,146,60,0.16)',
-    text: '#f97316',
-    border: 'rgba(251,146,60,0.28)',
-  },
-  {
-    bg: 'rgba(192,132,252,0.16)',
-    text: '#a855f7',
-    border: 'rgba(192,132,252,0.28)',
-  },
+  { bg: '#fef3c7', text: '#d97706', border: '#fde68a' },
+  { bg: '#dbeafe', text: '#2563eb', border: '#bfdbfe' },
+  { bg: '#dcfce7', text: '#16a34a', border: '#bbf7d0' },
+  { bg: '#ffedd5', text: '#ea580c', border: '#fdba74' },
+  { bg: '#f3e8ff', text: '#9333ea', border: '#e9d5ff' },
 ]
 
 export default function Sidebar({ open, onClose, isDesktop }) {
   const { t } = useTranslation()
-  const { user, logout } = useAuth()
-
+  const { user, logout, canAccessRoute } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
 
@@ -95,9 +46,10 @@ export default function Sidebar({ open, onClose, isDesktop }) {
   const avIdx = (user?.name?.charCodeAt(0) ?? 0) % AV_COLORS.length
   const av = AV_COLORS[avIdx]
 
+  const visibleItems = NAV_ITEMS.filter(item => canAccessRoute(item.routeKey))
+
   return (
     <>
-      {/* Mobile Backdrop */}
       {!isDesktop && open && (
         <div
           onClick={onClose}
@@ -105,7 +57,7 @@ export default function Sidebar({ open, onClose, isDesktop }) {
             position: 'fixed',
             inset: 0,
             zIndex: 39,
-            background: 'rgba(0,0,0,0.28)',
+            background: 'rgba(0,0,0,0.35)',
             backdropFilter: 'blur(3px)',
           }}
         />
@@ -116,112 +68,83 @@ export default function Sidebar({ open, onClose, isDesktop }) {
           position: 'fixed',
           top: 0,
           [isRtl ? 'right' : 'left']: 0,
-
           width: `${SIDEBAR_W}px`,
           height: '100vh',
-
           zIndex: 40,
-
           display: 'flex',
           flexDirection: 'column',
-
-          background: COLORS.sidebarBg,
-
-          borderLeft: isRtl ? `1px solid ${COLORS.border}` : 'none',
-          borderRight: !isRtl ? `1px solid ${COLORS.border}` : 'none',
-
+          background: 'var(--bg-surface)',
+          borderLeft: isRtl ? '1px solid #e5ece9' : 'none',
+          borderRight: !isRtl ? '1px solid #e5ece9' : 'none',
           transform: open
             ? 'translateX(0)'
             : `translateX(${isRtl ? SIDEBAR_W : -SIDEBAR_W}px)`,
 
-          transition: 'transform 0.22s cubic-bezier(.4,0,.2,1)',
-
-          boxShadow: !isDesktop && open
-            ? '0 10px 40px rgba(0,0,0,0.12)'
-            : 'none',
-
+          transition: 'transform 0.22s ease',
           fontFamily: 'Cairo, sans-serif',
           overflow: 'hidden',
         }}
       >
-        {/* ═════════════════ Logo Section ═════════════════ */}
+
+        {/* Logo */}
         <div
           style={{
-            background: COLORS.sidebarBg,
-            padding: '24px 16px 20px',
-
-            borderBottom: `1px solid ${COLORS.border}`,
-
-            flexShrink: 0,
-
+            padding: '28px 18px 22px',
+            borderBottom: '1px solid #edf2f0',
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
-            gap: '6px',
-
+            gap: '8px',
+            background: 'var(--bg-surface)',
             position: 'relative',
           }}
         >
-          {/* Mobile Close Button */}
+
           {!isDesktop && (
             <button
               onClick={onClose}
               style={{
                 position: 'absolute',
-                top: 12,
-                [isRtl ? 'left' : 'right']: 12,
-
-                width: 30,
-                height: 30,
-
+                top: 14,
+                [isRtl ? 'left' : 'right']: 14,
+                width: 32,
+                height: 32,
                 borderRadius: 10,
-
-                background: '#ffffff',
-
-                border: `1px solid ${COLORS.border}`,
-
+                border: '1px solid #e5ece9',
+                 background: 'var(--bg-base)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-
                 cursor: 'pointer',
-
-                color: COLORS.textMuted,
+                color: '#5b6b67',
               }}
             >
-              <X size={15} />
+              <X size={16} />
             </button>
           )}
 
-          {/* Logo */}
           <div
             style={{
-              width: 76,
-              height: 76,
-
+              width: 74,
+              height: 74,
               borderRadius: 24,
-
-              background: COLORS.primarySoft,
-
-              border: `2px solid ${COLORS.primaryBorder}`,
-
+              background: 'var(--bg-surface)',
+              border: '1px solid #d7e6df',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
             }}
           >
-            <HeartHandshake size={34} color={COLORS.primary} />
+            <HeartHandshake size={34} color="#0a4a3e" />
           </div>
 
-          {/* Brand */}
           <div style={{ textAlign: 'center' }}>
             <p
               style={{
                 margin: 0,
                 fontSize: '1.45rem',
                 fontWeight: 800,
-                color: COLORS.primary,
-                lineHeight: 1.3,
+                color: '#0a4a3e',
               }}
             >
               {t('brand.name')}
@@ -230,70 +153,47 @@ export default function Sidebar({ open, onClose, isDesktop }) {
             <p
               style={{
                 margin: '4px 0 0',
-                fontSize: '0.75rem',
-                color: COLORS.textMuted,
-                lineHeight: 1.3,
+                fontSize: '0.8rem',
+                color: '#94a3b8',
               }}
             >
               {t('brand.subtitle')}
             </p>
           </div>
 
-          {/* Decorative Divider */}
           <div
             style={{
               width: 46,
-              height: 3,
-
-              background: `linear-gradient(
-                90deg,
-                transparent,
-                ${COLORS.primary},
-                transparent
-              )`,
-
+              height: 2,
               borderRadius: 999,
-              opacity: 0.25,
+              background: '#c8ecdd',
             }}
           />
         </div>
 
-        {/* ═════════════════ Navigation ═════════════════ */}
+        {/* Navigation */}
         <nav
           style={{
             flex: 1,
             overflowY: 'auto',
-
-            padding: '10px 10px',
-
+            padding: '1px 6px',
             scrollbarWidth: 'none',
           }}
         >
           <p
             style={{
-              margin: '0 0 6px',
-              padding: '0 10px',
-
-              fontSize: '0.75rem',
-              fontWeight: 800,
-
-              color: COLORS.textMuted,
-
-              textTransform: 'uppercase',
-              letterSpacing: '0.12em',
+              margin: '0 0 4px',
+              padding: '0 6px',
+              fontSize: '0.72rem',
+              fontWeight: 700,
+              color: '#94a3b8',
             }}
           >
             {t('nav.mainNav')}
           </p>
 
-          <div
-            style={{
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '2px',
-            }}
-          >
-            {NAV_ITEMS.map(({ key, path, icon: Icon }) => (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+            {visibleItems.map(({ key, path, icon: Icon }) => (
               <NavLink
                 key={key}
                 to={path}
@@ -302,80 +202,67 @@ export default function Sidebar({ open, onClose, isDesktop }) {
                 style={({ isActive }) => ({
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '10px',
-
-                  padding: '11px 12px',
-
-                  borderRadius: '16px',
-
-                  fontSize: '1rem',
-
-                  fontWeight: isActive ? 700 : 600,
-
+                  gap: 8,
+                  padding: '8px 12px',
+                  borderRadius: 16,
                   textDecoration: 'none',
+                  transition: '0.2s',
 
                   background: isActive
-                    ? COLORS.active
+                    ? '#0a4a3e'
                     : 'transparent',
 
                   color: isActive
                     ? '#ffffff'
-                    : COLORS.textSoft,
+                    : '#64748b',
 
-                  boxShadow: isActive
-                    ? '0 10px 24px rgba(11,75,67,0.16)'
-                    : 'none',
-
-                  transition: 'all 0.18s ease',
+                  border: isActive
+                    ? '1px solid transparent'
+                    : '1px solid transparent',
                 })}
               >
                 {({ isActive }) => (
                   <>
-                    {/* Icon */}
                     <span
                       style={{
-                        width: 36,
-                        height: 36,
-
+                        width: 38,
+                        height: 38,
                         borderRadius: 12,
-
                         flexShrink: 0,
+
+                        background: isActive
+                          ? 'rgba(255,255,255,0.14)'
+                          : '#edf5f2',
 
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
-
-                        background: isActive
-                          ? 'rgba(255,255,255,0.14)'
-                          : COLORS.primarySoft,
-
-                        transition: '0.2s',
                       }}
                     >
                       <Icon
-                        size={17}
-                        color={isActive ? '#ffffff' : COLORS.primary}
+                        size={18}
+                        color={isActive ? '#ffffff' : '#0a4a3e'}
                         strokeWidth={2.2}
                       />
                     </span>
 
-                    {/* Text */}
-                    <span style={{ flex: 1 }}>
+                    <span
+                      style={{
+                        flex: 1,
+                        fontSize: '1rem',
+                        fontWeight: isActive ? 700 : 600,
+                      }}
+                    >
                       {t(`nav.${key}`)}
                     </span>
 
-                    {/* Active Dot */}
                     {isActive && (
                       <span
                         style={{
-                          width: 7,
-                          height: 7,
-
+                          width: 8,
+                          height: 8,
                           borderRadius: '50%',
-
                           background: '#ffffff',
-
-                          flexShrink: 0,
                         }}
                       />
                     )}
@@ -386,79 +273,47 @@ export default function Sidebar({ open, onClose, isDesktop }) {
           </div>
         </nav>
 
-        {/* ═════════════════ AI Assistant ═════════════════ */}
-        <div
-          style={{
-            padding: '6px 10px 8px',
-            flexShrink: 0,
-          }}
-        >
+        {/* AI */}
+        <div style={{ padding: '8px 10px' }}>
           <button
             onClick={() => {
               navigate('/ai-assistant')
-
               if (!isDesktop) onClose?.()
             }}
             style={{
               width: '100%',
-
               padding: '12px',
-
               borderRadius: 16,
-
-              border: `1px solid ${COLORS.border}`,
-
-              cursor: 'pointer',
-
+              border: '1px solid #dce8e3',
+              background: '#f3f8f6',
               display: 'flex',
               alignItems: 'center',
-              gap: 12,
-
+              gap: 8,
+              cursor: 'pointer',
               fontFamily: 'Cairo, sans-serif',
-
-              background: isAIPage
-                ? COLORS.primarySoft
-                : '#ffffff',
-
-              transition: 'all 0.2s',
-
-              boxShadow: '0 3px 12px rgba(0,0,0,0.03)',
             }}
           >
-            {/* Icon */}
             <div
               style={{
-                width: 34,
-                height: 34,
-
+                width: 38,
+                height: 38,
                 borderRadius: 12,
-
-                flexShrink: 0,
-
-                background: COLORS.primarySoft,
-
+                background: '#e8f4ef',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
               }}
             >
-              <Sparkles size={15} color={COLORS.primary} />
+              <Sparkles size={16} color="#0a4a3e" />
             </div>
 
-            {/* Text */}
-            <div
-              style={{
-                flex: 1,
-                textAlign: 'start',
-              }}
-            >
+            <div style={{ flex: 1, textAlign: 'start' }}>
               <p
                 style={{
                   margin: 0,
-                  fontSize: '0.84rem',
+                  fontSize: '0.875rem',
                   fontWeight: 700,
-                  color: COLORS.primary,
-                  lineHeight: 1.3,
+                  color: '#0a4a3e',
                 }}
               >
                 {t('nav.ai')}
@@ -467,40 +322,31 @@ export default function Sidebar({ open, onClose, isDesktop }) {
               <p
                 style={{
                   margin: 0,
-                  fontSize: '0.64rem',
-                  color: COLORS.textMuted,
-                  lineHeight: 1.3,
+                  fontSize: '0.7rem',
+                  color: '#94a3b8',
                 }}
               >
                 Gemini AI
               </p>
             </div>
 
-            {/* Online Dot */}
             <span
               style={{
                 width: 8,
                 height: 8,
-
                 borderRadius: '50%',
-
                 background: '#22c55e',
-
-                boxShadow: '0 0 8px rgba(34,197,94,0.55)',
-
-                flexShrink: 0,
               }}
             />
           </button>
         </div>
 
-        {/* ═════════════════ User Card ═════════════════ */}
+        {/* User */}
         {user && (
           <div
             style={{
               padding: '10px',
-              borderTop: `1px solid ${COLORS.border}`,
-              flexShrink: 0,
+              borderTop: '1px solid #edf2f0',
             }}
           >
             <div
@@ -508,36 +354,23 @@ export default function Sidebar({ open, onClose, isDesktop }) {
                 display: 'flex',
                 alignItems: 'center',
                 gap: 10,
-
-                background: '#ffffff',
-
-                borderRadius: 16,
-
-                padding: '10px 12px',
-
-                border: `1px solid ${COLORS.border}`,
-
-                boxShadow: '0 2px 12px rgba(0,0,0,0.03)',
+                background: '#fff',
+                border: '1px solid #e5ece9',
+                borderRadius: 18,
+                padding: '10px',
               }}
             >
-              {/* Avatar */}
               <div
                 style={{
-                  width: 38,
-                  height: 38,
-
+                  width: 42,
+                  height: 42,
                   borderRadius: '50%',
-
                   flexShrink: 0,
-
                   background: av.bg,
                   color: av.text,
-
-                  border: `1.5px solid ${av.border}`,
-
+                  border: `1px solid ${av.border}`,
                   fontSize: '0.82rem',
                   fontWeight: 800,
-
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
@@ -546,22 +379,13 @@ export default function Sidebar({ open, onClose, isDesktop }) {
                 {user.avatar ?? user.name?.slice(0, 2)}
               </div>
 
-              {/* User Info */}
-              <div
-                style={{
-                  flex: 1,
-                  minWidth: 0,
-                }}
-              >
+              <div style={{ flex: 1, minWidth: 0 }}>
                 <p
                   style={{
                     margin: 0,
-
-                    fontSize: '0.82rem',
+                    fontSize: '0.88rem',
                     fontWeight: 700,
-
-                    color: COLORS.text,
-
+                    color: '#0f172a',
                     overflow: 'hidden',
                     textOverflow: 'ellipsis',
                     whiteSpace: 'nowrap',
@@ -573,39 +397,28 @@ export default function Sidebar({ open, onClose, isDesktop }) {
                 <p
                   style={{
                     margin: 0,
-                    fontSize: '0.66rem',
-                    color: COLORS.textMuted,
+                    fontSize: '0.7rem',
+                    color: '#94a3b8',
                   }}
                 >
                   {ROLE_LABEL[user.role]}
                 </p>
               </div>
 
-              {/* Logout */}
               <button
                 onClick={logout}
                 title={t('auth.logout')}
                 style={{
-                  background: 'rgba(239,68,68,0.08)',
-
-                  border: '1px solid rgba(239,68,68,0.14)',
-
+                  width: 34,
+                  height: 34,
                   borderRadius: 10,
-
-                  cursor: 'pointer',
-
-                  width: 32,
-                  height: 32,
-
-                  flexShrink: 0,
-
+                  border: '1px solid #fee2e2',
+                  background: '#fff5f5',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-
+                  cursor: 'pointer',
                   color: '#ef4444',
-
-                  transition: 'all 0.18s',
                 }}
               >
                 <LogOut size={15} />

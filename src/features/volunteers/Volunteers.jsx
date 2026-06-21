@@ -1,9 +1,8 @@
-
 import { useState, lazy, Suspense, useMemo } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
-import { useSearchParams } from 'react-router-dom'
-import { UserPlus, Search, MoreVertical, LayoutGrid, TableIcon } from 'lucide-react'
+import { useSearchParams, useNavigate } from 'react-router-dom'
+import { Search, LayoutGrid, TableIcon, Award, Check, X, ArrowUpDown, Eye } from 'lucide-react'
 import { volunteersService } from '../../service/ServiceLayer'
 import { Avatar } from '../../ui/Avatar'
 import { Badge } from '../../ui/Badge'
@@ -11,16 +10,19 @@ import { Card } from '../../ui/Card'
 import { PageHeader } from '../../ui/PageHeader'
 import { SpinnerPage } from '../../ui/Spinner'
 import { EmptyState } from '../../ui/EmptyState'
-import DataTable from '../../ui/DataTable' 
+import DataTable from '../../ui/DataTable'
 import Pagination from '../../ui/Pagination'
-import VolunteerModal from './Volunteermodal'
-import { ActionModal } from '../../ui/ActionModal'
-import ExportPDFButton from '../../ui/Pdfexportbutton'
+import ExportPDFPermissionButton from '../../ui/Pdfexportbutton'
 import { usePDFReport } from '../../hooks/Usepdfexport'
+import PermissionButton from '../../ui/PermissionButton'
+import { getTotalHours } from '../certificates/mockVolunteers' // عدّلي المسار حسب مكان الملف
+import { useAuth } from '../../context/AuthContext'
+import VolunteerDetailsModal from './VolunteerDetailsModal'
 
 // Lazy load Kanban
 const VolunteersKanban = lazy(() => import('./VolunteersKanban'))
 
+const REQUIRED_HOURS = 50
 const LIMIT = 10
 
 export default function Volunteers() {
@@ -28,15 +30,20 @@ export default function Volunteers() {
   const qc = useQueryClient()
   const [params, setParams] = useSearchParams()
   const { exportVolunteers, isExporting } = usePDFReport()
+  const navigate = useNavigate()
+
+  // ✅ الأدمن فقط يشاهد زر "شهادة"
+  const { user } = useAuth()
+  const isAdmin = user?.role === 'admin'
 
   const search = params.get('search') || ''
   const status = params.get('status') || ''
   const page   = Number(params.get('page') || 1)
+  const sortByHours = params.get('sort') === 'hours' // ✅ ترتيب حسب ساعات التطوع
 
   const [view,       setView]       = useState('table')   // 'table' | 'kanban'
-  const [modalOpen, setModalOpen] = useState(false)
   const [selected,   setSelected]  = useState(null)
-  const [actionOpen, setActionOpen] = useState(false)
+  const [detailsOpen, setDetailsOpen] = useState(false) // ✅ مودال عرض تفاصيل المتطوع (قراءة فقط)
 
   const STATUS_TABS = [
     { key: '',           label: t('volunteers.tabs.all') },
@@ -46,12 +53,57 @@ export default function Volunteers() {
     { key: 'rejected',   label: t('volunteers.tabs.rejected') },
   ]
 
+  const { data, isLoading } = useQuery({
+    queryKey: ['volunteers', search, status, page, sortByHours],
+    queryFn: () => volunteersService.getList({ search, status, page, limit: LIMIT }),
+    keepPreviousData: true,
+  })
+
+  // ✅ ترتيب محلي حسب إجمالي ساعات التطوع (تنازلياً) عند تفعيل الزر
+  const sortedData = useMemo(() => {
+    if (!data?.data) return data?.data
+    if (!sortByHours) return data.data
+    return [...data.data].sort((a, b) => getTotalHours(b) - getTotalHours(a))
+  }, [data, sortByHours])
+
+  // ✅ تغيير حالة المتطوع (قبول/رفض/إعادة للحالة السابقة)
+  const statusMut = useMutation({
+    mutationFn: ({ id, newStatus }) => volunteersService.changeStatus(id, newStatus),
+    onSuccess: () => qc.invalidateQueries(['volunteers']),
+  })
+
+  const handleApprove = (row) => statusMut.mutate({ id: row.id, newStatus: 'approved' })
+  const handleReject  = (row) => statusMut.mutate({ id: row.id, newStatus: 'rejected' })
+
+  // عرض تفاصيل المتطوع (قراءة فقط)
+  const handleShowDetails = (row) => {
+    setSelected(row)
+    setDetailsOpen(true)
+  }
+
+  const setParam = (key, value) => setParams(prev => {
+    const n = new URLSearchParams(prev)
+    if (value) n.set(key, value); else n.delete(key)
+    n.set('page', '1')
+    return n
+  })
+
+  const toggleSortByHours = () => setParam('sort', sortByHours ? '' : 'hours')
+
+  const viewBtn = (active) => ({
+    display: 'flex', alignItems: 'center', justifyContent: 'center',
+    width: '34px', height: '34px', borderRadius: '8px', border: 'none', cursor: 'pointer',
+    background: active ? '#094037' : 'transparent',
+    color: active ? '#fff' : 'var(--text-muted)',
+    transition: 'all 0.15s',
+  })
+
   // تعريف الأعمدة للجدول مع توسيط العناوين
   const columns = useMemo(() => [
     {
       title: t('volunteers.table.name'),
       key: 'name',
-      align: 'center', // توسيط العنوان والبيانات
+      align: 'center',
       render: (_, row) => (
         <div style={{ display: 'flex', gap: 10, alignItems: 'center', justifyContent: 'center' }}>
           <Avatar name={row.name} size="sm" />
@@ -67,59 +119,133 @@ export default function Volunteers() {
       key: 'campaignName',
       align: 'center'
     },
+    // ✅ عمود: إجمالي ساعات التطوع + مؤشر "مستحق لشهادة"
+    {
+      title: 'ساعات التطوع',
+      key: 'totalHours',
+      align: 'center',
+      render: (_, row) => {
+        const total = getTotalHours(row)
+        const isEligible = total >= REQUIRED_HOURS
+
+        return (
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
+            <span style={{ fontWeight: 700, color: 'var(--text-primary)' }}>{total}</span>
+
+            {isEligible && (
+              <span
+                title="مستحق لشهادة تطوع"
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                  fontSize: '0.68rem',
+                  fontWeight: 700,
+                  color: '#92400e',
+                  background: '#fef3c7',
+                  padding: '2px 8px',
+                  borderRadius: 99,
+                }}
+              >
+                <Award size={11} />
+                مستحق لشهادة
+              </span>
+            )}
+          </div>
+        )
+      },
+    },
     {
       title: t('volunteers.table.status'),
       key: 'status',
       align: 'center',
       render: (val) => <Badge status={val} />
     },
+    // ✅ عمود واحد للإجراء:
+    //    - لو approved: زر "عرض" فقط (+ زر شهادة للأدمن إذا مستحق)
+    //    - غير ذلك (pending/rejected/...): زرّا قبول/رفض
     {
       title: t('volunteers.table.actions'),
       key: 'actions',
       align: 'center',
-      render: (_, row) => (
-        <button 
-          onClick={() => { setSelected(row); setActionOpen(true) }}
-          style={{ width: 32, height: 32, borderRadius: 8, border: 'none', cursor: 'pointer', background: 'var(--bg-muted)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
-          <MoreVertical size={16} />
-        </button>
-      )
+      render: (_, row) => {
+        const isApproved = row.status === 'approved'
+        const isEligible = getTotalHours(row) >= REQUIRED_HOURS
+
+        return (
+          <div style={{ display: 'flex', gap: '6px', alignItems: 'center', justifyContent: 'center' }}>
+            {isApproved ? (
+              <>
+                {/* ✅ زر "شهادة" - فقط للأدمن وعند الاستحقاق */}
+                {isEligible && isAdmin && (
+                  <button
+                    onClick={() => navigate('/certificates')}
+                    title="الانتقال لصفحة الشهادات"
+                    style={{
+                      display: 'flex', alignItems: 'center', gap: '4px',
+                      padding: '6px 10px', borderRadius: 8, border: 'none',
+                      cursor: 'pointer', fontSize: '0.75rem', fontWeight: 700,
+                      fontFamily: 'Cairo, sans-serif',
+                      background: 'var(--color-secondary-500)', color: '#111',
+                    }}
+                  >
+                    <Award size={13} />
+                    شهادة
+                  </button>
+                )}
+
+                {/* عرض تفاصيل المتطوع (قراءة فقط) */}
+                <button
+                  onClick={() => handleShowDetails(row)}
+                  title="عرض التفاصيل"
+                  style={{ width: 32, height: 32, borderRadius: 8, border: 'none', cursor: 'pointer', background: 'var(--bg-muted)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <Eye size={16} />
+                </button>
+              </>
+            ) : (
+              <>
+                <PermissionButton
+                  onClick={() => handleApprove(row)}
+                  disabled={statusMut.isLoading}
+                  title="قبول المتطوع"
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: '4px',
+                    padding: '6px 12px', borderRadius: 8, border: 'none',
+                    cursor: 'pointer',
+                    fontSize: '0.78rem', fontWeight: 700, fontFamily: 'Cairo, sans-serif',
+                    background: '#dcfce7', color: '#16a34a',
+                  }}
+                >
+                  <Check size={13} />
+                  قبول
+                </PermissionButton>
+
+                <PermissionButton
+                  onClick={() => handleReject(row)}
+                  disabled={row.status === 'rejected' || statusMut.isLoading}
+                  title={row.status === 'rejected' ? 'مرفوض حالياً' : 'رفض المتطوع'}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: '4px',
+                    padding: '6px 12px', borderRadius: 8, border: 'none',
+                    cursor: row.status === 'rejected' ? 'default' : 'pointer',
+                    fontSize: '0.78rem', fontWeight: 700, fontFamily: 'Cairo, sans-serif',
+                    background: row.status === 'rejected' ? 'rgba(220,38,38,0.12)' : '#fee2e2',
+                    color: '#dc2626',
+                    opacity: row.status === 'rejected' ? 0.6 : 1,
+                  }}
+                >
+                  <X size={13} />
+                  رفض
+                </PermissionButton>
+              </>
+            )}
+          </div>
+        )
+      }
     }
-  ], [t])
+  ], [t, isAdmin, statusMut.isLoading])
 
-  const { data, isLoading } = useQuery({
-    queryKey: ['volunteers', search, status, page],
-    queryFn: () => volunteersService.getList({ search, status, page, limit: LIMIT }),
-    keepPreviousData: true,
-  })
 
-  const actionMut = useMutation({
-    mutationFn: ({ id, action }) => volunteersService.changeStatus(id, action),
-    onSuccess: () => qc.invalidateQueries(['volunteers']),
-  })
-
-  const handleAction = (action, row) => {
-    if (action === 'edit') { setSelected(row); setModalOpen(true) }
-    else actionMut.mutate({ id: row.id, action })
-    setActionOpen(false)
-  }
-
-  const setParam = (key, value) => setParams(prev => {
-    const n = new URLSearchParams(prev)
-    if (value) n.set(key, value); else n.delete(key)
-    n.set('page', '1')
-    return n
-  })
-
-  const viewBtn = (active) => ({
-    display: 'flex', alignItems: 'center', justifyContent: 'center',
-    width: '34px', height: '34px', borderRadius: '8px', border: 'none', cursor: 'pointer',
-    background: active ? '#094037' : 'transparent',
-    color: active ? '#fff' : 'var(--text-muted)',
-    transition: 'all 0.15s',
-  })
-
- 
 return (
   <div
     style={{
@@ -159,17 +285,17 @@ return (
             onClick={() => setView('table')}
           >
             <TableIcon size={15} />
-          </button>
+          </button >
 
-          <button
+          <button 
             style={viewBtn(view === 'kanban')}
             onClick={() => setView('kanban')}
           >
             <LayoutGrid size={15} />
-          </button>
+          </button >
         </div>
 
-        <ExportPDFButton
+        <ExportPDFPermissionButton 
           onClick={() =>
             exportVolunteers(data?.data ?? [])
           }
@@ -177,23 +303,25 @@ return (
           label={t('common.export')}
         />
 
-        <button
-          className="btn-primary"
-          onClick={() => {
-            setSelected(null)
-            setModalOpen(true)
-          }}
+        {/* ✅ بديل زر "الإضافة": ترتيب المتطوعين حسب إجمالي ساعات التطوع
+            مفيد لمتابعة الأقرب للاستحقاق بسرعة */}
+        <PermissionButton
+          onClick={toggleSortByHours}
+          title="ترتيب حسب ساعات التطوع"
           style={{
-            background:
-              'var(--color-secondary-500)',
-color:'#111',
+            display: 'flex', alignItems: 'center', gap: 8,
+            background: sortByHours ? '#094037' : 'var(--bg-muted)',
+            color: sortByHours ? '#fff' : 'var(--text-secondary)',
+            border: sortByHours ? 'none' : '1px solid var(--border-default)',
             borderRadius: '14px',
             padding: '10px 18px',
+            fontFamily: 'Cairo, sans-serif',
+            fontWeight: 700,
           }}
         >
-          <UserPlus size={15} />
-          {t('volunteers.addBtn')}
-        </button>
+          <ArrowUpDown size={15} />
+          الأعلى ساعات
+        </PermissionButton>
       </div>
     </PageHeader>
 
@@ -229,7 +357,7 @@ color:'#111',
               }}
             >
               {STATUS_TABS.map((tab) => (
-                <button
+                <PermissionButton 
                   key={tab.key}
                   onClick={() =>
                     setParam('status', tab.key)
@@ -264,7 +392,7 @@ color:'#111',
                   }}
                 >
                   {tab.label}
-                </button>
+                </PermissionButton >
               ))}
             </div>
 
@@ -359,7 +487,7 @@ color:'#111',
           {/* Table */}
           <DataTable
             columns={columns}
-            data={data?.data}
+            data={sortedData}
             isLoading={isLoading}
             loadingComponent={<SpinnerPage />}
             EmptyComponent={
@@ -397,21 +525,14 @@ color:'#111',
       </>
     )}
 
-    <VolunteerModal
-      open={modalOpen}
-      onClose={() => setModalOpen(false)}
-      editItem={selected}
-    />
-
-    <ActionModal
-      isOpen={actionOpen}
-      onClose={() => setActionOpen(false)}
-      onAction={handleAction}
-      row={selected}
+    {/* ✅ مودال عرض تفاصيل المتطوع - قراءة فقط، بدلاً من VolunteerModal */}
+    <VolunteerDetailsModal
+      open={detailsOpen}
+      onClose={() => setDetailsOpen(false)}
+      volunteer={selected}
     />
   </div>
 )
 
 
 }
-

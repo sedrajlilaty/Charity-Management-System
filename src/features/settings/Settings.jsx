@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { PageHeader } from '../../ui/PageHeader'
 import { Card } from '../../ui/Card'
 import { useTheme } from '../../context/ThemeContext'
-
+import PermissionButton from '../../ui/PermissionButton'
 import {
   Globe,
   Bell,
@@ -16,7 +16,7 @@ import {
 
 function Toggle({ on, onChange }) {
   return (
-    <button
+    <PermissionButton 
       onClick={() => onChange(!on)}
       style={{
         width: '48px',
@@ -44,7 +44,7 @@ function Toggle({ on, onChange }) {
           boxShadow: '0 2px 6px rgba(0,0,0,0.2)',
         }}
       />
-    </button>
+    </PermissionButton >
   )
 }
 
@@ -161,7 +161,7 @@ export default function Settings() {
     height: '42px',
     borderRadius: '12px',
     border: '1px solid var(--border-default)',
-    background: 'var(--bg-muted)',
+    background: 'var(--color-primary-500)',
     color: 'var(--text-primary)',
     paddingInline: '12px',
     fontWeight: 600,
@@ -241,7 +241,7 @@ export default function Settings() {
             const Icon = section.icon
 
             return (
-              <button
+              <PermissionButton 
                 key={section.key}
                 onClick={() =>
                   setActiveSection(section.key)
@@ -258,11 +258,11 @@ export default function Settings() {
                       : '1px solid var(--border-subtle)',
                   background:
                     activeSection === section.key
-                      ? 'var(--bg-muted)'
+                      ? 'var(--color-primary-500)'
                       : 'transparent',
                   color:
                     activeSection === section.key
-                      ? 'var(--text-primary)'
+                      ? 'var(--bg-surface)'
                       : 'var(--text-secondary)',
                   fontWeight:
                     activeSection === section.key
@@ -274,7 +274,7 @@ export default function Settings() {
               >
                 <Icon size={17} />
                 <span>{section.label}</span>
-              </button>
+              </PermissionButton >
             )
           })}
         </div>
@@ -330,7 +330,7 @@ export default function Settings() {
             </p>
           </div>
 
-          <button
+          <PermissionButton 
             onClick={handleSave}
             className="btn-primary"
             style={{
@@ -342,7 +342,7 @@ export default function Settings() {
           >
             <Save size={16} />
             {t('settings.save')}
-          </button>
+          </PermissionButton >
         </div>
 
         {/* APPEARANCE */}
@@ -376,7 +376,7 @@ export default function Settings() {
               )}
               noBorder
             >
-              <button
+              <PermissionButton 
                 onClick={toggleLang}
                 style={{
                   height: '42px',
@@ -385,9 +385,9 @@ export default function Settings() {
                   border:
                     '1px solid var(--border-default)',
                   background:
-                    'var(--bg-muted)',
+                    'var(--color-primary-500)',
                   color:
-                    'var(--text-primary)',
+                    'var(--text-hint)',
                   fontWeight: 700,
                   cursor: 'pointer',
                 }}
@@ -395,7 +395,7 @@ export default function Settings() {
                 {isAr
                   ? 'Switch to English'
                   : 'التبديل للعربية'}
-              </button>
+              </PermissionButton >
             </SettingRow>
           </>
         )}

@@ -17,7 +17,7 @@ import { volunteersService } from '../../service/ServiceLayer'
 import { Avatar } from '../../ui/Avatar'
 import { Badge } from '../../ui/Badge'
 import { SpinnerPage } from '../../ui/Spinner'
-
+import PermissionButton from '../../ui/PermissionButton'
 // ─── Config ───────────────────────────────────────────────────────────────────
 const COLUMNS = [
   { key:'pending',   icon:Clock,       color:'#92400e', bg:'#fff8e6', border:'#f59e0b', label_ar:'قيد الانتظار', label_en:'Pending'   },
@@ -71,9 +71,9 @@ function DetailModal({ volunteer, onClose, onAction, isAr }) {
               </div>
             </div>
           </div>
-          <button onClick={onClose} style={{ background:'rgba(255,255,255,0.15)', border:'none', borderRadius:'8px', width:'30px', height:'30px', display:'flex', alignItems:'center', justifyContent:'center', cursor:'pointer', color:'#fff', flexShrink:0 }}>
+          <PermissionButton  onClick={onClose} style={{ background:'rgba(255,255,255,0.15)', border:'none', borderRadius:'8px', width:'30px', height:'30px', display:'flex', alignItems:'center', justifyContent:'center', cursor:'pointer', color:'#fff', flexShrink:0 }}>
             <X size={15} />
-          </button>
+          </PermissionButton >
         </div>
 
         {/* Body */}
@@ -144,13 +144,13 @@ function DetailModal({ volunteer, onClose, onAction, isAr }) {
         {ACTIONS.length > 0 && (
           <div style={{ padding:'12px 20px', borderTop:'1px solid var(--border-default)', display:'flex', gap:'8px', justifyContent:'flex-end' }}>
             {ACTIONS.map(a => (
-              <button key={a.key} onClick={() => { onAction(a.key, volunteer); onClose() }}
+              <PermissionButton  key={a.key} onClick={() => { onAction(a.key, volunteer); onClose() }}
                 style={{ ...a.style, padding:'7px 16px', borderRadius:'10px', border:'none', cursor:'pointer', fontSize:'0.82rem', fontWeight:600, fontFamily:'Cairo,sans-serif', display:'flex', alignItems:'center', gap:'5px' }}>
                 {a.key === 'approve' && <Check size={13} />}
                 {a.key === 'reject'  && <Ban   size={13} />}
                 {a.key === 'complete'&& <Star  size={13} />}
                 {a.label}
-              </button>
+              </PermissionButton >
             ))}
           </div>
         )}
@@ -209,12 +209,12 @@ function VolunteerCard({ volunteer, onDragStart, isDragging, onOpenDetail, onQui
         <div style={{ position:'absolute', top:'8px', insetInlineEnd:'8px', display:'flex', gap:'4px', zIndex:10 }}
           onClick={e => e.stopPropagation()}>
           {quickActions.map(a => (
-            <button key={a.key}
+            <PermissionButton  key={a.key}
               onClick={() => onQuickAction(a.key, volunteer)}
               style={{ width:'24px', height:'24px', borderRadius:'6px', border:'none', cursor:'pointer', background:a.bg, color:a.color, display:'flex', alignItems:'center', justifyContent:'center' }}
               title={a.key}>
               <a.icon size={12} />
-            </button>
+            </PermissionButton >
           ))}
         </div>
       )}

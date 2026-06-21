@@ -120,7 +120,7 @@
     @apply bg-primary-500 text-white shadow-lg;
   }
 
-  /* ── Buttons */
+  /* ── PermissionButtons */
   .btn-primary {
     @apply inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl
            text-base font-bold transition-all duration-150 cursor-pointer
@@ -159,7 +159,7 @@
     @apply bg-[#eab308] text-white dark:bg-[#eab308]/30; 
   }
 
-  /* ── Buttons Variants */
+  /* ── PermissionButtons Variants */
   .btn-outline {
     @apply inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl text-base font-semibold transition-all;
     background: var(--bg-surface);

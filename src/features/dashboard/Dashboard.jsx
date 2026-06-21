@@ -13,7 +13,7 @@ import { Card } from '../../ui/Card'
 import { Badge } from '../../ui/Badge'
 import { DollarSign, Users, Megaphone, UserCheck, TrendingUp, TrendingDown, ExternalLink } from 'lucide-react'
 import { color } from 'framer-motion'
-
+import PermissionButton from '../../ui/PermissionButton'
 /* ───────────────────── KPI Card ───────────────────── */
 function KpiCard({ label, value, change, icon: Icon, accent }) {
   const up = change >= 0
@@ -96,7 +96,7 @@ function ModernTable({ title, headers, children, onViewAll }) {
   return (
     <Card style={{ background: 'var(--bg-base)' }}>
       <CardHeader title={title}>
-        <button
+        <PermissionButton 
           onClick={onViewAll}
           style={{
             display: 'flex', alignItems: 'center', gap: '4px',
@@ -107,7 +107,7 @@ function ModernTable({ title, headers, children, onViewAll }) {
           }}
         >
           عرض الكل <ExternalLink size={12} />
-        </button>
+        </PermissionButton >
       </CardHeader>
       <div style={{ overflowX: 'auto' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.82rem' }}>
@@ -237,34 +237,55 @@ export default function Dashboard() {
         </Card>
 
         {/* دائرة الحالات */}
-        <Card style={{ background: 'var(--bg-base)' ,color:'var(--text-secondary)' }}>
-          <CardHeader title={t('dashboard.casesByStatus')} />
-          <div style={{ padding: '0.875rem 1rem' }}>
-            <ResponsiveContainer width="100%" height={150}>
-              <PieChart>
-                <Pie data={byStatus} cx="50%" cy="50%" innerRadius={40} outerRadius={65}
-                  paddingAngle={3} dataKey="value" labelLine={false} label={PieLabel}
-                >
-                  {byStatus?.map((e, i) => <Cell key={i} fill={e.color} />)}
-                </Pie>
-                <Tooltip formatter={(v, n) => [v, n]} />
-              </PieChart>
-            </ResponsiveContainer>
+       <Card style={{ background: 'var(--bg-base)', color: 'var(--text-secondary)' }}>
+  <CardHeader title={t('dashboard.casesByStatus')} />
+  <div style={{ padding: '0.875rem 1rem' }}>
+    
+    {/* 1. زدنا الارتفاع إلى 220 ليعطي مساحة أكبر للدائرة المكبرة */}
+    <ResponsiveContainer width="100%" height={220}> 
+      <PieChart>
+        {/* 2. تم تكبير القطر الخارجي والداخلي للدائرة أكثر */}
+        <Pie 
+          data={byStatus} 
+          cx="50%" 
+          cy="50%" 
+          innerRadius={65}   
+          outerRadius={95}  
+          paddingAngle={3} 
+          dataKey="value" 
+          labelLine={false} 
+          label={PieLabel}
+        >
+          {byStatus?.map((e, i) => <Cell key={i} fill={e.color} />)}
+        </Pie>
+        <Tooltip formatter={(v, n) => [v, n]} />
+      </PieChart>
+    </ResponsiveContainer>
 
-            {/* أسطورة */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginTop: '8px' }}>
-              {byStatus?.map((s, i) => (
-                <div key={i} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <span style={{ width: '9px', height: '9px', borderRadius: '50%', background: s.color, flexShrink: 0 }} />
-                    <span style={{ fontSize: '0.82rem', color: 'var(--text-secondary)' }}>{s.name}</span>
-                  </div>
-                  <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-primary)' }}>{s.value}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </Card>
+    {/* 3. تعديل الأسطورة لتصبح أفقية (بجانب بعضها) ومتناسقة أسفل الدائرة */}
+    <div style={{ 
+      display: 'flex', 
+      flexDirection: 'row',     
+      flexWrap: 'wrap',         
+      justifyContent: 'center', 
+      gap: '16px',              
+      marginTop: '16px' 
+    }}>
+      {byStatus?.map((s, i) => (
+        <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+          {/* النقطة الملونة */}
+          <span style={{ width: '9px', height: '9px', borderRadius: '50%', background: s.color, flexShrink: 0 }} />
+          
+          {/* الاسم وبجانبه القيمة مباشرة بين قوسين أو بجانبه */}
+          <span style={{ fontSize: '0.82rem', color: 'var(--text-secondary)' }}>
+            {s.name} <span style={{ fontWeight: 700, color: 'var(--text-primary)', marginLeft: '4px' }}>({s.value})</span>
+          </span>
+        </div>
+      ))}
+    </div>
+
+  </div>
+</Card>
       </div>
 
       {/* ── جداول ── */}

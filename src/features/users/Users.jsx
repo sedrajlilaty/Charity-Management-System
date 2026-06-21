@@ -16,7 +16,7 @@ import DataTable from '../../ui/DataTable' // تأكدي من مسار الاس�
 import UserModal from './UserModal'
 import DeleteConfirm from './DeleteConfirmModal'
 import Pagination from '../../ui/Pagination'
-
+import PermissionButton from '../../ui/PermissionButton'
 const LIMIT = 10
 
 export default function Users() {
@@ -86,12 +86,12 @@ export default function Users() {
       key: 'status',
       align: 'center',
       render: (val, user) => (
-        <button 
+        <PermissionButton  
           onClick={() => toggleMut.mutate({ id: user.id, status: user.status })} 
           style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
         >
           <Badge status={val} />
-        </button>
+        </PermissionButton >
       )
     },
     {
@@ -109,16 +109,16 @@ export default function Users() {
       align: 'center',
       render: (_, user) => (
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
-          <button 
+          <PermissionButton  
             style={{ padding: '6px 12px', borderRadius: '8px', backgroundColor: '#eab308', color: '#fff', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
             onClick={() => { setEditUser(user); setModalOpen(true) }}>
             {t('users.actions.edit')} <Edit2 size={14} />
-          </button>
-          <button 
+          </PermissionButton >
+          <PermissionButton  
             style={{ padding: '6px', borderRadius: '8px', color: '#ef4444', background: 'transparent', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
             onClick={() => { setDeleteTarget(user); setDeleteOpen(true) }}>
             {t('users.actions.delete')} <Trash2 size={14} />
-          </button>
+          </PermissionButton >
         </div>
       )
     }
@@ -163,7 +163,7 @@ return (
         count: data?.total ?? 0,
       })}
     >
-      <button
+      <PermissionButton 
         className="btn-primary"
         onClick={() => {
           setEditUser(null)
@@ -178,7 +178,7 @@ color:'#111',
       >
         <UserPlus size={15} />
         {t('users.addBtn')}
-      </button>
+      </PermissionButton >
     </PageHeader>
 
     {/* Filter Card */}
@@ -207,7 +207,7 @@ color:'#111',
           }}
         >
           {ROLE_TABS.map((tab) => (
-            <button
+            <PermissionButton 
               key={tab.key}
               onClick={() =>
                 setParam('role', tab.key)
@@ -239,7 +239,7 @@ color:'#111',
               }}
             >
               {tab.label}
-            </button>
+            </PermissionButton >
           ))}
         </div>
 

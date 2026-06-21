@@ -1,7 +1,7 @@
 
 import styled from 'styled-components'
 import Logout from '../features/authentication/Logout'
-import ButtonIcon from './ButtonIcon'
+import PermissionButton Icon from './PermissionButton Icon'
 import { HiOutlineUser } from 'react-icons/hi'
 // import { useNavigate } from 'react-router-dom'
 import DarkModetoggle from './DarkModetoggle'
@@ -16,11 +16,11 @@ export default function HeaderMenu() {
   return (
     <StyledHedaerMenu>
 <li>
-    <ButtonIcon 
+    <PermissionButton Icon 
     // onClick={()=>navigate('/account')}
     >
         <HiOutlineUser/>
-    </ButtonIcon>
+    </PermissionButton Icon>
 </li>
 <li>
        <DarkModetoggle/>

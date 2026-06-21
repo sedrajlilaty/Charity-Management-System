@@ -1,22 +1,22 @@
 /**
- * ExportPDFButton — زر تصدير PDF قابل لإعادة الاستخدام
+ * ExportPDFPermissionButton  — زر تصدير PDF قابل لإعادة الاستخدام
  *
  * الاستخدام في Donations.jsx:
- *   import ExportPDFButton from '../../ui/ExportPDFButton'
+ *   import ExportPDFPermissionButton  from '../../ui/ExportPDFPermissionButton '
  *   import { usePDFReport } from '../../hooks/usePDFReport'
  *
  *   const { exportDonations, isExporting } = usePDFReport()
- *   <ExportPDFButton onClick={() => exportDonations(data?.data)} loading={isExporting} />
+ *   <ExportPDFPermissionButton  onClick={() => exportDonations(data?.data)} loading={isExporting} />
  */
 
 import { FileDown, Loader2 } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
-
-export default function ExportPDFButton({ onClick, loading = false, label, style = {} }) {
+import PermissionButton from './PermissionButton'
+export default function ExportPDFPermissionButton ({ onClick, loading = false, label, style = {} }) {
   const { t } = useTranslation()
 
   return (
-    <button
+    <PermissionButton
       onClick={onClick}
       disabled={loading}
       style={{
@@ -45,6 +45,6 @@ export default function ExportPDFButton({ onClick, loading = false, label, style
         : <FileDown size={14} />
       }
       {label ?? t('common.export')}
-    </button>
+    </PermissionButton >
   )
 }

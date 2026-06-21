@@ -14,18 +14,18 @@ export default function Pagination({ page = 1, total = 0, limit = 10, onPageChan
         Page {page} of {totalPages}
       </span>
       <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-        <button className="btn-outline" disabled={page <= 1} onClick={() => onPageChange(page - 1)}>Previous</button>
+        <PermissionButton  className="btn-outline" disabled={page <= 1} onClick={() => onPageChange(page - 1)}>Previous</PermissionButton >
         {pages.map((p) => (
-          <button
+          <PermissionButton 
             key={p}
             className={p === page ? 'btn-primary' : 'btn-outline'}
             style={{ minWidth: '36px', paddingInline: '10px' }}
             onClick={() => onPageChange(p)}
           >
             {p}
-          </button>
+          </PermissionButton >
         ))}
-        <button className="btn-outline" disabled={page >= totalPages} onClick={() => onPageChange(page + 1)}>Next</button>
+        <PermissionButton  className="btn-outline" disabled={page >= totalPages} onClick={() => onPageChange(page + 1)}>Next</PermissionButton >
       </div>
     </div>
   )

@@ -16,7 +16,7 @@ import { PageHeader } from '../../ui/PageHeader'
 import { Card } from '../../ui/Card'
 import { formatDateTime } from '../../utlis/helper'
 import { useTheme } from '../../context/ThemeContext'
-
+import PermissionButton from '../../ui/PermissionButton'
 export default function Notifications() {
   const { t } = useTranslation()
   const qc = useQueryClient()
@@ -107,7 +107,7 @@ export default function Notifications() {
         }
       >
         {unread.length > 0 && (
-          <button
+          <PermissionButton 
             onClick={() => markAll.mutate()}
             className="btn-primary"
             style={{
@@ -122,7 +122,7 @@ export default function Notifications() {
           >
             <CheckCheck size={15} />
             {t('notifications.markAllRead')}
-          </button>
+          </PermissionButton >
         )}
       </PageHeader>
 
@@ -608,7 +608,7 @@ function NotifCard({
           </div>
 
           {!notif.read && (
-            <button
+            <PermissionButton 
               onClick={() =>
                 onMarkRead(notif.id)
               }
@@ -634,7 +634,7 @@ function NotifCard({
               {t(
                 'notifications.markRead'
               )}
-            </button>
+            </PermissionButton >
           )}
         </div>
       </div>

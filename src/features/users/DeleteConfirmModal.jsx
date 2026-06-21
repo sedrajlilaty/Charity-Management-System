@@ -2,17 +2,17 @@
 import { useTranslation } from 'react-i18next'
 import { AlertTriangle } from 'lucide-react'
 import Modal from '../../ui/Modal'
-
+import PermissionButton from '../../ui/PermissionButton'
 export default function DeleteConfirm({ open, onClose, onConfirm, userName, loading }) {
   const { t } = useTranslation()
   return (
     <Modal open={open} onClose={onClose} title={t('users.deleteModal.title')} width={400}
       footer={
         <>
-          <button onClick={onClose} className="btn-outline" style={{ minWidth: '80px' }}>{t('users.deleteModal.cancel')}</button>
-          <button onClick={onConfirm} disabled={loading} className="btn-danger" style={{ minWidth: '100px' }}>
+          <PermissionButton  onClick={onClose} className="btn-outline" style={{ minWidth: '80px' }}>{t('users.deleteModal.cancel')}</PermissionButton >
+          <PermissionButton  onClick={onConfirm} disabled={loading} className="btn-danger" style={{ minWidth: '100px' }}>
             {loading ? '...' : t('users.deleteModal.confirm')}
-          </button>
+          </PermissionButton >
         </>
       }
     >

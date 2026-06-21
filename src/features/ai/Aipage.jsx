@@ -13,7 +13,7 @@ import { donationsService }     from '../../service/ServiceLayer'
 import { beneficiariesService } from '../../service/ServiceLayer'
 import { campaignsService }     from '../../service/ServiceLayer'
 import { volunteersService }    from '../../service/ServiceLayer'
-
+import PermissionButton from '../../ui/PermissionButton'
 // ─── جلب بيانات الداشبورد ─────────────────────────────────────────────────────
 function useDashboardContext() {
   const { data: kpis }    = useQuery({ queryKey: ['kpis'],             queryFn: dashboardService.getKPIs,                               staleTime: 2 * 60_000 })
@@ -155,14 +155,14 @@ function WelcomeScreen({ suggestions, onSuggest, isAr, kpis }) {
         </div>
         <div style={{ display:'flex', flexDirection:'column', gap:'6px' }}>
           {suggestions.map((q, i) => (
-            <button key={i} onClick={() => onSuggest(q)}
+            <PermissionButton  key={i} onClick={() => onSuggest(q)}
               style={{ background:'var(--bg-surface)', border:'1px solid var(--border-default)', borderRadius:'10px', padding:'10px 14px', fontSize:'0.83rem', color:'var(--text-secondary)', cursor:'pointer', textAlign: isAr ? 'right' : 'left', transition:'all 0.15s', fontFamily:'Cairo,sans-serif', display:'flex', alignItems:'center', gap:'8px' }}
               onMouseEnter={e => { e.currentTarget.style.background='#e6f0ee'; e.currentTarget.style.color='#094037'; e.currentTarget.style.borderColor='#094037' }}
               onMouseLeave={e => { e.currentTarget.style.background='var(--bg-surface)'; e.currentTarget.style.color='var(--text-secondary)'; e.currentTarget.style.borderColor='var(--border-default)' }}
             >
               <ChevronLeft size={14} style={{ flexShrink:0, transform: isAr ? 'none' : 'scaleX(-1)', color:'#094037' }} />
               {q}
-            </button>
+            </PermissionButton >
           ))}
         </div>
       </div>
@@ -221,11 +221,11 @@ export default function AIPage() {
           </div>
         </div>
         {messages.length > 0 && (
-          <button onClick={clearChat}
+          <PermissionButton  onClick={clearChat}
             style={{ display:'flex', alignItems:'center', gap:'6px', padding:'6px 12px', borderRadius:'8px', border:'1px solid rgba(255,255,255,0.2)', background:'rgba(255,255,255,0.1)', color:'rgba(255,255,255,0.85)', cursor:'pointer', fontSize:'12px', fontFamily:'Cairo,sans-serif' }}>
             <Trash2 size={13} />
             {isAr ? 'محادثة جديدة' : 'New chat'}
-          </button>
+          </PermissionButton >
         )}
       </div>
 
@@ -268,16 +268,16 @@ export default function AIPage() {
             onInput={e => { e.target.style.height = 'auto'; e.target.style.height = Math.min(e.target.scrollHeight, 120) + 'px' }}
           />
           {isLoading ? (
-            <button onClick={stopGeneration}
+            <PermissionButton  onClick={stopGeneration}
               style={{ width:'38px', height:'38px', borderRadius:'10px', border:'none', background:'#fee2e2', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
               <StopCircle size={18} color="#b91c1c" />
-            </button>
+            </PermissionButton >
           ) : (
-            <button onClick={() => handleSend()}
+            <PermissionButton  onClick={() => handleSend()}
               disabled={!input.trim() || !hasApiKey}
               style={{ width:'38px', height:'38px', borderRadius:'10px', border:'none', background: input.trim() && hasApiKey ? '#094037' : 'var(--bg-muted)', cursor: input.trim() && hasApiKey ? 'pointer' : 'not-allowed', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0, transition:'background 0.15s' }}>
               <Send size={16} color={input.trim() && hasApiKey ? '#fff' : 'var(--text-muted)'} style={{ transform: isAr ? 'scaleX(-1)' : 'none' }} />
-            </button>
+            </PermissionButton >
           )}
         </div>
         <p style={{ textAlign:'center', fontSize:'11px', color:'var(--text-muted)', marginTop:'6px' }}>

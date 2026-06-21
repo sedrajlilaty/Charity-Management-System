@@ -20,6 +20,8 @@ const ar = {
             notifications: 'الإشعارات',
             volunteers: 'المتطوعون',
             ai: 'المساعد الذكي',
+            wallet: 'المحفظة ',
+            appUsers: "مستخدمو التطبيق"
         },
 
         // ── Common ────────────────────────────────────────────────────────────
@@ -151,112 +153,139 @@ const ar = {
                     amountInvalid: 'المبلغ يجب أن يكون أكبر من صفر',
                 },
             },
+            tableTitle: 'قائمة التبرعات',
+            tableSubtitle: 'متابعة وإدارة التبرعات الخاصة بالجمعية',
+
+            summary: {
+                total: 'إجمالي التبرعات',
+                count: 'عدد التبرعات',
+                avg: 'متوسط التبرع',
+                max: 'أعلى تبرع',
+            },
+
+            filter: {
+                search: 'ابحث باسم المتبرع...',
+            },
         },
 
         // ── Beneficiaries ─────────────────────────────────────────────────────
         beneficiaries: {
             title: 'المستفيدون',
-            subtitle: '{{count}} حالة',
-            addBtn: 'إضافة حالة',
+            subtitle: '{{count}} مستفيد مسجل',
+            addBtn: 'إضافة مستفيد',
+
             tabs: {
                 all: 'الكل',
-                active: 'نشطة',
-                pending: 'قيد الانتظار',
-                rejected: 'مرفوضة',
-                archived: 'مؤرشفة',
+                active: 'نشط',
+                pending: 'قيد المراجعة',
+                rejected: 'مرفوض',
+                archived: 'مؤرشف',
             },
-            filters: {
-                searchPlaceholder: 'ابحث بالاسم أو الهاتف...',
-                allCategories: 'كل الفئات',
-                allCampaigns: 'كل الحملات',
-            },
+
             categories: {
-                orphan: 'كفالة يتيم',
-                educational: 'دعم تعليمي',
-                medical: 'دعم طبي',
-                widow: 'دعم أرملة',
-                poor: 'أسرة محدودة الدخل',
+                all: 'كل الفئات',
+                label: 'الفئة',
+                patient: 'مريض',
+                orphan: 'يتيم',
+                school_student: 'طالب مدرسة',
+                university_student: 'طالب جامعة',
             },
-            campaigns: {
-                camp_1: 'كسوة الشتاء',
-                camp_2: 'كفالة أيتام',
-                camp_3: 'سلة غذائية',
-                camp_4: 'دعم الأرامل',
-                camp_5: 'العودة للمدرسة',
-                camp_6: 'الإغاثة الطبية',
+
+            priority: {
+                label: 'الأولوية',
+                high: 'عالية',
+                medium: 'متوسطة',
+                low: 'منخفضة',
             },
-            priority: { high: 'عالية', medium: 'متوسطة', low: 'منخفضة' },
+
             table: {
+                title: 'قائمة المستفيدين',
+                subtitle: 'إدارة وعرض بيانات المستفيدين',
                 beneficiary: 'المستفيد',
-                location: 'الموقع الجغرافي',
-                governorate: 'المحافظة',
-                region: 'المنطقة',
                 category: 'الفئة',
+                location: 'الموقع',
                 priority: 'الأولوية',
-                support: 'الدعم',
+                amount: 'المبلغ المطلوب',
                 status: 'الحالة',
                 actions: 'الإجراءات',
-                noAddress: 'غير محدد',
             },
-            empty: { title: 'لا توجد بيانات', description: 'لا توجد حالات مطابقة للفلتر المحدد.' },
-            deleteConfirm: 'هل أنت متأكد من حذف هذا المستفيد؟',
-            modal: {
-                titleAdd: 'طلب دعم جديد',
-                titleEdit: 'تعديل بيانات الحالة',
+
+            search: 'بحث بالاسم...',
+            empty: { title: 'لا يوجد مستفيدون', description: 'ابدأ بإضافة أول مستفيد' },
+
+            support: {
+                laptop: 'دعم لابتوب',
+                fees: 'رسوم دراسية',
+            },
+
+            caseView: {
+                title: 'تفاصيل الحالة',
+                publishTitle: 'قبول ونشر الحالة',
+                caseNumber: 'رقم الحالة #{{id}}',
+                publishSubtitle: 'أضف البيانات التي ستظهر للمتبرعين',
+                close: 'إغلاق',
+                reject: 'رفض',
+                archive: 'أرشفة',
+                approveAndPublish: 'قبول ونشر',
+                confirmPublish: 'تأكيد القبول والنشر',
+                back: 'رجوع',
+
                 fields: {
-                    category: 'الفئة',
-                    priority: 'الأولوية',
-                    fullName: 'الاسم الكامل',
-                    fullNamePlaceholder: 'أدخل الاسم الكامل',
-                    phone: 'رقم التواصل',
-                    phonePlaceholder: '+966 XXXXXXXX',
+                    phone: 'الهاتف',
+                    email: 'البريد',
                     governorate: 'المحافظة',
-                    region: 'المنطقة / الحي',
-                    governoratePlaceholder: 'اختر المحافظة',
-                    regionPlaceholder: 'مثال: الميدان، الحمدانية...',
+                    region: 'المنطقة',
                     address: 'العنوان التفصيلي',
-                    membersCount: 'عدد أفراد الأسرة',
-                    monthlySupport: 'الدعم الشهري (ر.س)',
-                    needDescription: 'وصف الاحتياج',
-                    needPlaceholder: 'اشرح باختصار سبب طلب الدعم...',
+                    description: 'وصف الحالة',
+                    amount: 'المبلغ المطلوب',
+                    priority: 'أولوية',
+                    publishedTitle: 'تفاصيل النشر',
+                    grade: 'المرحلة الدراسية',
+                    school: 'اسم المدرسة',
+                    year: 'السنة الدراسية',
+                    supportType: 'نوع الدعم',
                 },
-                categories: { orphan: 'كفالة يتيم', educational: 'دعم تعليمي', medical: 'دعم طبي' },
-                priority: { high: 'عالية', medium: 'متوسطة', low: 'منخفضة' },
-                educational: {
-                    sectionTitle: 'التفاصيل الأكاديمية',
-                    academicYear: 'السنة / الصف الدراسي',
-                    academicPlaceholder: 'مثال: الصف الثاني الثانوي',
-                    supportType: 'نوع الدعم التعليمي',
-                    supportOptions: { laptop: 'دعم بجهاز حاسوب', tuition: 'مساعدة في الرسوم', stationary: 'قرطاسية ومستلزمات' },
+
+                files: {
+                    picture: 'الصورة الشخصية',
+                    medicalReport: 'التقرير الطبي',
+                    nationalId: 'الهوية الوطنية',
+                    familyBooklet: 'دفتر العائلة',
+                    deathCert: 'وثيقة وفاة الوالد',
+                    familyBook: 'صورة دفتر العائلة',
+                    universityId: 'بطاقة الجامعة',
+                    uploaded: 'تم رفع الملف',
                 },
-                medical: {
-                    sectionTitle: 'الوضع الطبي',
-                    condition: 'وصف الحالة المرضية',
-                    conditionPlaceholder: 'اشرح الوضع الصحي باختصار...',
-                    requiredAmount: 'المبلغ المطلوب (ر.س)',
+
+                publish: {
+                    warning: 'هذه المعلومات ستظهر للمتبرعين — اختر عنواناً ووصفاً احترافياً دون الكشف عن بيانات حساسة',
+                    caseTitle: 'عنوان الحالة',
+                    caseTitleRequired: 'عنوان الحالة مطلوب',
+                    caseDesc: 'وصف الحالة للعرض العام',
+                    caseDescRequired: 'وصف الحالة مطلوب',
+                    caseDescPlaceholder: 'وصف مختصر يوضح احتياج الحالة دون الكشف عن بيانات شخصية...',
+                    caseImage: 'صورة الحالة',
+                    imageOptional: '(اختياري)',
+                    imageLabel: 'اضغط أو اسحب صورة الحالة',
+                    placeholders: {
+                        patient: 'مثال: مريض يحتاج دعماً طبياً عاجلاً',
+                        orphan: 'مثال: كفالة أيتام — أسرة بحاجة للدعم',
+                        school_student: 'مثال: دعم طالب متفوق في مدرسته',
+                        university_student: 'مثال: طالب جامعي يحتاج لابتوب للدراسة',
+                    },
                 },
-                buttons: { cancel: 'إلغاء', submit: 'إرسال الطلب', update: 'حفظ التعديلات' },
-                errors: {
-                    nameRequired: 'الاسم الكامل مطلوب',
-                    phoneRequired: 'رقم التواصل مطلوب',
-                    addressRequired: 'العنوان السكني مطلوب',
-                },
-                governorates: {
-                    damascus: 'دمشق',
-                    rif_dimashq: 'ريف دمشق',
-                    aleppo: 'حلب',
-                    homs: 'حمص',
-                    hama: 'حماة',
-                    latakia: 'اللاذقية',
-                    tartus: 'طرطوس',
-                    idlib: 'إدلب',
-                    deir_ez_zor: 'دير الزور',
-                    raqqa: 'الرقة',
-                    hasakah: 'الحسكة',
-                    daraa: 'درعا',
-                    sweida: 'السويداء',
-                    quneitra: 'القنيطرة',
-                },
+            },
+
+            map: {
+                allGov: 'كل المحافظات',
+                allCat: 'كل الفئات',
+                allPri: 'كل الأولويات',
+                clearFilters: '✕ مسح الفلاتر',
+                unmapped: '{{count}} مستفيد لم يُحدَّد موقعهم',
+                unmappedTip: 'تأكد من وجود حقل المحافظة أو المنطقة في بيانات المستفيد',
+                govLevel: 'موضوع على مستوى المحافظة',
+                legend: { category: 'الفئة', sizeNote: '● حجم الدائرة = الأولوية' },
+                counter: '{{filtered}} / {{total}} مستفيد',
             },
         },
 
@@ -284,9 +313,59 @@ const ar = {
                 startDate: 'تاريخ البداية',
                 endDate: 'تاريخ الانتهاء',
                 statuses: { active: 'نشطة', draft: 'مسودة', completed: 'مكتملة' },
-                buttons: { cancel: 'إلغاء', create: 'إنشاء الحملة', update: 'حفظ التعديلات' },
+                PermissionButtons: { cancel: 'إلغاء', create: 'إنشاء الحملة', update: 'حفظ التعديلات' },
                 errors: { nameRequired: 'اسم الحملة مطلوب', amountRequired: 'المبلغ المستهدف مطلوب' },
             },
+        },
+        wallet: {
+            title: 'المحفظة',
+            subtitle: 'الإدارة المالية وعمليات الصرف',
+            disburseBtn: 'صرف من المحفظة',
+            kpi: {
+                balance: 'الرصيد الحالي',
+                totalOut: 'إجمالي المصروف',
+            },
+            campaigns: 'الحملات',
+            cases: 'حالات المستفيدين',
+            raised: 'التبرعات',
+            totalRaised: 'إجمالي التبرعات',
+            disbursed: 'تم صرفه',
+            remaining: 'المتبقي',
+            disburse: 'صرف',
+            fullyDisbursed: 'تم الصرف بالكامل',
+            status: { completed: 'مكتملة', active: 'نشطة' },
+            type: { campaign: 'حملة', case: 'حالة' },
+            txTitle: 'سجل المصروفات',
+            txSubtitle: 'جميع عمليات الصرف للحملات والحالات',
+            table: { id: '#', target: 'الوجهة', type: 'النوع', amount: 'المبلغ', note: 'ملاحظة', date: 'التاريخ' },
+            searchPlaceholder: 'ابحث بالاسم أو الملاحظة...',
+            empty: 'لا توجد مصروفات',
+            modal: {
+                title: 'صرف من المحفظة',
+                subtitle: 'اختر الوجهة وأدخل المبلغ',
+                available: 'الرصيد المتاح',
+                destination: 'وجهة الصرف',
+                campaign: 'حملة',
+                case: 'حالة مستفيد',
+                selectCampaign: 'اختر الحملة',
+                selectCase: 'اختر الحالة',
+                choose: 'اختر',
+                totalRaised: 'إجمالي التبرعات',
+                disbursed: 'تم صرفه مسبقاً',
+                remaining: 'المتبقي للصرف',
+                amount: 'المبلغ (ر.س)',
+                amountPlaceholder: 'أدخل المبلغ...',
+                note: 'ملاحظة',
+                notePlaceholder: 'ملاحظة اختيارية...',
+                confirm: 'تأكيد الصرف',
+                errors: {
+                    noTarget: 'اختر الوجهة أولاً',
+                    invalidAmt: 'أدخل مبلغاً صحيحاً',
+                    noBalance: 'المبلغ يتجاوز رصيد المحفظة',
+                    overRemain: 'المبلغ يتجاوز المتبقي لهذه الوجهة',
+                },
+            },
+            toast: { success: 'تم الصرف بنجاح إلى' },
         },
 
         // ── Notifications ─────────────────────────────────────────────────────
@@ -301,7 +380,43 @@ const ar = {
             empty: 'لا توجد إشعارات',
             types: { donation: 'تبرع', case: 'حالة', campaign: 'حملة', system: 'نظام' },
         },
-
+        //========= appUser
+        appUsers: {
+            title: "مستخدمو التطبيق",
+            subtitle: "إجمالي {{count}} مستخدم مسجّل",
+            searchPlaceholder: "ابحث بالاسم أو رقم الهاتف...",
+            tableTitle: "قائمة المستخدمين",
+            tableSubtitle: "إدارة أرصدة مستخدمي تطبيق التبرع",
+            table: {
+                user: "المستخدم",
+                contact: "التواصل",
+                balance: "الرصيد",
+                status: "الحالة",
+                joinedAt: "تاريخ الانضمام",
+                actions: "الإجراءات"
+            },
+            actions: {
+                topUp: "شحن رصيد"
+            },
+            empty: {
+                title: "لا يوجد مستخدمون",
+                description: "لم يسجّل أي مستخدم في التطبيق بعد"
+            }
+        },
+        topUp: {
+            title: "شحن الرصيد",
+            subtitle: "إضافة رصيد للمحفظة الإلكترونية",
+            currentBalance: "الرصيد الحالي",
+            quickAmounts: "مبالغ سريعة",
+            amountLabel: "المبلغ المراد إضافته",
+            amountPlaceholder: "أدخل المبلغ",
+            balanceAfter: "الرصيد بعد الشحن",
+            confirmBtn: "تأكيد الشحن",
+            errors: {
+                invalidAmount: "يرجى إدخال مبلغ صحيح أكبر من صفر"
+            }
+        }
+        ,
         // ── Services ──────────────────────────────────────────────────────────
         services: {
             title: 'الخدمات والبرامج',
@@ -325,7 +440,7 @@ const ar = {
                 status: 'الحالة',
                 active: 'نشطة',
                 inactive: 'موقوفة',
-                buttons: { cancel: 'إلغاء', save: 'حفظ التغييرات', add: 'إضافة الخدمة' },
+                PermissionButtons: { cancel: 'إلغاء', save: 'حفظ التغييرات', add: 'إضافة الخدمة' },
                 errors: { nameRequired: 'اسم الخدمة مطلوب' },
             },
             stats: {
@@ -407,7 +522,7 @@ const ar = {
                 removePhoto: 'إزالة الصورة',
                 roles: { admin: 'مدير النظام', fieldWorker: 'موظف ميداني' },
                 statuses: { active: 'نشط', inactive: 'غير نشط' },
-                buttons: { cancel: 'إلغاء', create: 'إنشاء المستخدم', update: 'حفظ التعديلات' },
+                PermissionButtons: { cancel: 'إلغاء', create: 'إنشاء المستخدم', update: 'حفظ التعديلات' },
                 errors: { nameRequired: 'الاسم مطلوب', emailRequired: 'البريد الإلكتروني مطلوب', phoneRequired: 'رقم الهاتف مطلوب' },
             },
             deleteModal: {
@@ -460,7 +575,7 @@ const ar = {
                 skills: { medical: 'طبي / صحي', teaching: 'تعليمي', logistics: 'لوجستي', social: 'اجتماعي', technical: 'تقني', other: 'أخرى' },
                 availability_options: { morning: 'صباحي', evening: 'مسائي', weekend: 'نهاية الأسبوع', flexible: 'مرن' },
                 experience_options: { none: 'لا يوجد', '1_2': '1 - 2 سنة', '3_5': '3 - 5 سنوات', '5_plus': 'أكثر من 5 سنوات' },
-                buttons: { cancel: 'إلغاء', create: 'إنشاء الطلب', update: 'حفظ التعديلات' },
+                PermissionButtons: { cancel: 'إلغاء', create: 'إنشاء الطلب', update: 'حفظ التعديلات' },
                 errors: {
                     nameRequired: 'الاسم مطلوب',
                     phoneRequired: 'الهاتف مطلوب',
@@ -510,7 +625,9 @@ const en = {
             settings: 'Settings',
             notifications: 'Notifications',
             volunteers: 'Volunteers',
-            ai: 'AI Assistant'
+            ai: 'AI Assistant',
+            wallet: 'Wallet',
+            appUsers: "App Users"
         },
 
         // ── Common ────────────────────────────────────────────────────────────
@@ -615,129 +732,143 @@ const en = {
                 types: { cash: 'Cash', transfer: 'Bank Transfer', inkind: 'In-kind' },
                 errors: { donorRequired: 'Donor name is required', amountInvalid: 'Amount must be greater than zero' },
             },
+            tableTitle: 'Donations List',
+            tableSubtitle: 'Track and manage all charity donations',
+
+            summary: {
+                total: 'Total Donations',
+                count: 'Count',
+                avg: 'Average Donation',
+                max: 'Highest Donation',
+            },
+
+            filter: {
+                search: 'Search by donor name...',
+            },
         },
 
         // ── Beneficiaries ─────────────────────────────────────────────────────
 
         beneficiaries: {
             title: 'Beneficiaries',
-            subtitle: '{{count}} cases',
+            subtitle: '{{count}} registered cases',
             addBtn: 'Add Case',
+
             tabs: {
                 all: 'All',
                 active: 'Active',
-                pending: 'Pending',
+                pending: 'Under Review',
                 rejected: 'Rejected',
-                archived: 'Archived'
+                archived: 'Archived',
             },
-            filters: {
-                searchPlaceholder: 'Search by name or phone...',
-                allCategories: 'All Categories',
-                allCampaigns: 'All Campaigns'
-            },
+
             categories: {
-                orphan: 'Orphan Care',
-                educational: 'Educational Assistance',
-                medical: 'Medical Assistance',
-                widow: 'Widow Support',
-                poor: 'Low-income Family'
+                all: 'All Categories',
+                label: 'Category',
+                patient: 'Patient',
+                orphan: 'Orphan',
+                school_student: 'School Student',
+                university_student: 'University Student',
             },
-            campaigns: {
-                camp_1: 'Winter Clothing',
-                camp_2: 'Orphan Sponsorship',
-                camp_3: 'Food Basket',
-                camp_4: 'Widows Support',
-                camp_5: 'Back to School',
-                camp_6: 'Medical Aid'
-            },
+
             priority: {
+                label: 'Priority',
                 high: 'High',
                 medium: 'Medium',
-                low: 'Low'
+                low: 'Low',
             },
+
             table: {
+                title: 'Beneficiaries List',
+                subtitle: 'Manage and view beneficiary data',
                 beneficiary: 'Beneficiary',
-                location: 'Geographic Location',
                 category: 'Category',
+                location: 'Location',
                 priority: 'Priority',
-                support: 'Support',
+                amount: 'Required Amount',
                 status: 'Status',
                 actions: 'Actions',
-                noAddress: 'Not specified'
             },
-            empty: {
-                title: 'No Data',
-                description: 'No matching cases found for the selected filters.'
+
+            search: 'Search by name...',
+            empty: { title: 'No beneficiaries found', description: 'Start by adding the first case' },
+
+            support: {
+                laptop: 'Laptop Support',
+                fees: 'Tuition Fees',
             },
-            deleteConfirm: 'Are you sure you want to delete this beneficiary?',
-            modal: {
-                titleAdd: 'New Support Request',
-                titleEdit: 'Edit Case Info',
+
+            caseView: {
+                title: 'Case Details',
+                publishTitle: 'Approve & Publish Case',
+                caseNumber: 'Case #{{id}}',
+                publishSubtitle: 'Add details that will be shown to donors',
+                close: 'Close',
+                reject: 'Reject',
+                archive: 'Archive',
+                approveAndPublish: 'Approve & Publish',
+                confirmPublish: 'Confirm Approval & Publishing',
+                back: 'Back',
+
                 fields: {
-                    category: 'Category',
-                    priority: 'Priority',
-                    fullName: 'Full Name (Legal)',
-                    fullNamePlaceholder: 'Enter full name',
-                    phone: 'Contact Number',
-                    phonePlaceholder: '09XXXXXXXX',
+                    phone: 'Phone',
+                    email: 'Email',
                     governorate: 'Governorate',
-                    governoratePlaceholder: 'Select Governorate',
-                    region: 'Region / District',
-                    regionPlaceholder: 'e.g., Al-Midan, Al-Hamadaniyah...',
+                    region: 'Region',
                     address: 'Detailed Address',
-                    addressPlaceholder: 'Street, Building, Floor...',
-                    membersCount: 'Family Members',
-                    monthlySupport: 'Monthly Support',
-                    needDescription: 'Description of Need',
-                    needPlaceholder: 'Briefly describe why this support is requested...'
-                },
-                governorates: {
-                    damascus: 'Damascus',
-                    rif_dimashq: 'Rif Dimashq',
-                    aleppo: 'Aleppo',
-                    homs: 'Homs',
-                    hama: 'Hama',
-                    latakia: 'Latakia',
-                    tartus: 'Tartus',
-                    idlib: 'Idlib',
-                    deir_ez_zor: 'Deir ez-Zor',
-                    raqqa: 'Raqqa',
-                    hasakah: 'Al-Hasakah',
-                    daraa: 'Daraa',
-                    sweida: 'As-Suwayda',
-                    quneitra: 'Quneitra'
-                },
-                educational: {
-                    sectionTitle: 'Academic Details',
-                    academicYear: 'Academic Year / Grade',
-                    academicPlaceholder: 'e.g., 2nd Year University',
+                    description: 'Case Description',
+                    amount: 'Required Amount',
+                    priority: 'Priority',
+                    publishedTitle: 'Publishing Details',
+                    grade: 'Academic Grade',
+                    school: 'School Name',
+                    year: 'Academic Year',
                     supportType: 'Support Type',
-                    supportOptions: {
-                        laptop: 'Laptop Support',
-                        tuition: 'Tuition Assistance',
-                        stationary: 'Stationery / Supplies'
-                    }
                 },
-                medical: {
-                    sectionTitle: 'Medical Situation',
-                    condition: 'Condition Description',
-                    conditionPlaceholder: 'Briefly describe the medical situation...',
-                    requiredAmount: 'Required Amount'
+
+                files: {
+                    picture: 'Personal Photo',
+                    medicalReport: 'Medical Report',
+                    nationalId: 'National ID',
+                    familyBooklet: 'Family Booklet',
+                    deathCert: 'Father Death Certificate',
+                    familyBook: 'Family Book Photo',
+                    universityId: 'University ID',
+                    uploaded: 'File uploaded',
                 },
-                buttons: {
-                    cancel: 'Cancel',
-                    submit: 'Submit Request',
-                    update: 'Update Case'
+
+                publish: {
+                    warning: 'This information will be visible to donors — choose a professional title and description without revealing sensitive personal data',
+                    caseTitle: 'Case Title',
+                    caseTitleRequired: 'Case title is required',
+                    caseDesc: 'Public Case Description',
+                    caseDescRequired: 'Case description is required',
+                    caseDescPlaceholder: 'Brief description of the case need without revealing personal data...',
+                    caseImage: 'Case Image',
+                    imageOptional: '(optional)',
+                    imageLabel: 'Click or drag a case image',
+                    placeholders: {
+                        patient: 'e.g. Patient in urgent need of medical support',
+                        orphan: 'e.g. Orphan sponsorship — family in need',
+                        school_student: 'e.g. Supporting a high-achieving school student',
+                        university_student: 'e.g. University student needs a laptop for studies',
+                    },
                 },
-                errors: {
-                    nameRequired: 'Full name is required',
-                    phoneRequired: 'Contact number is required',
-                    addressRequired: 'Address is required',
-                    required: 'This field is required'
-                }
-            }
-        }
-        ,
+            },
+
+            map: {
+                allGov: 'All Governorates',
+                allCat: 'All Categories',
+                allPri: 'All Priorities',
+                clearFilters: '✕ Clear Filters',
+                unmapped: '{{count}} beneficiaries with no location',
+                unmappedTip: 'Make sure governorate or region fields are filled in the beneficiary data',
+                govLevel: 'Placed at governorate level',
+                legend: { category: 'Category', sizeNote: '● Circle size = Priority' },
+                counter: '{{filtered}} / {{total}} beneficiaries',
+            },
+        },
+
         // ── Campaigns ─────────────────────────────────────────────────────────
         campaigns: {
             title: 'Campaigns', subtitle: '{{count}} campaigns', addBtn: 'New campaign',
@@ -751,11 +882,94 @@ const en = {
                 targetAmount: 'Target amount (SAR)', targetPlaceholder: '50000',
                 status: 'Status', startDate: 'Start date', endDate: 'End date',
                 statuses: { active: 'Active', draft: 'Draft', completed: 'Completed' },
-                buttons: { cancel: 'Cancel', create: 'Create campaign', update: 'Save changes' },
+                PermissionButtons: { cancel: 'Cancel', create: 'Create campaign', update: 'Save changes' },
                 errors: { nameRequired: 'Campaign name is required', amountRequired: 'Target amount is required' },
             },
         },
+        wallet: {
+            title: 'Wallet',
+            subtitle: 'Financial management & disbursements',
+            disburseBtn: 'Disburse',
+            kpi: { balance: 'Current Balance', totalOut: 'Total Disbursed' },
+            campaigns: 'CAMPAIGNS',
+            cases: 'BENEFICIARY CASES',
+            raised: 'Raised',
+            totalRaised: 'Total raised',
+            disbursed: 'Disbursed',
+            remaining: 'Remaining',
+            disburse: 'Disburse',
+            fullyDisbursed: 'Fully Disbursed',
+            status: { completed: 'Completed', active: 'Active' },
+            type: { campaign: 'Campaign', case: 'Case' },
+            txTitle: 'Disbursement History',
+            txSubtitle: 'All outgoing disbursements to campaigns and cases',
+            table: { id: '#', target: 'Destination', type: 'Type', amount: 'Amount', note: 'Note', date: 'Date' },
+            searchPlaceholder: 'Search by name or note...',
+            empty: 'No disbursements found',
+            modal: {
+                title: 'Disburse from Wallet',
+                subtitle: 'Choose destination and enter amount',
+                available: 'Available balance',
+                destination: 'Destination type',
+                campaign: 'Campaign',
+                case: 'Case',
+                selectCampaign: 'Select campaign',
+                selectCase: 'Select case',
+                choose: 'Select',
+                totalRaised: 'Total raised',
+                disbursed: 'Already disbursed',
+                remaining: 'Remaining',
+                amount: 'Amount (SAR)',
+                amountPlaceholder: 'Enter amount...',
+                note: 'Note',
+                notePlaceholder: 'Optional note...',
+                confirm: 'Confirm Disbursement',
+                errors: {
+                    noTarget: 'Please select a destination',
+                    invalidAmt: 'Please enter a valid amount',
+                    noBalance: 'Amount exceeds wallet balance',
+                    overRemain: 'Amount exceeds remaining for this destination',
+                },
+            },
+            toast: { success: 'Successfully disbursed to' },
+        },
 
+        ///====appUser
+        appUsers: {
+            title: "App Users",
+            subtitle: "{{count}} registered users total",
+            searchPlaceholder: "Search by name or phone...",
+            tableTitle: "Users List",
+            tableSubtitle: "Manage donation app users' wallets",
+            table: {
+                user: "User",
+                contact: "Contact",
+                balance: "Balance",
+                status: "Status",
+                joinedAt: "Joined At",
+                actions: "Actions"
+            },
+            actions: {
+                topUp: "Top Up"
+            },
+            empty: {
+                title: "No users found",
+                description: "No users have registered in the app yet"
+            }
+        },
+        topUp: {
+            title: "Top Up Balance",
+            subtitle: "Add funds to the e-wallet",
+            currentBalance: "Current Balance",
+            quickAmounts: "Quick Amounts",
+            amountLabel: "Amount to Add",
+            amountPlaceholder: "Enter amount",
+            balanceAfter: "Balance After Top Up",
+            confirmBtn: "Confirm Top Up",
+            errors: {
+                invalidAmount: "Please enter a valid amount greater than zero"
+            }
+        },
         // ── Notifications ─────────────────────────────────────────────────────
         notifications: {
             title: 'Notifications', unread: '{{count}} unread notifications', allRead: 'All notifications are read',
@@ -776,7 +990,7 @@ const en = {
                 category: 'Category', amount: 'Service amount (SAR)',
                 description: 'Description', descPlaceholder: 'Short service description...',
                 status: 'Status', active: 'Active', inactive: 'Inactive',
-                buttons: { cancel: 'Cancel', save: 'Save changes', add: 'Add service' },
+                PermissionButtons: { cancel: 'Cancel', save: 'Save changes', add: 'Add service' },
                 errors: { nameRequired: 'Service name is required' },
             },
         },
@@ -829,7 +1043,7 @@ const en = {
                 uploadPhoto: 'Upload photo', changePhoto: 'Change photo', removePhoto: 'Remove photo',
                 roles: { admin: 'Admin', fieldWorker: 'Field Worker' },
                 statuses: { active: 'Active', inactive: 'Inactive' },
-                buttons: { cancel: 'Cancel', create: 'Create user', update: 'Save changes' },
+                PermissionButtons: { cancel: 'Cancel', create: 'Create user', update: 'Save changes' },
                 errors: { nameRequired: 'Name is required', emailRequired: 'Email is required', phoneRequired: 'Phone is required' },
             },
             deleteModal: {
@@ -861,7 +1075,7 @@ const en = {
                 skills: { medical: 'Medical / Health', teaching: 'Education', logistics: 'Logistics', social: 'Social', technical: 'Technical', other: 'Other' },
                 availability_options: { morning: 'Morning', evening: 'Evening', weekend: 'Weekend', flexible: 'Flexible' },
                 experience_options: { none: 'No experience', '1_2': '1 - 2 years', '3_5': '3 - 5 years', '5_plus': '5+ years' },
-                buttons: { cancel: 'Cancel', create: 'Create request', update: 'Save changes' },
+                PermissionButtons: { cancel: 'Cancel', create: 'Create request', update: 'Save changes' },
                 errors: {
                     nameRequired: 'Name is required', phoneRequired: 'Phone is required',
                     campaignRequired: 'Please select a campaign', skillRequired: 'Please select a skill',

@@ -1,61 +1,136 @@
-import { useState, useEffect } from 'react'
+// features/auth/Login.jsx
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
+
 import {
   Eye,
   EyeOff,
   LogIn,
   HeartHandshake,
+  Mail,
+  LockKeyhole,
 } from 'lucide-react'
 
 import { useAuth } from '../../context/AuthContext'
 
-/* صور السلايدر */
+// الصفحة الرئيسية لكل دور
+const HOME_BY_ROLE = {
+  admin: '/dashboard',
+  supervisor: '/dashboard',
+  fieldWorker: '/campaigns',
+}
+
+// الصور
 import imgMedical from '../../image/Screenshot 2026-05-15 140344.png'
 import imgVolunteer from '../../image/Screenshot 2026-05-15 140324.png'
 import imgChild from '../../image/children.jpg'
 import imgEnvironment from '../../image/Screenshot 2026-05-15 140313.png'
 
 const SLIDES = [
-  imgChild,
-  imgMedical,
-  imgVolunteer,
-  imgEnvironment,
+  {
+    image: imgChild,
+    title: 'نغيّر حياة الأطفال',
+    sub: 'نسعى لمستقبل أفضل لكل طفل محتاج',
+
+    stats: [
+      {
+        title: 'الأطفال المكفولين',
+        value: '2,480',
+        progress: '78%',
+      },
+      {
+        title: 'التبرعات الشهرية',
+        value: '$84K',
+        progress: '64%',
+      },
+    ],
+  },
+
+  {
+    image: imgMedical,
+    title: 'رعاية صحية للجميع',
+    sub: 'توفير الخدمات الطبية لمن لا يقدر عليها',
+
+    stats: [
+      {
+        title: 'الحالات الطبية',
+        value: '1,320',
+        progress: '72%',
+      },
+      {
+        title: 'العمليات المدعومة',
+        value: '285',
+        progress: '48%',
+      },
+    ],
+  },
+
+  {
+    image: imgVolunteer,
+    title: 'متطوعون بقلب كبير',
+    sub: 'آلاف المتطوعين يعملون يداً بيد كل يوم',
+
+    stats: [
+      {
+        title: 'المتطوعون النشطون',
+        value: '950',
+        progress: '82%',
+      },
+      {
+        title: 'ساعات التطوع',
+        value: '14K',
+        progress: '67%',
+      },
+    ],
+  },
+
+  {
+    image: imgEnvironment,
+    title: 'نحمي بيئتنا',
+    sub: 'مبادرات بيئية لغدٍ أكثر خضرة',
+
+    stats: [
+      {
+        title: 'الأشجار المزروعة',
+        value: '12,500',
+        progress: '88%',
+      },
+      {
+        title: 'الحملات البيئية',
+        value: '98',
+        progress: '53%',
+      },
+    ],
+  },
 ]
 
 export default function Login() {
   const { t } = useTranslation()
   const { login } = useAuth()
+
   const navigate = useNavigate()
 
   const [email, setEmail] = useState('admin@charity.org')
   const [password, setPassword] = useState('123456')
+
   const [showPass, setShowPass] = useState(false)
-  const [error, setError] = useState('')
+
   const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
 
   const [slide, setSlide] = useState(0)
-  const [fade, setFade] = useState(false)
 
-  useEffect(() => {
-    SLIDES.forEach((imgSrc) => {
-      const img = new Image()
-      img.src = imgSrc
-    })
-  }, [])
-
+  // slider
   useEffect(() => {
     const id = setInterval(() => {
-      setFade(true)
-
-      setTimeout(() => {
-        setSlide((s) => (s + 1) % SLIDES.length)
-        setFade(false)
-      }, 350)
+      setSlide((s) => (s + 1) % SLIDES.length)
     }, 4000)
 
     return () => clearInterval(id)
   }, [])
+
+  const current = SLIDES[slide]
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -65,67 +140,58 @@ export default function Login() {
 
     await new Promise((r) => setTimeout(r, 700))
 
-    const ok = login(email, password)
+    const user = login(email, password)
 
-    if (ok) {
-      navigate('/')
+    if (user) {
+      const home = HOME_BY_ROLE[user.role] ?? '/campaigns'
+      navigate(home, { replace: true })
     } else {
-      setError(
-        'البريد الإلكتروني أو كلمة المرور غير صحيحة'
-      )
+      setError(t('auth.loginError'))
     }
 
     setLoading(false)
   }
 
   return (
-    <div style={styles.page}>
-
-      {/* CARD */}
-      <div style={styles.wrapper}>
-
-        {/* LEFT SIDE */}
-        <div style={styles.formSection}>
-
+    <div style={s.page}>
+      <div style={s.wrapper}>
+        {/* ================= LEFT ================= */}
+        <div style={s.formSection}>
           {/* Logo */}
-          <div style={styles.logoRow}>
-            <div style={styles.logoIcon}>
-              <HeartHandshake
-                size={18}
-                color="#fff"
-              />
+          <div style={s.brand}>
+            <div style={s.brandIcon}>
+              <HeartHandshake size={24} color="#0b4b43" />
             </div>
 
             <div>
-              <p style={styles.logoTitle}>
-                الجمعية الخيرية
+              <p style={s.brandTitle}>
+                {t('brand.name')}
               </p>
 
-              <p style={styles.logoSub}>
-                Charity Dashboard
+              <p style={s.brandSub}>
+                {t('brand.subtitle')}
               </p>
             </div>
           </div>
 
           {/* Welcome */}
-          <div style={styles.heroText}>
-            <h1 style={styles.title}>
+          <div style={s.header}>
+            <h1 style={s.heading}>
               أهلاً بعودتك
             </h1>
 
-            <p style={styles.subtitle}>
-              قم بتسجيل الدخول للوصول إلى
-              لوحة التحكم الخاصة بالجمعية
+            <p style={s.subHeading}>
+              قم بتسجيل الدخول للمتابعة إلى لوحة التحكم
             </p>
           </div>
 
           {/* Tabs */}
-          <div style={styles.tabs}>
-            <button style={styles.activeTab}>
+          <div style={s.tabs}>
+            <button style={s.activeTab}>
               تسجيل الدخول
             </button>
 
-            <button style={styles.tab}>
+            <button style={s.tab}>
               إنشاء حساب
             </button>
           </div>
@@ -133,59 +199,64 @@ export default function Login() {
           {/* Form */}
           <form
             onSubmit={handleSubmit}
-            style={styles.form}
+            style={s.form}
           >
+            {/* Email */}
             <div>
-              <label style={styles.label}>
+              <label style={s.label}>
                 البريد الإلكتروني
               </label>
 
-              <input
-                type="email"
-                value={email}
-                onChange={(e) =>
-                  setEmail(e.target.value)
-                }
-                placeholder="admin@charity.org"
-                style={styles.input}
-              />
+              <div style={s.inputWrap}>
+                <Mail
+                  size={16}
+                  color="#94a3b8"
+                />
+
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) =>
+                    setEmail(e.target.value)
+                  }
+                  placeholder="ادخل البريد الإلكتروني"
+                  style={s.input}
+                  required
+                />
+              </div>
             </div>
 
+            {/* Password */}
             <div>
-              <label style={styles.label}>
+              <label style={s.label}>
                 كلمة المرور
               </label>
 
-              <div
-                style={{
-                  position: 'relative',
-                }}
-              >
+              <div style={s.inputWrap}>
+                <LockKeyhole
+                  size={16}
+                  color="#94a3b8"
+                />
+
                 <input
                   type={
-                    showPass
-                      ? 'text'
-                      : 'password'
+                    showPass ? 'text' : 'password'
                   }
                   value={password}
                   onChange={(e) =>
-                    setPassword(
-                      e.target.value
-                    )
+                    setPassword(e.target.value)
                   }
-                  placeholder="••••••••"
-                  style={{
-                    ...styles.input,
-                    paddingLeft: '42px',
-                  }}
+                  placeholder="ادخل كلمة المرور"
+                  style={s.input}
+                  required
                 />
 
                 <button
                   type="button"
                   onClick={() =>
-                    setShowPass(!showPass)
+                    setShowPass((p) => !p)
                   }
-                  style={styles.eyeBtn}
+                  style={s.eyeBtn}
                 >
                   {showPass ? (
                     <EyeOff size={16} />
@@ -196,183 +267,159 @@ export default function Login() {
               </div>
             </div>
 
+            {/* Error */}
             {error && (
-              <div style={styles.errorBox}>
+              <div style={s.errorBox}>
                 {error}
               </div>
             )}
 
+            {/* Submit */}
             <button
               type="submit"
               disabled={loading}
-              style={styles.submitBtn}
+              style={s.submitBtn}
             >
               {loading ? (
-                <span style={styles.spinner} />
+                <span style={s.spinner} />
               ) : (
-                <LogIn size={16} />
+                <>
+                  <LogIn size={16} />
+                  تسجيل الدخول
+                </>
               )}
-
-              {loading
-                ? 'جارٍ تسجيل الدخول...'
-                : 'تسجيل الدخول'}
             </button>
           </form>
 
           {/* Divider */}
-          <div style={styles.divider}>
+          <div style={s.divider}>
             <span>أو المتابعة عبر</span>
           </div>
 
           {/* Social */}
-          <div style={styles.socialRow}>
-            {['G', 'A', 'F'].map((x) => (
+          <div style={s.socials}>
+            {['G', '', 'f', '✕'].map((scl) => (
               <button
-                key={x}
-                style={styles.socialBtn}
+                key={scl}
+                style={s.socialBtn}
               >
-                {x}
+                {scl}
               </button>
             ))}
           </div>
 
           {/* Footer */}
-          <div style={styles.footer}>
-            <span>
-              © جميع الحقوق محفوظة
-            </span>
-
-            <div
-              style={{
-                display: 'flex',
-                gap: '12px',
-              }}
-            >
-              <button style={styles.footerBtn}>
-                الشروط
-              </button>
-
-              <button style={styles.footerBtn}>
-                الخصوصية
-              </button>
-            </div>
+          <div style={s.footer}>
+            Copyright © Kezak. All Right Reserved
           </div>
         </div>
 
-        {/* RIGHT SIDE */}
-        <div style={styles.previewSection}>
-
+        {/* ================= RIGHT ================= */}
+        <div style={s.visualSection}>
           {/* Background */}
           <div
             style={{
-              ...styles.bgImage,
-              backgroundImage: `url(${SLIDES[slide]})`,
-              opacity: fade ? 0 : 1,
+              ...s.bg,
+              backgroundImage: `url(${current.image})`,
             }}
           />
 
           {/* Overlay */}
-          <div style={styles.overlay} />
+          <div style={s.overlay} />
+
+          {/* Floating Cards */}
+          {/* Floating Statistics */}
+<div style={s.floatingWrap}>
+  {current.stats.map((item, index) => (
+    <div
+      key={item.title}
+      style={{
+        ...s.floatCard,
+        transform:
+          index === 1
+            ? 'translate(120px, 40px)'
+            : 'translate(0px, 0px)',
+      }}
+    >
+      {/* Header */}
+      <div style={s.floatHeader}>
+        <div>
+          <p style={s.floatLabel}>
+            {item.title}
+          </p>
+
+          <h3 style={s.floatValue}>
+            {item.value}
+          </h3>
+        </div>
+
+        <div style={s.floatIcon}>
+          <HeartHandshake
+            size={16}
+            color="#0f766e"
+          />
+        </div>
+      </div>
+
+      {/* Progress */}
+      <div style={s.progressWrap}>
+        <div
+          style={{
+            ...s.progressBar,
+            width: item.progress,
+          }}
+        />
+      </div>
+
+      {/* Footer */}
+      <div style={s.floatFooter}>
+        <span>نسبة الإنجاز</span>
+        <span>{item.progress}</span>
+      </div>
+    </div>
+  ))}
+</div>
 
           {/* Content */}
-          <div style={styles.previewContent}>
-
-            {/* Floating Cards */}
-            <div style={styles.cardsArea}>
-
-              <div style={styles.floatCardLg}>
-                <p style={styles.cardTitle}>
-                  عدد المستفيدين
-                </p>
-
-                <h3 style={styles.cardNumber}>
-                  +2,450
-                </h3>
-
-                <div style={styles.progress}>
-                  <div
-                    style={{
-                      ...styles.progressFill,
-                      width: '82%',
-                    }}
-                  />
-                </div>
-              </div>
-
-              <div style={styles.floatCardSm}>
-                <p style={styles.cardTitle}>
-                  التبرعات الشهرية
-                </p>
-
-                <h3 style={styles.cardNumber}>
-                  120K
-                </h3>
-              </div>
-
-              <div style={styles.floatCardMd}>
-                <p style={styles.cardTitle}>
-                  الحملات النشطة
-                </p>
-
-                <h3 style={styles.cardNumber}>
-                  98
-                </h3>
-
-                <div style={styles.progress}>
-                  <div
-                    style={{
-                      ...styles.progressFill,
-                      width: '65%',
-                    }}
-                  />
-                </div>
-              </div>
+          <div style={s.visualContent}>
+            <div style={s.visualLogo}>
+              <HeartHandshake
+                size={22}
+                color="#fff"
+              />
             </div>
 
-            {/* About */}
-            <div style={styles.aboutBox}>
-              <div style={styles.centerLogo}>
-                <HeartHandshake
-                  size={28}
-                  color="#fff"
+            <h2 style={s.visualTitle}>
+              منصة ذكية لإدارة
+              <br />
+              العمل الخيري
+            </h2>
+
+            <p style={s.visualSub}>
+              نظام موحد يساعد الجمعيات على
+              إدارة الحملات والتبرعات
+              والمستفيدين بكفاءة عالية.
+            </p>
+
+            {/* Dots */}
+            <div style={s.dots}>
+              {SLIDES.map((_, i) => (
+                <button
+                  key={i}
+                  onClick={() => setSlide(i)}
+                  style={{
+                    ...s.dot,
+                    width:
+                      i === slide
+                        ? 36
+                        : 10,
+                    opacity:
+                      i === slide
+                        ? 1
+                        : 0.4,
+                  }}
                 />
-              </div>
-
-              <h2 style={styles.aboutTitle}>
-                منصة متكاملة لإدارة العمل
-                الخيري
-              </h2>
-
-              <p style={styles.aboutText}>
-                نسعى لتطوير العمل الإنساني
-                عبر نظام ذكي يساعد على
-                إدارة التبرعات والمستفيدين
-                والحملات الخيرية بكفاءة
-                وسهولة وشفافية عالية.
-              </p>
-
-              {/* Dots */}
-              <div style={styles.dots}>
-                {SLIDES.map((_, i) => (
-                  <button
-                    key={i}
-                    onClick={() =>
-                      setSlide(i)
-                    }
-                    style={{
-                      ...styles.dot,
-                      width:
-                        slide === i
-                          ? '26px'
-                          : '8px',
-                      opacity:
-                        slide === i
-                          ? 1
-                          : 0.45,
-                    }}
-                  />
-                ))}
-              </div>
+              ))}
             </div>
           </div>
         </div>
@@ -381,398 +428,595 @@ export default function Login() {
   )
 }
 
-/* ================= STYLES ================= */
-
-const styles = {
+const s = {
   page: {
     minHeight: '100vh',
-    background: '#dbe2e8',
+
+    background: '#dfe7ea',
+
     display: 'flex',
-    justifyContent: 'center',
     alignItems: 'center',
-    padding: '32px',
+    justifyContent: 'center',
+
+    padding: '24px',
+
     fontFamily: 'Cairo, sans-serif',
-    direction: 'rtl',
   },
 
   wrapper: {
     width: '100%',
     maxWidth: '1320px',
-    height: '92vh',
-    background: '#fff',
-    borderRadius: '26px',
+
+    minHeight: '90vh',
+
+    background: '#ffffff',
+
+    borderRadius: '28px',
+
     overflow: 'hidden',
+
     display: 'flex',
-    boxShadow:
-      '0 20px 50px rgba(15,23,42,0.08)',
+
+    boxShadow: '0 25px 80px rgba(0,0,0,0.08)',
   },
 
-  /* LEFT */
+  // ================= LEFT =================
 
   formSection: {
-    width: '46%',
-    background: '#fff',
-    padding: '34px 42px',
+    width: '42%',
+
+    minWidth: '420px',
+
+    background: '#ffffff',
+
+    padding: '36px 48px',
+
     display: 'flex',
     flexDirection: 'column',
+    justifyContent: 'center',
   },
 
-  logoRow: {
+  brand: {
     display: 'flex',
     alignItems: 'center',
+
     gap: '12px',
-    marginBottom: '38px',
+
+    marginBottom: '42px',
   },
 
-  logoIcon: {
-    width: '42px',
-    height: '42px',
-    borderRadius: '14px',
-    background:
-      'linear-gradient(135deg,#0b5d4f,#094037)',
+  brandIcon: {
+    width: 52,
+    height: 52,
+
+    borderRadius: 16,
+
+    background: '#e7f3ef',
+
+    border: '1px solid #cfe5de',
+
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
   },
 
-  logoTitle: {
+  brandTitle: {
     margin: 0,
-    fontWeight: 800,
+
     fontSize: '1rem',
-    color: '#0f172a',
+    fontWeight: 800,
+
+    color: '#0b4b43',
   },
 
-  logoSub: {
-    margin: '2px 0 0',
+  brandSub: {
+    margin: '4px 0 0',
+
     fontSize: '0.72rem',
+
     color: '#94a3b8',
   },
 
-  heroText: {
-    marginBottom: '28px',
-    textAlign: 'center',
+  header: {
+    marginBottom: '26px',
   },
 
-  title: {
+  heading: {
     margin: 0,
+
     fontSize: '2rem',
+
     fontWeight: 800,
+
     color: '#0f172a',
   },
 
-  subtitle: {
-    marginTop: '10px',
+  subHeading: {
+    margin: '10px 0 0',
+
     color: '#64748b',
-    fontSize: '0.92rem',
+
+    fontSize: '0.95rem',
+
     lineHeight: 1.7,
   },
 
   tabs: {
     display: 'flex',
+
     background: '#f1f5f9',
-    borderRadius: '14px',
-    padding: '4px',
-    marginBottom: '26px',
+
+    padding: 4,
+
+    borderRadius: 14,
+
+    marginBottom: '28px',
   },
 
   activeTab: {
     flex: 1,
-    height: '42px',
+
+    height: 42,
+
     border: 'none',
-    borderRadius: '10px',
-    background: '#fff',
+
+    borderRadius: 10,
+
+    background: '#ffffff',
+
+    color: '#0f172a',
+
     fontWeight: 700,
-    color: '#094037',
-    cursor: 'pointer',
-    boxShadow:
-      '0 2px 8px rgba(15,23,42,0.06)',
+
     fontFamily: 'Cairo, sans-serif',
+
+    boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
+
+    cursor: 'pointer',
   },
 
   tab: {
     flex: 1,
+
+    height: 42,
+
     border: 'none',
+
+    borderRadius: 10,
+
     background: 'transparent',
+
     color: '#64748b',
+
     fontWeight: 600,
-    cursor: 'pointer',
+
     fontFamily: 'Cairo, sans-serif',
+
+    cursor: 'pointer',
   },
 
   form: {
     display: 'flex',
     flexDirection: 'column',
+
     gap: '18px',
   },
 
   label: {
     display: 'block',
-    marginBottom: '8px',
+
+    marginBottom: 8,
+
     fontSize: '0.82rem',
+
     fontWeight: 700,
+
     color: '#334155',
   },
 
-  input: {
-    width: '100%',
-    boxSizing: 'border-box',
-    height: '48px',
-    borderRadius: '12px',
+  inputWrap: {
+    height: 54,
+
+    borderRadius: 14,
+
     border: '1px solid #e2e8f0',
-    background: '#fff',
-    paddingInline: '16px',
-    fontSize: '0.9rem',
-    outline: 'none',
-    color: '#0f172a',
-  },
 
-  eyeBtn: {
-    position: 'absolute',
-    left: '14px',
-    top: '50%',
-    transform: 'translateY(-50%)',
-    border: 'none',
-    background: 'none',
-    color: '#94a3b8',
-    cursor: 'pointer',
-  },
+    background: '#ffffff',
 
-  submitBtn: {
-    marginTop: '10px',
-    height: '50px',
-    borderRadius: '14px',
-    border: 'none',
-    background:
-      'linear-gradient(135deg,#0b6b5b,#094037)',
-    color: '#fff',
-    fontWeight: 800,
-    fontSize: '0.92rem',
-    cursor: 'pointer',
     display: 'flex',
     alignItems: 'center',
-    justifyContent: 'center',
-    gap: '8px',
+
+    gap: 10,
+
+    padding: '0 16px',
+
+    transition: '0.2s',
+  },
+
+  input: {
+    flex: 1,
+
+    border: 'none',
+    outline: 'none',
+
+    background: 'transparent',
+
+    fontSize: '0.92rem',
+
+    color: '#0f172a',
+
     fontFamily: 'Cairo, sans-serif',
   },
 
+  eyeBtn: {
+    border: 'none',
+    background: 'none',
+
+    display: 'flex',
+
+    cursor: 'pointer',
+
+    color: '#94a3b8',
+  },
+
+  errorBox: {
+    background: '#fff1f2',
+
+    border: '1px solid #fecdd3',
+
+    color: '#be123c',
+
+    padding: '12px 14px',
+
+    borderRadius: 12,
+
+    fontSize: '0.82rem',
+  },
+
+  submitBtn: {
+    height: 54,
+
+    border: 'none',
+
+    borderRadius: 14,
+
+    cursor: 'pointer',
+
+    background:
+      'linear-gradient(135deg, #0b4b43 0%, #0f766e 100%)',
+
+    color: '#ffffff',
+
+    fontSize: '0.95rem',
+
+    fontWeight: 700,
+
+    fontFamily: 'Cairo, sans-serif',
+
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+
+    gap: 8,
+
+    marginTop: 6,
+
+    boxShadow:
+      '0 10px 24px rgba(11,75,67,0.22)',
+  },
+
   spinner: {
-    width: '16px',
-    height: '16px',
+    width: 18,
+    height: 18,
+
     borderRadius: '50%',
+
     border:
       '2px solid rgba(255,255,255,0.3)',
+
     borderTopColor: '#fff',
+
     animation:
       'spin 0.7s linear infinite',
   },
 
-  errorBox: {
-    padding: '12px 14px',
-    borderRadius: '12px',
-    background: '#fff1f2',
-    border: '1px solid #fecdd3',
-    color: '#be123c',
-    fontSize: '0.82rem',
-  },
-
   divider: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '12px',
     margin: '26px 0 18px',
+
+    position: 'relative',
+
+    textAlign: 'center',
+
     color: '#94a3b8',
+
     fontSize: '0.8rem',
   },
 
-  socialRow: {
+  socials: {
     display: 'flex',
     justifyContent: 'center',
-    gap: '12px',
+
+    gap: 12,
   },
 
   socialBtn: {
-    width: '44px',
-    height: '44px',
-    borderRadius: '12px',
+    width: 44,
+    height: 44,
+
+    borderRadius: 12,
+
     border: '1px solid #e2e8f0',
-    background: '#fff',
+
+    background: '#ffffff',
+
     cursor: 'pointer',
-    fontWeight: 700,
-    color: '#475569',
+
+    fontSize: '1rem',
+
+    color: '#334155',
   },
 
   footer: {
     marginTop: 'auto',
-    paddingTop: '30px',
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+
+    paddingTop: '34px',
+
+    textAlign: 'center',
+
+    fontSize: '0.72rem',
+
     color: '#94a3b8',
-    fontSize: '0.75rem',
   },
 
-  footerBtn: {
-    border: 'none',
-    background: 'none',
-    cursor: 'pointer',
-    color: '#64748b',
-    fontFamily: 'Cairo, sans-serif',
-  },
+  // ================= RIGHT =================
 
-  /* RIGHT */
-
-  previewSection: {
+  visualSection: {
     flex: 1,
+
     position: 'relative',
+
     overflow: 'hidden',
-    background: '#073b35',
+
+    background: '#0b4b43',
+
+    display: 'flex',
+    alignItems: 'flex-end',
   },
 
-  bgImage: {
+  bg: {
     position: 'absolute',
     inset: 0,
+
     backgroundSize: 'cover',
     backgroundPosition: 'center',
-    transition: 'opacity 0.35s ease',
+
+    opacity: 0.24,
   },
 
   overlay: {
     position: 'absolute',
     inset: 0,
+
     background:
-      'linear-gradient(to bottom, rgba(6,78,59,0.78), rgba(3,35,31,0.94))',
-    backdropFilter: 'blur(1px)',
+      'linear-gradient(to bottom, rgba(11,75,67,0.82), rgba(3,33,29,0.96))',
   },
 
-  previewContent: {
-    position: 'relative',
+  floatingWrap: {
+    position: 'absolute',
+
+    top: 80,
+    left: 80,
+
     zIndex: 2,
-    height: '100%',
-    display: 'flex',
-    flexDirection: 'column',
-    justifyContent: 'space-between',
-    padding: '36px',
   },
 
-  cardsArea: {
-    position: 'relative',
-    height: '340px',
-  },
+  floatCard: {
+    width: 220,
 
-  floatCardLg: {
-    width: '260px',
-    background: 'rgba(255,255,255,0.96)',
-    borderRadius: '22px',
-    padding: '20px',
+    background: 'rgba(255,255,255,0.92)',
+
+    borderRadius: 24,
+
+    padding: 18,
+
     backdropFilter: 'blur(10px)',
-    position: 'absolute',
-    top: '20px',
-    right: '80px',
+
     boxShadow:
-      '0 15px 35px rgba(0,0,0,0.18)',
+      '0 18px 40px rgba(0,0,0,0.18)',
+  },
+floatHeader: {
+  display: 'flex',
+  alignItems: 'flex-start',
+  justifyContent: 'space-between',
+
+  marginBottom: 18,
+},
+
+floatLabel: {
+  margin: 0,
+
+  fontSize: '0.78rem',
+
+  color: '#64748b',
+
+  fontWeight: 600,
+},
+
+floatValue: {
+  margin: '6px 0 0',
+
+  fontSize: '1.7rem',
+
+  fontWeight: 800,
+
+  color: '#0f172a',
+},
+
+floatIcon: {
+  width: 42,
+  height: 42,
+
+  borderRadius: 14,
+
+  background: '#e6fffa',
+
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+},
+
+progressWrap: {
+  height: 10,
+
+  borderRadius: 999,
+
+  background: '#edf2f7',
+
+  overflow: 'hidden',
+},
+
+progressBar: {
+  height: '100%',
+
+  borderRadius: 999,
+
+  background:
+    'linear-gradient(90deg,#0f766e,#14b8a6)',
+},
+
+floatFooter: {
+  marginTop: 14,
+
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'space-between',
+
+  fontSize: '0.76rem',
+
+  color: '#64748b',
+
+  fontWeight: 600,
+},
+  floatTop: {
+    display: 'flex',
+    alignItems: 'center',
+
+    gap: 10,
+
+    marginBottom: 16,
   },
 
-  floatCardMd: {
-    width: '230px',
-    background: 'rgba(255,255,255,0.96)',
-    borderRadius: '20px',
-    padding: '18px',
-    position: 'absolute',
-    top: '170px',
-    left: '60px',
-    boxShadow:
-      '0 15px 35px rgba(0,0,0,0.18)',
+  circle: {
+    width: 14,
+    height: 14,
+
+    borderRadius: '50%',
+
+    background: '#0f766e',
   },
 
-  floatCardSm: {
-    width: '190px',
-    background: 'rgba(255,255,255,0.96)',
-    borderRadius: '20px',
-    padding: '16px',
-    position: 'absolute',
-    top: '90px',
-    left: '140px',
-    boxShadow:
-      '0 15px 35px rgba(0,0,0,0.18)',
+  line: {
+    height: 10,
+
+    width: 90,
+
+    borderRadius: 99,
+
+    background: '#dbeafe',
   },
 
-  cardTitle: {
-    margin: 0,
-    fontSize: '0.76rem',
-    color: '#64748b',
-    fontWeight: 700,
+  chartFake: {
+    height: 90,
+
+    borderRadius: 16,
+
+    background: '#f8fafc',
+
+    display: 'flex',
+    alignItems: 'center',
+
+    padding: 18,
   },
 
-  cardNumber: {
-    margin: '10px 0',
-    fontSize: '1.6rem',
-    fontWeight: 800,
-    color: '#094037',
-  },
+  bar: {
+    height: 12,
 
-  progress: {
-    width: '100%',
-    height: '7px',
-    borderRadius: '999px',
-    background: '#dbe4e7',
-    overflow: 'hidden',
-  },
+    borderRadius: 99,
 
-  progressFill: {
-    height: '100%',
-    borderRadius: '999px',
     background:
-      'linear-gradient(90deg,#0b6b5b,#0f9f86)',
+      'linear-gradient(90deg,#0f766e,#14b8a6)',
   },
 
-  aboutBox: {
-    textAlign: 'center',
-    maxWidth: '520px',
-    margin: '0 auto 20px',
+  visualContent: {
+    position: 'relative',
+
+    zIndex: 2,
+
+    padding: '70px',
+
+    maxWidth: 580,
   },
 
-  centerLogo: {
-    width: '68px',
-    height: '68px',
-    borderRadius: '22px',
-    background:
-      'rgba(255,255,255,0.14)',
-    backdropFilter: 'blur(12px)',
-    margin: '0 auto 24px',
+  visualLogo: {
+    width: 60,
+    height: 60,
+
+    borderRadius: 18,
+
+    background: 'rgba(255,255,255,0.12)',
+
+    border:
+      '1px solid rgba(255,255,255,0.16)',
+
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
+
+    marginBottom: 28,
+
+    backdropFilter: 'blur(12px)',
   },
 
-  aboutTitle: {
+  visualTitle: {
     margin: 0,
-    fontSize: '2.2rem',
+
+    fontSize: '3rem',
+
+    lineHeight: 1.25,
+
     fontWeight: 800,
-    color: '#fff',
-    lineHeight: 1.4,
+
+    color: '#ffffff',
   },
 
-  aboutText: {
-    marginTop: '18px',
+  visualSub: {
+    margin: '22px 0 34px',
+
     fontSize: '1rem',
+
     lineHeight: 1.9,
-    color: 'rgba(255,255,255,0.78)',
+
+    color: 'rgba(255,255,255,0.72)',
   },
 
   dots: {
     display: 'flex',
-    justifyContent: 'center',
     alignItems: 'center',
-    gap: '8px',
-    marginTop: '26px',
+
+    gap: 8,
   },
 
   dot: {
-    height: '8px',
-    borderRadius: '999px',
+    height: 10,
+
+    borderRadius: 999,
+
     border: 'none',
-    background: '#fff',
+
+    background: '#ffffff',
+
     cursor: 'pointer',
+
     transition: '0.3s',
   },
 }

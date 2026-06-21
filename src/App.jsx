@@ -18,6 +18,9 @@ const Settings      = lazy(() => import('./features/settings/Settings'))
 const Login         = lazy(() => import('./features/auth/Login'))
 const NotFound      = lazy(() => import('./features/auth/NotFound'))
 const Volunteers      = lazy(() => import('./features/volunteers/Volunteers'))
+const Certificates = lazy(() => import('./features/certificates/Certificates'))
+const WalletPage = lazy(() => import('./features/wallet/WalletPage'))
+const AppUser = lazy(() => import('./features/appUser/AppUser'))
 function ProtectedRoute({ children }) {
   const { user } = useAuth()
   if (!user) return <Navigate to="/login" replace />
@@ -68,6 +71,9 @@ export default function App() {
             <Route path="settings"       element={<Settings />}      />
             <Route path="volunteers" element={<Volunteers />} />
            <Route path="ai-assistant" element={<AIPage />} />
+           <Route path="certificates" element={<Certificates />} />
+           <Route path="/wallet" element={<WalletPage />} />
+           <Route path="/app-users" element={<AppUser />} />
           </Route>
 
         

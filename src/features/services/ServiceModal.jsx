@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import Modal, { FormRow } from '../../ui/Modal'
+import PermissionButton from '../../ui/PermissionButton'
 export default function ServiceModal({
   open,
   onClose,
@@ -68,14 +69,14 @@ export default function ServiceModal({
       }
       footer={
         <>
-          <button
+          <PermissionButton 
             onClick={onClose}
             className="btn-outline"
           >
-            {t('services.modal.buttons.cancel')}
-          </button>
+            {t('services.modal.PermissionButtons.cancel')}
+          </PermissionButton >
 
-          <button
+          <PermissionButton 
             onClick={handleSave}
             disabled={saving}
             className="btn-primary"
@@ -98,9 +99,9 @@ export default function ServiceModal({
             )}
 
             {editItem
-              ? t('services.modal.buttons.save')
-              : t('services.modal.buttons.add')}
-          </button>
+              ? t('services.modal.PermissionButtons.save')
+              : t('services.modal.PermissionButtons.add')}
+          </PermissionButton >
         </>
       }
     >
