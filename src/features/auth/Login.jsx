@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-
+ import toast from 'react-hot-toast'
 import {
   Eye,
   EyeOff,
@@ -132,25 +132,23 @@ export default function Login() {
 
   const current = SLIDES[slide]
 
-  const handleSubmit = async (e) => {
-    e.preventDefault()
+ 
 
-    setLoading(true)
-    setError('')
+const handleSubmit = async (e) => {
+  e.preventDefault()
+  setLoading(true)
 
-    await new Promise((r) => setTimeout(r, 700))
-
-    const user = login(email, password)
-
-    if (user) {
-      const home = HOME_BY_ROLE[user.role] ?? '/campaigns'
-      navigate(home, { replace: true })
-    } else {
-      setError(t('auth.loginError'))
-    }
-
+  try {
+    const user = await login(email, password)
+    toast.success(`أهلاً ${user.name} 👋`)
+    const home = HOME_BY_ROLE[user.role] ?? '/campaigns'
+    navigate(home, { replace: true })
+  } catch (err) {
+    toast.error(err.message ?? t('auth.loginError'))
+  } finally {
     setLoading(false)
   }
+}
 
   return (
     <div style={s.page}>

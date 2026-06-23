@@ -5,7 +5,7 @@ import DashboardLayout from './ui/DashboardLayout'
 import { SpinnerPage }  from './ui/Spinner'
 import { useAuth }      from './context/AuthContext'
 import AIPage from './features/ai/AIPage'
-
+import { Toaster } from 'react-hot-toast'
 
 const Dashboard     = lazy(() => import('./features/dashboard/Dashboard'))
 const Donations     = lazy(() => import('./features/donations/Donations'))
@@ -36,6 +36,7 @@ function PublicRoute({ children }) {
 
 export default function App() {
   return (
+    <>
     <BrowserRouter>
       
       <Suspense fallback={<SpinnerPage />}>
@@ -82,6 +83,33 @@ export default function App() {
         </Routes>
       </Suspense>
     </BrowserRouter>
+    
+
+    <Toaster
+  position="top-center"
+  toastOptions={{
+    style: {
+      background: '#0a3d35',
+      color: '#fff',
+      border: '1px solid #eab308',
+      fontFamily: 'inherit',
+      direction: 'rtl',
+    },
+    success: {
+      iconTheme: {
+        primary: '#eab308',
+        secondary: '#0a3d35',
+      },
+    },
+    error: {
+      iconTheme: {
+        primary: '#ef4444',
+        secondary: '#fff',
+      },
+    },
+  }}
+/>
+</>
   )
 }
 
