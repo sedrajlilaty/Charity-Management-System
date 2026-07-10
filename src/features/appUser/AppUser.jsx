@@ -107,22 +107,22 @@ export default function AppUsers() {
       ),
     },
     {
-      title: t('appUsers.table.balance'),
-      key: 'balances',
-      align: 'center',
-      render: (_, user) => (
-        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-          <Wallet size={14} style={{ color: '#094037' }} />
-          <span style={{
-            fontSize: '0.9rem',
-            fontWeight: 700,
-            color: user.balances?.USD > 0 ? '#094037' : 'var(--text-muted)',
-          }}>
-            {Number(user.balances?.USD || 0).toLocaleString('en-US')} $
-          </span>
-        </div>
-      ),
-    },
+  title: t('appUsers.table.balance'),
+  key: 'balances',
+  align: 'center',
+  render: (_, user) => (
+  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+    <Wallet size={14} style={{ color: '#094037' }} />
+    <span style={{
+      fontSize: '0.9rem',
+      fontWeight: 700,
+      color: user.balances?.USD > 0 ? '#094037' : 'var(--text-muted)',
+    }}>
+      {Number(user.balances?.USD || 0).toLocaleString('en-US')} USD
+    </span>
+  </div>
+),
+},
     {
       title: t('appUsers.table.status'),
       key: 'status',

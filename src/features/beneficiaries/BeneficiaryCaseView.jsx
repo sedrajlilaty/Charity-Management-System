@@ -1,15 +1,22 @@
-// features/beneficiaries/BeneficiaryCaseView.jsx
+// src/features/beneficiaries/BeneficiaryCaseView.jsx
 import { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
   X, CheckCircle, XCircle, Archive, MapPin,
   Phone, AlertCircle, ChevronRight,
   FileText, Heart, User, BookOpen, GraduationCap,
-  Mail, DollarSign,
+  Mail, DollarSign, ExternalLink,
 } from 'lucide-react'
-import ImageUpload from '../../ui/ImageUpload'
-import { Badge } from '../../ui/Badge'
+import { Badge }          from '../../ui/Badge'
 import { formatCurrency } from '../../utlis/helper'
+
+const STORAGE_URL = import.meta.env.VITE_STORAGE_URL ?? 'http://localhost:8000/storage'
+
+const fileUrl = (path) => {
+  if (!path) return null
+  if (path.startsWith('http')) return path
+  return `${STORAGE_URL}/${path.replace(/^\/+/, '')}`
+}
 
 const CAT_CFG = {
   patient:            { icon: Heart,         labelKey: 'beneficiaries.categories.patient',            color: '#094037', bg: 'var(--color-primary-50)'  },
@@ -18,12 +25,7 @@ const CAT_CFG = {
   university_student: { icon: GraduationCap, labelKey: 'beneficiaries.categories.university_student', color: '#92400e', bg: '#fef3c7'                  },
 }
 
-const PRI = {
-  high:   { bg: '#fee2e2',                 color: '#dc2626', labelKey: 'beneficiaries.priority.high'   },
-  medium: { bg: '#fef3c7',                 color: '#92400e', labelKey: 'beneficiaries.priority.medium' },
-  low:    { bg: 'var(--color-primary-50)', color: '#094037', labelKey: 'beneficiaries.priority.low'    },
-}
-
+// ── مساعدات ─────────────────────────────────────────────────
 function InfoCard({ icon: Icon, label, value }) {
   if (!value && value !== 0) return null
   return (
@@ -36,29 +38,58 @@ function InfoCard({ icon: Icon, label, value }) {
   )
 }
 
-function FilePreview({ label, value }) {
-  if (!value) return null
-  const isImage = value.startsWith('data:image')
+// بيشتغل مع URLs من الباك اند وbase64 من الفرونت
+function FilePreview({ label, src }) {
+  if (!src) return null
+  const url      = src.startsWith('data:') ? src : fileUrl(src)
+  if (!url) return null
+  const isImage  = /\.(jpg|jpeg|png|webp|gif)$/i.test(url) || src.startsWith('data:image') || url.includes('personal_pictures') || url.includes('profile_images')
+
   return (
     <div style={{ padding: '8px 12px', background: 'var(--bg-muted)', borderRadius: 8, border: '1px solid var(--border-subtle)' }}>
       <p style={{ margin: '0 0 6px', fontSize: '0.67rem', fontWeight: 700, color: 'var(--text-muted)' }}>{label}</p>
-      {isImage
-        ? <img src={value} alt={label} style={{ width: '100%', maxHeight: 100, objectFit: 'cover', borderRadius: 6 }} />
-        : (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            <FileText size={16} color="#094037" />
-            <span style={{ fontSize: '0.78rem', color: '#094037', fontWeight: 500 }}>{label}</span>
-          </div>
-        )
-      }
+      {isImage && (
+        <img
+          src={url} alt={label}
+          style={{ width: '100%', maxHeight: 120, objectFit: 'cover', borderRadius: 6, marginBottom: 4 }}
+          onError={e => { e.currentTarget.style.display = 'none' }}
+        />
+      )}
+      <a href={url} target="_blank" rel="noreferrer" style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: '0.75rem', color: '#094037', fontWeight: 600, textDecoration: 'none' }}>
+        <FileText size={13} />
+        {label} — عرض
+        <ExternalLink size={11} />
+      </a>
     </div>
   )
 }
 
+// ── Progress Bar ─────────────────────────────────────────────
+function ProgressBar({ donated, required, progress }) {
+  if (!required || required <= 0) return null
+  const pct   = Math.min(progress ?? 0, 100)
+  const color = pct >= 100 ? '#16a34a' : pct >= 60 ? '#094037' : '#d97706'
+  return (
+    <div style={{ padding: '12px 14px', background: 'var(--bg-muted)', borderRadius: 10, border: '1px solid var(--border-subtle)' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
+        <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)' }}>تقدم التبرعات</span>
+        <span style={{ fontSize: '0.75rem', fontWeight: 800, color }}>{pct}%</span>
+      </div>
+      <div style={{ height: 6, background: 'var(--bg-surface)', borderRadius: 99, overflow: 'hidden' }}>
+        <div style={{ width: `${pct}%`, height: '100%', background: color, borderRadius: 99, transition: 'width 0.6s ease' }} />
+      </div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 6 }}>
+        <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>تم جمع: <b style={{ color: '#094037' }}>{formatCurrency(donated ?? 0)}</b></span>
+        <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>المطلوب: <b>{formatCurrency(required)}</b></span>
+      </div>
+    </div>
+  )
+}
+
+// ── View Step ─────────────────────────────────────────────────
 function ViewStep({ c }) {
   const { t } = useTranslation()
-  const pri = PRI[c.priority] || PRI.medium
-  const cat = CAT_CFG[c.category]
+  const cat     = CAT_CFG[c.category]
   const CatIcon = cat?.icon
 
   return (
@@ -66,8 +97,11 @@ function ViewStep({ c }) {
 
       {/* Profile card */}
       <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', padding: '1rem', background: 'var(--bg-muted)', borderRadius: 14, border: '1px solid var(--border-subtle)' }}>
-        {c.personal_picture || c.caseImage
-          ? <img src={c.personal_picture || c.caseImage} alt="" style={{ width: 68, height: 68, borderRadius: 12, objectFit: 'cover', flexShrink: 0 }} />
+        {c.personal_picture
+          ? <img src={c.personal_picture.startsWith('data:') ? c.personal_picture : fileUrl(c.personal_picture)} alt=""
+              style={{ width: 68, height: 68, borderRadius: 12, objectFit: 'cover', flexShrink: 0 }}
+              onError={e => e.currentTarget.style.display = 'none'}
+            />
           : (
             <div style={{ width: 68, height: 68, borderRadius: 12, flexShrink: 0, background: 'linear-gradient(135deg,#094037,#0a5244)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.3rem', fontWeight: 800, color: '#eab308' }}>
               {c.full_name?.slice(0, 2)}
@@ -79,108 +113,107 @@ function ViewStep({ c }) {
           {c.title && <p style={{ margin: '0 0 6px', fontSize: '0.78rem', color: '#094037', fontWeight: 600 }}>📢 {c.title}</p>}
           <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
             <Badge status={c.status} />
-            <span style={{ padding: '2px 9px', borderRadius: 99, fontSize: '0.68rem', fontWeight: 700, background: pri.bg, color: pri.color }}>
-              {t('beneficiaries.priority.label')} {t(pri.labelKey)}
-            </span>
             {cat && (
               <span style={{ padding: '2px 9px', borderRadius: 99, fontSize: '0.68rem', fontWeight: 700, background: cat.bg, color: cat.color, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
                 {CatIcon && <CatIcon size={10} />} {t(cat.labelKey)}
+              </span>
+            )}
+            {c.status_request && (
+              <span style={{ padding: '2px 9px', borderRadius: 99, fontSize: '0.68rem', fontWeight: 700, background: c.status_request === 'open' ? '#dcfce7' : '#f1f5f9', color: c.status_request === 'open' ? '#16a34a' : '#64748b' }}>
+                {c.status_request === 'open' ? '🟢 مفتوح' : '🔴 مغلق'}
               </span>
             )}
           </div>
         </div>
       </div>
 
-      {/* Contact + Location */}
+      {/* معلومات التواصل والموقع */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
-        <InfoCard icon={Phone}  label={t('beneficiaries.caseView.fields.phone')}       value={c.phone} />
-        {c.email && <InfoCard icon={Mail} label={t('beneficiaries.caseView.fields.email')} value={c.email} />}
-        <InfoCard icon={MapPin} label={t('beneficiaries.caseView.fields.governorate')} value={c.governorate} />
-        <InfoCard icon={MapPin} label={t('beneficiaries.caseView.fields.region')}      value={c.region} />
+        {c.phone       && <InfoCard icon={Phone}  label="رقم الهاتف"  value={c.phone} />}
+        {c.email       && <InfoCard icon={Mail}   label="البريد"      value={c.email} />}
+        {c.governorate && <InfoCard icon={MapPin} label="المحافظة"    value={c.governorate} />}
+        {c.region      && <InfoCard icon={MapPin} label="المنطقة"     value={c.region} />}
       </div>
-      {c.address && <InfoCard icon={MapPin} label={t('beneficiaries.caseView.fields.address')} value={c.address} />}
 
+      {/* الوصف */}
       {c.description && (
         <div style={{ padding: '1rem', background: 'var(--bg-muted)', borderRadius: 12, border: '1px solid var(--border-subtle)' }}>
-          <p style={{ margin: '0 0 6px', fontSize: '0.67rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-            {t('beneficiaries.caseView.fields.description')}
-          </p>
+          <p style={{ margin: '0 0 6px', fontSize: '0.67rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>وصف الحالة</p>
           <p style={{ margin: 0, fontSize: '0.875rem', color: 'var(--text-primary)', lineHeight: 1.7 }}>{c.description}</p>
         </div>
       )}
 
-      {c.required_amount > 0 && (
-        <InfoCard icon={DollarSign} label={t('beneficiaries.caseView.fields.amount')} value={formatCurrency(c.required_amount)} />
+      {/* تقدم التبرعات للمقبولة */}
+      {c.status === 'accepted' && (
+        <ProgressBar donated={c.donated_amount} required={c.required_amount} progress={c.progress_percentage} />
       )}
 
-      {/* Patient */}
+      {/* المبلغ المطلوب للمعلقة */}
+      {c.status === 'pending' && c.required_amount > 0 && (
+        <InfoCard icon={DollarSign} label="المبلغ المطلوب" value={formatCurrency(c.required_amount)} />
+      )}
+
+      {/* ── Patient ── */}
       {c.category === 'patient' && (
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.75rem' }}>
-          <FilePreview label={t('beneficiaries.caseView.files.picture')}      value={c.personal_picture} />
-          <FilePreview label={t('beneficiaries.caseView.files.medicalReport')} value={c.medical_report} />
-          <FilePreview label={t('beneficiaries.caseView.files.nationalId')}   value={c.national_id} />
+          <FilePreview label="الصورة الشخصية"  src={c.personal_picture} />
+          <FilePreview label="التقرير الطبي"    src={c.medical_report} />
+          <FilePreview label="وثيقة الهوية"     src={c.national_id_document} />
         </div>
       )}
 
-      {/* Orphan */}
+      {/* ── Orphan ── */}
       {c.category === 'orphan' && (
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.75rem' }}>
-          <FilePreview label={t('beneficiaries.caseView.files.picture')}       value={c.personal_picture} />
-          <FilePreview label={t('beneficiaries.caseView.files.familyBooklet')} value={c.family_booklet} />
-          <FilePreview label={t('beneficiaries.caseView.files.deathCert')}     value={c.father_death_certificate} />
+          <FilePreview label="الصورة الشخصية"   src={c.personal_picture} />
+          <FilePreview label="دفتر العائلة"      src={c.family_booklet} />
+          <FilePreview label="وثيقة وفاة الوالد" src={c.father_death_certificate} />
         </div>
       )}
 
-      {/* School student */}
+      {/* ── School ── */}
       {c.category === 'school_student' && (
         <>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
-            <InfoCard icon={BookOpen} label={t('beneficiaries.caseView.fields.grade')}  value={c.academic_grade} />
-            <InfoCard icon={BookOpen} label={t('beneficiaries.caseView.fields.school')} value={c.school_name} />
+            <InfoCard icon={BookOpen} label="المرحلة الدراسية" value={c.academic_grade} />
+            <InfoCard icon={BookOpen} label="اسم المدرسة"      value={c.school_name} />
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
-            <FilePreview label={t('beneficiaries.caseView.files.picture')}    value={c.personal_picture} />
-            <FilePreview label={t('beneficiaries.caseView.files.familyBook')} value={c.family_book_photo} />
+            <FilePreview label="الصورة الشخصية"    src={c.personal_picture} />
+            <FilePreview label="صورة دفتر العائلة" src={c.family_book_photo} />
           </div>
         </>
       )}
 
-      {/* University student */}
+      {/* ── University ── */}
       {c.category === 'university_student' && (
         <>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
-            <InfoCard icon={GraduationCap} label={t('beneficiaries.caseView.fields.year')}        value={c.academic_year} />
-            <InfoCard icon={GraduationCap} label={t('beneficiaries.caseView.fields.supportType')} value={c.support_type === 'laptop_support' ? `💻 ${t('beneficiaries.support.laptop')}` : `🎓 ${t('beneficiaries.support.fees')}`} />
+            <InfoCard icon={GraduationCap} label="السنة الدراسية" value={c.academic_year} />
+            <InfoCard icon={GraduationCap} label="نوع الدعم"
+              value={c.support_type === 'laptopsupport' ? '💻 دعم لابتوب' : '🎓 دعم رسوم دراسية'} />
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
-            <FilePreview label={t('beneficiaries.caseView.files.picture')}      value={c.personal_picture} />
-            <FilePreview label={t('beneficiaries.caseView.files.universityId')} value={c.university_id_photo} />
+            <FilePreview label="الصورة الشخصية" src={c.personal_picture} />
+            <FilePreview label="بطاقة الجامعة"  src={c.university_id_photo} />
           </div>
         </>
-      )}
-
-      {c.caseTitle && (
-        <div style={{ padding: '1rem', background: 'rgba(9,64,55,0.06)', borderRadius: 12, border: '1px solid rgba(9,64,55,0.15)' }}>
-          <p style={{ margin: '0 0 6px', fontSize: '0.67rem', fontWeight: 700, color: '#094037', textTransform: 'uppercase' }}>
-            {t('beneficiaries.caseView.fields.publishedTitle')}
-          </p>
-          <h4 style={{ margin: '0 0 6px', fontSize: '0.95rem', fontWeight: 700, color: 'var(--text-primary)' }}>{c.caseTitle}</h4>
-          <p style={{ margin: 0, fontSize: '0.87rem', color: 'var(--text-secondary)', lineHeight: 1.6 }}>{c.caseDescription}</p>
-        </div>
       )}
     </div>
   )
 }
 
+// ── Publish Step ──────────────────────────────────────────────
 function PublishStep({ caseData, form, setForm, errors }) {
   const { t } = useTranslation()
-  const set = (k, v) => setForm(f => ({ ...f, [k]: v }))
-  const cat = CAT_CFG[caseData.category]
+  const set     = (k, v) => setForm(f => ({ ...f, [k]: v }))
+  const cat     = CAT_CFG[caseData.category]
   const CatIcon = cat?.icon
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.125rem' }}>
 
+      {/* بيانات الحالة */}
       <div style={{ display: 'flex', gap: 12, alignItems: 'center', padding: '0.875rem 1rem', background: 'rgba(9,64,55,0.06)', borderRadius: 12, border: '1px solid rgba(9,64,55,0.12)' }}>
         <div style={{ width: 42, height: 42, borderRadius: 10, background: '#094037', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.85rem', fontWeight: 800, color: '#eab308' }}>
           {caseData.full_name?.slice(0, 2)}
@@ -194,59 +227,79 @@ function PublishStep({ caseData, form, setForm, errors }) {
         </div>
       </div>
 
+      {/* تحذير */}
       <div style={{ display: 'flex', gap: 8, padding: '0.75rem 1rem', background: '#fefce8', borderRadius: 10, border: '1px solid #fde68a' }}>
         <AlertCircle size={15} style={{ color: '#a16207', flexShrink: 0, marginTop: 1 }} />
         <p style={{ margin: 0, fontSize: '0.8rem', color: '#78350f', lineHeight: 1.5 }}>
-          {t('beneficiaries.caseView.publish.warning')}
+          بعد القبول سيتم نشر الحالة وإتاحتها للتبرع. تأكد من صحة المعلومات.
         </p>
       </div>
 
+      {/* العنوان */}
       <div>
         <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-primary)', marginBottom: 6 }}>
-          {t('beneficiaries.caseView.publish.caseTitle')} <span style={{ color: '#dc2626' }}>*</span>
+          عنوان الحالة <span style={{ color: '#dc2626' }}>*</span>
         </label>
         <input
           value={form.title}
           onChange={e => set('title', e.target.value)}
-          placeholder={t(`beneficiaries.caseView.publish.placeholders.${caseData.category}`)}
+          placeholder="مثال: مريض سرطان يحتاج تمويل علاج عاجل"
           style={{ width: '100%', boxSizing: 'border-box', padding: '10px 14px', fontSize: '0.875rem', fontFamily: 'Cairo, sans-serif', border: `1px solid ${errors.title ? '#fca5a5' : 'var(--border-default)'}`, borderRadius: 10, outline: 'none', color: 'var(--text-primary)', background: 'var(--bg-muted)' }}
         />
-        {errors.title && <p style={{ margin: '4px 0 0', fontSize: '0.72rem', color: '#dc2626' }}>{t('beneficiaries.caseView.publish.caseTitleRequired')}</p>}
+        {errors.title && <p style={{ margin: '4px 0 0', fontSize: '0.72rem', color: '#dc2626' }}>العنوان مطلوب</p>}
       </div>
 
+      {/* الوصف */}
       <div>
         <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-primary)', marginBottom: 6 }}>
-          {t('beneficiaries.caseView.publish.caseDesc')} <span style={{ color: '#dc2626' }}>*</span>
+          وصف الحالة <span style={{ color: '#dc2626' }}>*</span>
         </label>
         <textarea
           value={form.description}
           onChange={e => set('description', e.target.value)}
-          placeholder={t('beneficiaries.caseView.publish.caseDescPlaceholder')}
+          placeholder="وصف تفصيلي للحالة والاحتياج..."
           rows={4}
           style={{ width: '100%', boxSizing: 'border-box', padding: '10px 14px', fontSize: '0.875rem', fontFamily: 'Cairo, sans-serif', lineHeight: 1.6, border: `1px solid ${errors.description ? '#fca5a5' : 'var(--border-default)'}`, borderRadius: 10, outline: 'none', resize: 'vertical', color: 'var(--text-primary)', background: 'var(--bg-muted)' }}
         />
-        {errors.description && <p style={{ margin: '4px 0 0', fontSize: '0.72rem', color: '#dc2626' }}>{t('beneficiaries.caseView.publish.caseDescRequired')}</p>}
+        {errors.description && <p style={{ margin: '4px 0 0', fontSize: '0.72rem', color: '#dc2626' }}>الوصف مطلوب</p>}
       </div>
 
+      {/* المبلغ */}
       <div>
         <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-primary)', marginBottom: 6 }}>
-          {t('beneficiaries.caseView.publish.caseImage')} <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: 400 }}>({t('beneficiaries.caseView.publish.imageOptional')})</span>
+          المبلغ المطلوب ($) <span style={{ color: '#dc2626' }}>*</span>
         </label>
-        <ImageUpload value={form.image} onChange={v => set('image', v)} label={t('beneficiaries.caseView.publish.imageLabel')} maxHeight={140} />
+        <input
+          type="number" min="1"
+          value={form.required_amount ?? caseData.required_amount ?? ''}
+          onChange={e => set('required_amount', e.target.value)}
+          placeholder="0"
+          style={{ width: '100%', boxSizing: 'border-box', padding: '10px 14px', fontSize: '0.875rem', fontFamily: 'Cairo, sans-serif', border: `1px solid ${errors.required_amount ? '#fca5a5' : 'var(--border-default)'}`, borderRadius: 10, outline: 'none', color: 'var(--text-primary)', background: 'var(--bg-muted)' }}
+        />
+        {errors.required_amount && <p style={{ margin: '4px 0 0', fontSize: '0.72rem', color: '#dc2626' }}>المبلغ مطلوب</p>}
       </div>
     </div>
   )
 }
 
+// ── Main Component ────────────────────────────────────────────
 export default function BeneficiaryCaseView({ isOpen, onClose, caseData, initialStep = 'view', onApprove, onReject, onArchive }) {
   const { t } = useTranslation()
   const [step,   setStep]   = useState(initialStep)
-  const [form,   setForm]   = useState({ title: '', description: '', image: null })
+  const [form,   setForm]   = useState({ title: '', description: '', required_amount: '' })
   const [errors, setErrors] = useState({})
   const [saving, setSaving] = useState(false)
 
   useEffect(() => {
-    if (isOpen) { setStep(initialStep); setForm({ title: '', description: '', image: null }); setErrors({}) }
+    if (isOpen) {
+      setStep(initialStep)
+      setForm({
+        title:           caseData?.title           ?? '',
+        description:     caseData?.description     ?? '',
+        required_amount: caseData?.required_amount ?? '',
+      })
+      setErrors({})
+    }
   }, [isOpen, initialStep, caseData?.id])
 
   if (!isOpen || !caseData) return null
@@ -255,17 +308,27 @@ export default function BeneficiaryCaseView({ isOpen, onClose, caseData, initial
     const e = {}
     if (!form.title.trim())       e.title       = true
     if (!form.description.trim()) e.description = true
-    setErrors(e); return !Object.keys(e).length
+    if (!form.required_amount)    e.required_amount = true
+    setErrors(e)
+    return !Object.keys(e).length
   }
 
   const handleApprove = async () => {
     if (!validate()) return
     setSaving(true)
     try {
-      await onApprove?.({ ...caseData, caseTitle: form.title, caseDescription: form.description, caseImage: form.image || caseData.personal_picture, status: 'active' })
+      await onApprove?.({
+        id:              caseData.id,
+        caseTitle:       form.title,
+        caseDescription: form.description,
+        required_amount: form.required_amount,
+      })
       onClose()
-    } catch (err) { console.error(err) }
-    finally { setSaving(false) }
+    } catch (err) {
+      console.error(err)
+    } finally {
+      setSaving(false)
+    }
   }
 
   const isPending = caseData.status === 'pending'
@@ -275,7 +338,7 @@ export default function BeneficiaryCaseView({ isOpen, onClose, caseData, initial
       <div style={{ background: 'var(--bg-surface)', borderRadius: 20, width: '100%', maxWidth: 680, maxHeight: '92vh', display: 'flex', flexDirection: 'column', boxShadow: '0 20px 60px rgba(0,0,0,0.3)', overflow: 'hidden' }}>
 
         {/* Header */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '1.1rem 1.5rem', borderBottom: '1px solid var(--border-default)', background: step === 'publish' ? 'rgba(9,64,55,0.04)' : 'var(--bg-surface)', flexShrink: 0 }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '1.1rem 1.5rem', borderBottom: '1px solid var(--border-default)', flexShrink: 0 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             {step === 'publish' && (
               <button onClick={() => setStep('view')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', display: 'flex', padding: 4 }}>
@@ -284,12 +347,12 @@ export default function BeneficiaryCaseView({ isOpen, onClose, caseData, initial
             )}
             <div>
               <h2 style={{ margin: 0, fontSize: '1rem', fontWeight: 800, color: 'var(--text-primary)' }}>
-                {step === 'view' ? t('beneficiaries.caseView.title') : t('beneficiaries.caseView.publishTitle')}
+                {step === 'view' ? 'تفاصيل الحالة' : 'قبول ونشر الحالة'}
               </h2>
               <p style={{ margin: 0, fontSize: '0.72rem', color: 'var(--text-muted)' }}>
                 {step === 'view'
-                  ? t('beneficiaries.caseView.caseNumber', { id: caseData.id }) + ' · ' + caseData.full_name
-                  : t('beneficiaries.caseView.publishSubtitle')
+                  ? `حالة #${caseData.id} · ${caseData.full_name}`
+                  : 'أدخل معلومات النشر'
                 }
               </p>
             </div>
@@ -311,27 +374,27 @@ export default function BeneficiaryCaseView({ isOpen, onClose, caseData, initial
         <div style={{ padding: '1rem 1.5rem', flexShrink: 0, borderTop: '1px solid var(--border-default)', display: 'flex', gap: 8, justifyContent: 'flex-end', background: 'var(--bg-surface)' }}>
           {step === 'view' ? (
             <>
-              <button onClick={onClose} style={btnGhost}>{t('beneficiaries.caseView.close')}</button>
+              <button onClick={onClose} style={btnGhost}>إغلاق</button>
               {isPending && (
                 <>
                   <button onClick={() => { onReject?.(caseData); onClose() }} style={btnDanger}>
-                    <XCircle size={15} /> {t('beneficiaries.caseView.reject')}
+                    <XCircle size={15} /> رفض
                   </button>
                   <button onClick={() => { onArchive?.(caseData); onClose() }} style={btnMuted}>
-                    <Archive size={15} /> {t('beneficiaries.caseView.archive')}
+                    <Archive size={15} /> أرشفة
                   </button>
                   <button onClick={() => setStep('publish')} style={btnPrimary}>
-                    <CheckCircle size={15} /> {t('beneficiaries.caseView.approveAndPublish')}
+                    <CheckCircle size={15} /> قبول ونشر
                   </button>
                 </>
               )}
             </>
           ) : (
             <>
-              <button onClick={() => setStep('view')} style={btnGhost}>{t('beneficiaries.caseView.back')}</button>
+              <button onClick={() => setStep('view')} style={btnGhost}>رجوع</button>
               <button onClick={handleApprove} disabled={saving} style={{ ...btnPrimary, opacity: saving ? 0.7 : 1, cursor: saving ? 'not-allowed' : 'pointer' }}>
                 {saving && <span style={{ width: 14, height: 14, border: '2px solid rgba(255,255,255,0.35)', borderTopColor: '#fff', borderRadius: '50%', animation: 'spin 0.7s linear infinite', display: 'inline-block' }} />}
-                {t('beneficiaries.caseView.confirmPublish')}
+                تأكيد النشر
               </button>
             </>
           )}
@@ -341,7 +404,7 @@ export default function BeneficiaryCaseView({ isOpen, onClose, caseData, initial
   )
 }
 
-const base      = { display: 'inline-flex', alignItems: 'center', gap: 6, padding: '9px 18px', borderRadius: 10, fontSize: '0.85rem', fontWeight: 700, fontFamily: 'Cairo, sans-serif', cursor: 'pointer', border: 'none', transition: 'opacity 0.15s' }
+const base       = { display: 'inline-flex', alignItems: 'center', gap: 6, padding: '9px 18px', borderRadius: 10, fontSize: '0.85rem', fontWeight: 700, fontFamily: 'Cairo, sans-serif', cursor: 'pointer', border: 'none', transition: 'opacity 0.15s' }
 const btnPrimary = { ...base, background: '#094037', color: '#fff' }
 const btnDanger  = { ...base, background: '#fee2e2', color: '#dc2626', border: '1px solid #fecaca' }
 const btnMuted   = { ...base, background: 'var(--bg-muted)', color: 'var(--text-secondary)', border: '1px solid var(--border-default)' }

@@ -1,42 +1,47 @@
-// features/beneficiaries/Beneficiaries.jsx
-import { useState, useMemo } from 'react'
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+// src/features/beneficiaries/Beneficiaries.jsx
+import { useState, useMemo, lazy, Suspense } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useSearchParams } from 'react-router-dom'
+import { toast } from 'react-hot-toast'
 import { Search, Plus, MoreVertical, MapPin, Map, TableIcon, Eye, Heart, User, BookOpen, GraduationCap } from 'lucide-react'
-import { beneficiariesService } from '../../service/ServiceLayer'
-import { PageHeader }    from '../../ui/PageHeader'
-import { Card }          from '../../ui/Card'
-import { Badge }         from '../../ui/Badge'
-import { Avatar }        from '../../ui/Avatar'
-import DataTable         from '../../ui/DataTable'
-import Pagination        from '../../ui/Pagination'
-import { SpinnerPage }   from '../../ui/Spinner'
-import { EmptyState }    from '../../ui/EmptyState'
-import BeneficiaryModal  from './BeneficairiesModal'
-import BeneficiaryCaseView from './BeneficiaryCaseView'
-import { ActionModal }   from '../../ui/ActionModal'
+import { PageHeader }          from '../../ui/PageHeader'
+import { Card }                from '../../ui/Card'
+import { Badge }               from '../../ui/Badge'
+import { Avatar }              from '../../ui/Avatar'
+import DataTable               from '../../ui/DataTable'
+import Pagination              from '../../ui/Pagination'
+import { SpinnerPage }         from '../../ui/Spinner'
+import { EmptyState }          from '../../ui/EmptyState'
+import BeneficiaryModal        from './BeneficairiesModal'
+import BeneficiaryCaseView     from './BeneficiaryCaseView'
+import { ActionModal }         from '../../ui/ActionModal'
 import ExportPDFPermissionButton from '../../ui/Pdfexportbutton'
-import { usePDFReport }  from '../../hooks/Usepdfexport'
-import { formatCurrency } from '../../utlis/helper'
-import { lazy, Suspense } from 'react'
+import { usePDFReport }        from '../../hooks/Usepdfexport'
+import { formatCurrency }      from '../../utlis/helper'
+import {
+  usePendingRequests,
+  useOpenAcceptedPatients,
+  useOpenAcceptedOrphans,
+  useOpenAcceptedSchools,
+  useOpenAcceptedUniversities,
+  useAcceptRequest,
+  useCloseRequest,
+  useStorePatient,
+  useStoreOrphan,
+  useStoreSchool,
+  useStoreUniversity,
+} from '../../hooks/useRequests'
 
 const BeneficiaryMap = lazy(() => import('./BeneficiaryMap'))
 
 const LIMIT = 10
 
-// ── Category config ──────────────────────────────────────────────────────────
+// ── Category config ───────────────────────────────────────
 export const CAT_CFG = {
   patient:            { icon: Heart,         color: '#094037', bg: 'var(--color-primary-50)',  labelKey: 'beneficiaries.categories.patient'            },
   orphan:             { icon: User,          color: '#094037', bg: 'var(--color-primary-100)', labelKey: 'beneficiaries.categories.orphan'             },
   school_student:     { icon: BookOpen,      color: '#92400e', bg: '#fef3c7',                  labelKey: 'beneficiaries.categories.school_student'     },
   university_student: { icon: GraduationCap, color: '#92400e', bg: '#fef3c7',                  labelKey: 'beneficiaries.categories.university_student' },
-}
-
-const PRI_STYLE = {
-  high:   { bg: '#fee2e2',                  color: '#dc2626' },
-  medium: { bg: '#fef3c7',                  color: '#92400e' },
-  low:    { bg: 'var(--color-primary-50)',   color: '#094037' },
 }
 
 function CatBadge({ category }) {
@@ -45,12 +50,7 @@ function CatBadge({ category }) {
   if (!cfg) return null
   const Icon = cfg.icon
   return (
-    <span style={{
-      display: 'inline-flex', alignItems: 'center', gap: 4,
-      padding: '3px 9px', borderRadius: 99,
-      fontSize: '0.7rem', fontWeight: 700,
-      background: cfg.bg, color: cfg.color,
-    }}>
+    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '3px 9px', borderRadius: 99, fontSize: '0.7rem', fontWeight: 700, background: cfg.bg, color: cfg.color }}>
       <Icon size={11} /> {t(cfg.labelKey)}
     </span>
   )
@@ -58,7 +58,6 @@ function CatBadge({ category }) {
 
 export default function Beneficiaries() {
   const { t }  = useTranslation()
-  const qc     = useQueryClient()
   const [params, setParams] = useSearchParams()
   const { exportBeneficiaries, isExporting } = usePDFReport()
 
@@ -76,14 +75,157 @@ export default function Beneficiaries() {
   const [viewItem,        setViewItem]        = useState(null)
   const [viewInitStep,    setViewInitStep]    = useState('view')
 
+  // ── جلب البيانات ─────────────────────────────────────────
+  const { data: pendingData     = [], isLoading: pl  } = usePendingRequests()
+  const { data: accPatients     = [], isLoading: al1 } = useOpenAcceptedPatients()
+  const { data: accOrphans      = [], isLoading: al2 } = useOpenAcceptedOrphans()
+  const { data: accSchools      = [], isLoading: al3 } = useOpenAcceptedSchools()
+  const { data: accUniversities = [], isLoading: al4 } = useOpenAcceptedUniversities()
+
+  const isLoading = pl || al1 || al2 || al3 || al4
+
+  // دمج البيانات مع إزالة المكررات
+  const allData = useMemo(() => {
+    const merged = [
+      ...pendingData,
+      ...accPatients,
+      ...accOrphans,
+      ...accSchools,
+      ...accUniversities,
+    ]
+    return merged.filter((item, index, self) =>
+      index === self.findIndex(t => t.id === item.id)
+    )
+  }, [pendingData, accPatients, accOrphans, accSchools, accUniversities])
+
+  // ── فلترة من الفرونت ──────────────────────────────────────
+  const filtered = useMemo(() => {
+    let result = allData
+    if (status)   result = result.filter(r => r.status   === status)
+    if (category) result = result.filter(r => r.category === category)
+    if (search) {
+      const q = search.toLowerCase()
+      result = result.filter(r =>
+        r.full_name?.toLowerCase().includes(q) ||
+        r.title?.toLowerCase().includes(q)     ||
+        r.governorate?.toLowerCase().includes(q)
+      )
+    }
+    return result
+  }, [allData, status, category, search])
+
+  const total    = filtered.length
+  const pageData = filtered.slice((page - 1) * LIMIT, page * LIMIT)
+
+  // ── Mutations ─────────────────────────────────────────────
+  const acceptMut  = useAcceptRequest()
+  const closeMut   = useCloseRequest()
+  const patientMut = useStorePatient()
+  const orphanMut  = useStoreOrphan()
+  const schoolMut  = useStoreSchool()
+  const uniMut     = useStoreUniversity()
+
+  // ── إنشاء طلب جديد ───────────────────────────────────────
+  const handleSave = async (form) => {
+    try {
+      const cat = form.category
+      const base = {
+        full_name:        form.full_name,
+        national_id:      form.national_id,
+        governorate_id:   form.governorate_id,
+        region_id:        form.region_id,
+        description:      form.description,
+        required_amount:  form.required_amount,
+        title:            form.title,
+        personal_picture: form.personal_picture instanceof File ? form.personal_picture : undefined,
+      }
+
+      if (cat === 'patient') {
+        await patientMut.mutateAsync({
+          ...base,
+          is_self:              'false',
+          phone:                form.phone  || undefined,
+          email:                form.email  || undefined,
+          medical_report:       form.medical_report,
+          national_id_document: form.national_id_document,
+        })
+      } else if (cat === 'orphan') {
+        await orphanMut.mutateAsync({
+          ...base,
+          phone:                    form.phone,
+          family_booklet:           form.family_booklet,
+          father_death_certificate: form.father_death_certificate,
+        })
+      } else if (cat === 'school_student') {
+        await schoolMut.mutateAsync({
+          ...base,
+          academic_grade:    form.academic_grade,
+          school_name:       form.school_name,
+          family_book_photo: form.family_book_photo,
+        })
+      } else if (cat === 'university_student') {
+        await uniMut.mutateAsync({
+          ...base,
+          academic_year:       form.academic_year,
+          support_type:        form.support_type,
+          university_id_photo: form.university_id_photo,
+        })
+      }
+
+      toast.success(t('beneficiaries.toast.createSuccess', { defaultValue: 'تمت إضافة الطلب بنجاح ✅' }))
+    } catch (err) {
+      toast.error(err?.response?.data?.message ?? t('beneficiaries.toast.createError', { defaultValue: 'فشل إضافة الطلب' }))
+      throw err
+    }
+  }
+
+  // ── قبول الطلب ───────────────────────────────────────────
+  const handleApproveAndPublish = async (enrichedData) => {
+    try {
+      await acceptMut.mutateAsync({
+        id:              enrichedData.id,
+        title:           enrichedData.caseTitle       ?? enrichedData.title,
+        description:     enrichedData.caseDescription ?? enrichedData.description,
+        required_amount: enrichedData.required_amount,
+      })
+      toast.success(t('beneficiaries.toast.acceptSuccess', { defaultValue: 'تم قبول الطلب ونشره ✅' }))
+    } catch (err) {
+      const msg = err?.response?.data?.message
+        ?? Object.values(err?.response?.data?.errors ?? {})[0]?.[0]
+        ?? t('beneficiaries.toast.acceptError', { defaultValue: 'فشل قبول الطلب' })
+      toast.error(msg)
+    }
+  }
+
+  // ── إغلاق الطلب ──────────────────────────────────────────
+  const handleClose = (row) => {
+    closeMut.mutate(row.id, {
+      onSuccess: () => toast.success(t('beneficiaries.toast.closeSuccess', { defaultValue: 'تم إغلاق الطلب' })),
+      onError:   (err) => toast.error(err?.response?.data?.message ?? t('beneficiaries.toast.error', { defaultValue: 'حدث خطأ' })),
+    })
+  }
+
+  // ── Action Modal ──────────────────────────────────────────
+  const handleAction = (action, row) => {
+    switch (action) {
+      case 'view':    setViewItem(row); setViewInitStep('view');    setCaseViewOpen(true); break
+      case 'approve': setViewItem(row); setViewInitStep('publish'); setCaseViewOpen(true); break
+      case 'archive':
+      case 'delete':  handleClose(row); break
+      default: break
+    }
+    setActionModalOpen(false)
+  }
+
+  // ── Status Tabs ───────────────────────────────────────────
   const STATUS_TABS = [
     { key: '',         label: t('beneficiaries.tabs.all')      },
-    { key: 'active',   label: t('beneficiaries.tabs.active')   },
+    { key: 'accepted', label: t('beneficiaries.tabs.active')   },
     { key: 'pending',  label: t('beneficiaries.tabs.pending')  },
     { key: 'rejected', label: t('beneficiaries.tabs.rejected') },
-    { key: 'archived', label: t('beneficiaries.tabs.archived') },
   ]
 
+  // ── الأعمدة ───────────────────────────────────────────────
   const columns = useMemo(() => [
     {
       title: t('beneficiaries.table.beneficiary'),
@@ -93,7 +235,7 @@ export default function Beneficiaries() {
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           {row.personal_picture
             ? <img src={row.personal_picture} alt="" style={{ width: 38, height: 38, borderRadius: 8, objectFit: 'cover', flexShrink: 0 }} />
-            : <Avatar name={row.full_name} size={38} />
+            : <Avatar name={row.full_name} size="sm" />
           }
           <div>
             <div style={{ fontWeight: 700, color: 'var(--text-primary)', fontSize: '0.88rem' }}>{row.full_name}</div>
@@ -108,17 +250,12 @@ export default function Beneficiaries() {
     {
       title: t('beneficiaries.table.category'),
       key: 'category',
-      textAlign: 'center',
+      align: 'center',
       render: (val, row) => (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 4, alignItems: 'center' }}>
           <CatBadge category={val} />
           {val === 'school_student'     && row.academic_grade && <span style={{ fontSize: '0.68rem', color: 'var(--text-muted)' }}>{row.academic_grade}</span>}
           {val === 'university_student' && row.academic_year  && <span style={{ fontSize: '0.68rem', color: 'var(--text-muted)' }}>{row.academic_year}</span>}
-          {val === 'university_student' && row.support_type   && (
-            <span style={{ fontSize: '0.68rem', color: 'var(--text-muted)' }}>
-              {row.support_type === 'laptop_support' ? `💻 ${t('beneficiaries.support.laptop')}` : `🎓 ${t('beneficiaries.support.fees')}`}
-            </span>
-          )}
         </div>
       ),
     },
@@ -128,20 +265,11 @@ export default function Beneficiaries() {
       render: (_, row) => (
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontWeight: 600, color: 'var(--text-primary)', fontSize: '0.85rem' }}>
-            <MapPin size={12} /> {row.governorate}
+            <MapPin size={12} /> {row.governorate ?? '—'}
           </div>
           {row.region && <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginRight: 16 }}>{row.region}</div>}
         </div>
       ),
-    },
-    {
-      title: t('beneficiaries.table.priority'),
-      key: 'priority',
-      render: (val) => val ? (
-        <span style={{ padding: '3px 10px', borderRadius: 99, fontSize: '0.72rem', fontWeight: 700, background: PRI_STYLE[val]?.bg, color: PRI_STYLE[val]?.color }}>
-          {t(`beneficiaries.priority.${val}`)}
-        </span>
-      ) : '—',
     },
     {
       title: t('beneficiaries.table.amount'),
@@ -181,58 +309,6 @@ export default function Beneficiaries() {
     },
   ], [t])
 
-  const { data, isLoading } = useQuery({
-    queryKey: ['beneficiaries', status, category, search, page],
-    queryFn:  () => beneficiariesService.getList({ status, category, search, page, limit: LIMIT }),
-    keepPreviousData: true,
-  })
-
-  const changeStatus = useMutation({
-    mutationFn: ({ id, s }) => beneficiariesService.changeStatus(id, s),
-    onSuccess:  () => qc.invalidateQueries(['beneficiaries']),
-  })
-
-  const approveMut = useMutation({
-    mutationFn: ({ id, ...rest }) => beneficiariesService.update(id, rest),
-    onSuccess:  () => qc.invalidateQueries(['beneficiaries']),
-  })
-
-  const createMut = useMutation({
-    mutationFn: (p) => beneficiariesService.create({ ...p, status: 'pending', registrationDate: new Date().toISOString().split('T')[0] }),
-    onSuccess:  () => qc.invalidateQueries(['beneficiaries']),
-  })
-
-  const updateMut = useMutation({
-    mutationFn: ({ id, ...r }) => beneficiariesService.update(id, r),
-    onSuccess:  () => qc.invalidateQueries(['beneficiaries']),
-  })
-
-  const deleteMut = useMutation({
-    mutationFn: (id) => beneficiariesService.archive(id),
-    onSuccess:  () => qc.invalidateQueries(['beneficiaries']),
-  })
-
-  const handleSave = (form) => {
-    if (editItem) updateMut.mutate({ ...form, id: editItem.id })
-    else          createMut.mutate(form)
-    setModalOpen(false); setEditItem(null)
-  }
-
-  const handleApproveAndPublish = (enrichedData) => { approveMut.mutate(enrichedData) }
-
-  const handleAction = (action, row) => {
-    switch (action) {
-      case 'view':    setViewItem(row); setViewInitStep('view');    setCaseViewOpen(true); break
-      case 'approve': setViewItem(row); setViewInitStep('publish'); setCaseViewOpen(true); break
-      case 'reject':  changeStatus.mutate({ id: row.id, s: 'rejected' }); break
-      case 'archive': deleteMut.mutate(row.id); break
-      case 'edit':    setEditItem(row); setModalOpen(true); break
-      case 'delete':  if (window.confirm(t('common.confirmDelete'))) deleteMut.mutate(row.id); break
-      default: break
-    }
-    setActionModalOpen(false)
-  }
-
   const setParam = (key, value) => setParams(prev => {
     const n = new URLSearchParams(prev)
     if (value) n.set(key, value); else n.delete(key)
@@ -249,13 +325,13 @@ export default function Beneficiaries() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', background: 'var(--bg-base)' }}>
 
-      <PageHeader title={t('beneficiaries.title')} subtitle={t('beneficiaries.subtitle', { count: data?.total ?? 0 })}>
+      <PageHeader title={t('beneficiaries.title')} subtitle={t('beneficiaries.subtitle', { count: total })}>
         <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
           <div style={{ display: 'flex', gap: '4px', padding: '4px', borderRadius: '12px', background: 'var(--bg-base)', border: '1px solid var(--border-default)' }}>
             <button style={viewBtn(view === 'table')} onClick={() => setView('table')}><TableIcon size={15} /></button>
             <button style={viewBtn(view === 'map')}   onClick={() => setView('map')}><Map size={15} /></button>
           </div>
-          <ExportPDFPermissionButton onClick={() => exportBeneficiaries(data?.data ?? [])} loading={isExporting} label={t('common.export')} />
+          <ExportPDFPermissionButton onClick={() => exportBeneficiaries(pageData)} loading={isExporting} label={t('common.export')} />
           <button
             className="btn-primary"
             onClick={() => { setEditItem(null); setModalOpen(true) }}
@@ -272,8 +348,8 @@ export default function Beneficiaries() {
         <>
           <Card style={{ padding: '16px', borderRadius: '24px', background: 'var(--bg-base)' }}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-
               <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: '16px' }}>
+                {/* Tabs */}
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
                   {STATUS_TABS.map(tab => (
                     <button key={tab.key} onClick={() => setParam('status', tab.key)} style={{
@@ -288,6 +364,7 @@ export default function Beneficiaries() {
                     </button>
                   ))}
                 </div>
+                {/* Search */}
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: '240px', height: '44px', borderRadius: '12px', border: '1px solid var(--border-default)', background: 'var(--bg-muted)', paddingInline: '12px' }}>
                   <Search size={15} style={{ color: 'var(--text-muted)', flexShrink: 0 }} />
                   <input
@@ -299,6 +376,7 @@ export default function Beneficiaries() {
                 </div>
               </div>
 
+              {/* Category filter */}
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center' }}>
                 <span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-muted)', marginLeft: 4 }}>{t('beneficiaries.categories.label')}:</span>
                 <button onClick={() => setParam('category', '')} style={{
@@ -337,14 +415,14 @@ export default function Beneficiaries() {
             </div>
             <DataTable
               columns={columns}
-              data={data?.data}
+              data={pageData}
               isLoading={isLoading}
               loadingComponent={<SpinnerPage />}
               EmptyComponent={<EmptyState title={t('beneficiaries.empty.title')} description={t('beneficiaries.empty.description')} />}
             />
             <div style={{ padding: '20px 24px', borderTop: '1px solid var(--border-subtle)' }}>
               <Pagination
-                page={page} total={data?.total ?? 0} limit={LIMIT}
+                page={page} total={total} limit={LIMIT}
                 onPageChange={next => setParams(prev => { const n = new URLSearchParams(prev); n.set('page', String(next)); return n })}
               />
             </div>
@@ -365,8 +443,8 @@ export default function Beneficiaries() {
         caseData={viewItem}
         initialStep={viewInitStep}
         onApprove={handleApproveAndPublish}
-        onReject={(row) => changeStatus.mutate({ id: row.id, s: 'rejected' })}
-        onArchive={(row) => deleteMut.mutate(row.id)}
+        onReject={(row) => handleClose(row)}
+        onArchive={(row) => handleClose(row)}
       />
 
       <ActionModal

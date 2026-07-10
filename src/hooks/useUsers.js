@@ -44,6 +44,13 @@ export const useListByRole = (role) =>
         select: (data) => data.data, // هاد الـ endpoint بيرجع data مش users
     })
 
+// مستخدمي التطبيق (role = 'user') — عندهم أرصدة وشحن
+export const useAppUsers = () =>
+    useQuery({
+        queryKey: ['users', 'role', 'user'],
+        queryFn: () => listByRole('user'),
+        select: (data) => data.data,
+    })
 // المستخدمين المعلقين
 export const useAllPendingUsers = () =>
     useQuery({
