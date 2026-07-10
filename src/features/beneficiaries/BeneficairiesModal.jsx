@@ -261,6 +261,16 @@ function SchoolStudentForm({ form, set, errors }) {
         <FieldError msg={errors.national_id} />
       </FormRow>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+  <FormRow compact label="رقم الهاتف">
+    <input className="input" type="tel" dir="ltr" placeholder="09XXXXXXXX" value={form.phone} onChange={e => set('phone', e.target.value)} />
+    <FieldError msg={errors.phone} />
+  </FormRow>
+  <FormRow compact label="البريد الإلكتروني">
+    <input className="input" type="email" dir="ltr" placeholder="example@mail.com" value={form.email} onChange={e => set('email', e.target.value)} />
+    <FieldError msg={errors.email} />
+  </FormRow>
+</div>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
         <FormRow compact label="المرحلة الدراسية" required>
           <input className="input" placeholder="مثال: الصف التاسع" value={form.academic_grade} onChange={e => set('academic_grade', e.target.value)} />
           <FieldError msg={errors.academic_grade} />
@@ -310,6 +320,16 @@ function UniversityStudentForm({ form, set, errors }) {
         <input className="input" placeholder="رقم الهوية" value={form.national_id} onChange={e => set('national_id', e.target.value)} dir="ltr" />
         <FieldError msg={errors.national_id} />
       </FormRow>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+  <FormRow compact label="رقم الهاتف">
+    <input className="input" type="tel" dir="ltr" placeholder="09XXXXXXXX" value={form.phone} onChange={e => set('phone', e.target.value)} />
+    <FieldError msg={errors.phone} />
+  </FormRow>
+  <FormRow compact label="البريد الإلكتروني">
+    <input className="input" type="email" dir="ltr" placeholder="example@mail.com" value={form.email} onChange={e => set('email', e.target.value)} />
+    <FieldError msg={errors.email} />
+  </FormRow>
+</div>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
         <FormRow compact label="السنة الدراسية" required>
           <input className="input" placeholder="مثال: السنة الثالثة" value={form.academic_year} onChange={e => set('academic_year', e.target.value)} />
@@ -373,6 +393,10 @@ function validateForm(form) {
     req('academic_grade', 'المرحلة الدراسية')
     req('school_name',    'اسم المدرسة')
     reqFile('family_book_photo', 'صورة دفتر العائلة')
+  }
+  if (!form.phone?.toString().trim() && !form.email?.toString().trim()) {
+    e.phone = 'الهاتف أو البريد الإلكتروني مطلوب'
+    e.email = 'الهاتف أو البريد الإلكتروني مطلوب'
   }
   if (form.category === 'university_student') {
     req('academic_year', 'السنة الدراسية')

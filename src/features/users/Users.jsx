@@ -22,6 +22,7 @@ import {
   useSetPending,
   usePromoteUser,
   useDemoteUser,
+  useDeleteUser
 } from '../../hooks/useUsers'
 
 // ── مساعد لتوحيد الاسم الكامل ──────────────────────────────
@@ -93,6 +94,7 @@ export default function Users() {
   const demoteMut  = useDemoteUser()
   const approveMut = useApproveUser()
   const pendingMut = useSetPending()
+  const deleteMut = useDeleteUser()
 
   // ── إنشاء موظف ───────────────────────────────────────────
   const handleSave = async (form) => {
@@ -125,7 +127,7 @@ export default function Users() {
         } catch (err) {
           toast.error(err?.response?.data?.message ?? t('users.toast.statusError', { defaultValue: 'فشل تغيير الحالة' }))
           return
-          return
+          
         }
       }
 
@@ -174,17 +176,16 @@ export default function Users() {
 
   // ── حذف (reject) ──────────────────────────────────────────
   const handleDelete = () => {
-    pendingMut.mutate(deleteTarget?.id, {
-      onSuccess: () => {
-        toast.success(t('users.toast.deleteSuccess', { defaultValue: 'تم تعليق الحساب بنجاح' }))
-        setDeleteOpen(false)
-      },
-      onError: (err) => {
-        toast.error(err?.response?.data?.message ?? t('users.toast.deleteError', { defaultValue: 'فشل العملية' }))
-      },
-    })
-  }
-
+  deleteMut.mutate(deleteTarget?.id, {
+    onSuccess: () => {
+      toast.success(t('users.toast.deleteSuccess', { defaultValue: 'تم حذف المستخدم نهائياً' }))
+      setDeleteOpen(false)
+    },
+    onError: (err) => {
+      toast.error(err?.response?.data?.message ?? t('users.toast.deleteError', { defaultValue: 'فشل العملية' }))
+    },
+  })
+}
   // ── الأعمدة ───────────────────────────────────────────────
   const columns = useMemo(() => [
     {
@@ -391,7 +392,7 @@ export default function Users() {
         onClose={() => setDeleteOpen(false)}
         onConfirm={handleDelete}
         userName={deleteTarget ? fullName(deleteTarget) : ''}
-        loading={pendingMut.isPending}
+        loading={deleteMut.isPending}
       />
     </div>
   )

@@ -17,6 +17,8 @@ export const getAllPendingUsers = () =>
 export const getAllNonUserAccounts = () =>
     axiosInstance.get('/getAllNonUserAccounts').then(r => r.data)
 
+export const deleteUser = (id) =>
+    axiosInstance.delete(`/deleteUser/${id}`).then(r => r.data)
 // ── إجراءات على المستخدمين ──────────────────────────────────
 
 // ⚠️ لازم FormData لأن فيه profile_image (file upload)

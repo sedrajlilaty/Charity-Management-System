@@ -157,20 +157,24 @@ export default function Beneficiaries() {
           father_death_certificate: form.father_death_certificate,
         })
       } else if (cat === 'school_student') {
-        await schoolMut.mutateAsync({
-          ...base,
-          academic_grade:    form.academic_grade,
-          school_name:       form.school_name,
-          family_book_photo: form.family_book_photo,
-        })
-      } else if (cat === 'university_student') {
-        await uniMut.mutateAsync({
-          ...base,
-          academic_year:       form.academic_year,
-          support_type:        form.support_type,
-          university_id_photo: form.university_id_photo,
-        })
-      }
+  await schoolMut.mutateAsync({
+    ...base,
+    phone:              form.phone || undefined,
+    email:              form.email || undefined,
+    academic_grade:     form.academic_grade,
+    school_name:        form.school_name,
+    family_book_photo:  form.family_book_photo,
+  })
+} else if (cat === 'university_student') {
+  await uniMut.mutateAsync({
+    ...base,
+    phone:                form.phone || undefined,
+    email:                form.email || undefined,
+    academic_year:        form.academic_year,
+    support_type:         form.support_type,
+    university_id_photo:  form.university_id_photo,
+  })
+}
 
       toast.success(t('beneficiaries.toast.createSuccess', { defaultValue: 'تمت إضافة الطلب بنجاح ✅' }))
     } catch (err) {

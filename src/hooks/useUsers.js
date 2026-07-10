@@ -13,6 +13,7 @@ import {
     demoteUser,
     changePassword,
     addBalanceToUser,
+    deleteUser
 } from '../api/users.api'
 
 // ── Queries ──────────────────────────────────────────────────
@@ -45,11 +46,12 @@ export const useListByRole = (role) =>
     })
 
 // مستخدمي التطبيق (role = 'user') — عندهم أرصدة وشحن
+// ⚠️ عم نستخدم getAllUsers مش listByRole لأنو listByRole بالباك اند بتقص عمود balances بالـ select()
 export const useAppUsers = () =>
     useQuery({
-        queryKey: ['users', 'role', 'user'],
-        queryFn: () => listByRole('user'),
-        select: (data) => data.data,
+        queryKey: ['users', 'all'],
+        queryFn: getAllUsers,
+        select: (data) => data.users.filter(u => u.role === 'user'),
     })
 // المستخدمين المعلقين
 export const useAllPendingUsers = () =>
@@ -118,6 +120,14 @@ export const useAddBalanceToUser = () => {
     const qc = useQueryClient()
     return useMutation({
         mutationFn: ({ userId, ...data }) => addBalanceToUser(userId, data),
+        onSuccess: () => qc.invalidateQueries({ queryKey: ['users'] }),
+    })
+}
+
+export const useDeleteUser = () => {
+    const qc = useQueryClient()
+    return useMutation({
+        mutationFn: deleteUser, // (id)
         onSuccess: () => qc.invalidateQueries({ queryKey: ['users'] }),
     })
 }
