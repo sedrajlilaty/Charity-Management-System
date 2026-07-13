@@ -1,4 +1,3 @@
-
 @import "tailwindcss";
 
 /* 1. Dark Variant */
@@ -7,24 +6,22 @@
 /* 2. Theme */
 @theme {
 
-  
-  /* ── Primary (متطابق مع Flutter) */
+  /* ── Primary (متطابق مع Flutter AppColors) */
   --color-primary-50: #e6f0ee;
   --color-primary-100: #c0d9d4;
-  --color-primary-500: #094037;
-  --color-primary-600: #0b4a40;
-  --color-primary-700: #094037;
+  --color-primary-500: #1A5C52;   /* AppColors.primary */
+  --color-primary-600: #1E6B5E;   /* AppColors.primaryLight (استخدمناه كـ hover) */
+  --color-primary-700: #0F3D35;   /* AppColors.primaryDark */
 
-  /* ── Secondary */
-  --color-secondary-500: #eab308;
-  --color-secondary-600: #6b4500;
+  /* ── Secondary / Accent (متطابق مع Flutter) */
+  --color-secondary-500: #F2C055; /* AppColors.accent */
+  --color-secondary-600: #C8960C; /* AppColors.accentDark */
 
   --font-family-sans: 'Cairo', sans-serif;
   
   --sidebar-width: 260px;
   --navbar-height: 64px;
 
-  /* Animations */
   @keyframes fade-in {
     from { opacity: 0; transform: translateY(8px); }
     to { opacity: 1; transform: translateY(0); }
@@ -38,39 +35,47 @@
 
 /* 3. Variables */
 :root {
-  /* Light */
-  --bg-base: #f8fafc;
-  --bg-surface: #ffffff;
-  --bg-muted: #f1f5f9;
-  --bg-subtle: #f8fafc;
+  /* Light — متطابق مع Flutter Light Mode */
+  --bg-base: #F5F5F5;      /* lightBackground */
+  --bg-surface: #FFFFFF;   /* lightSurface */
+  --bg-muted: #F0F0F0;     /* lightInputFill */
+  --bg-subtle: #F5F5F5;
 
-  --text-primary: #1e293b;
-  --text-secondary: #64748b;
-  --text-muted: #64748b;
-  --text-hint: #94a3b8;
+  --text-primary: #1A1A1A;    /* lightTextPrimary */
+  --text-secondary: #6B6B6B;  /* lightTextSecond */
+  --text-muted: #6B6B6B;
+  --text-hint: #9E9E9E;       /* lightTextHint */
 
-  --border-default: #e2e8f0;
-  --border-subtle: #eef2f7;
+  --border-default: #E0E0E0;  /* lightBorder */
+  --border-subtle: #E0E0E0;
 
   --shadow-card: 0 1px 3px rgba(0,0,0,0.08);
+
+  /* semantic */
+  --color-success: #2E7D32;
+  --color-error: #D32F2F;
+  --color-warning: #F57C00;
 }
 
 .dark-mode {
-  /* Dark (محسّن ليكون أعمق وأنظف) */
-  --bg-base: #041210;
-  --bg-surface: #0a2420;
-  --bg-muted: #11332d;
-  --bg-subtle: #0d2b26;
-  
-  --text-primary: #f1f5f9;
-  --text-secondary: #9fb4b0;
-  --text-muted: #9fb4b0;
-  --text-hint: #6f8a84;
+  /* Dark — متطابق مع Flutter Dark Mode */
+  --bg-base: #121212;      /* darkBackground */
+  --bg-surface: #1E1E1E;   /* darkSurface */
+  --bg-muted: #2A2A2A;     /* darkInputFill */
+  --bg-subtle: #1E1E1E;
 
-  --border-default: #143d37;
-  --border-subtle: #12332d;
+  --text-primary: #F5F5F5;    /* darkTextPrimary */
+  --text-secondary: #AAAAAA;  /* darkTextSecond */
+  --text-muted: #AAAAAA;
+  --text-hint: #666666;       /* darkTextHint */
+
+  --border-default: #333333;  /* darkBorder */
+  --border-subtle: #333333;
 
   --shadow-card: 0 6px 18px rgba(0,0,0,0.45);
+
+  /* stat card بلون مميز متل الفلاتر */
+  --stat-card-bg: #163D36;    /* darkStatCard */
 }
 
 /* 4. Base */
@@ -78,16 +83,14 @@
   body {
     background-color: var(--bg-base);
     color: var(--text-primary);
-    direction: ltr;
     font-family: 'Cairo', sans-serif;
-   @apply transition-colors duration-300 
+    @apply transition-colors duration-300 
   }
 }
 
 /* 5. Components */
 @layer components {
 
-  /* ── Surface */
   .surface {
     background-color: var(--bg-surface);
     border: 1px solid var(--border-default);
@@ -95,7 +98,6 @@
     box-shadow: var(--shadow-card);
   }
 
-  /* ── Stat Card (أخف في اللايت) */
   .stat-card {
     background-color: var(--bg-surface);
     border: 1px solid var(--border-default);
@@ -104,7 +106,11 @@
     @apply p-5 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg;
   }
 
-  /* ── Sidebar */
+  .dark-mode .stat-card {
+    background-color: var(--stat-card-bg);
+    border-color: var(--border-default);
+  }
+
   .sidebar-link {
     @apply flex items-center gap-3 px-4 py-3 rounded-xl text-3xl font-medium
            transition-all duration-200 cursor-pointer select-none;
@@ -120,7 +126,6 @@
     @apply bg-primary-500 text-white shadow-lg;
   }
 
-  /* ── PermissionButtons */
   .btn-primary {
     @apply inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl
            text-base font-bold transition-all duration-150 cursor-pointer
@@ -130,10 +135,9 @@
   .btn-secondary {
     @apply inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl
            text-base font-bold transition-all duration-150 cursor-pointer
-           bg-secondary-500 text-white hover:bg-secondary-600 active:scale-95  text-black
+           bg-secondary-500 text-black hover:bg-secondary-600 active:scale-95;
   }
 
-  /* ── Input */
   .input {
     @apply w-full px-4 py-2.5 text-base rounded-xl outline-none transition-all duration-200;
     background-color: var(--bg-surface);
@@ -143,23 +147,28 @@
 
   .input:focus {
     @apply ring-4 ring-primary-500/10;
-    border-color: #094037;
+    border-color: var(--color-primary-500);
   }
 
-  /* ── Badges */
   .badge {
     @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold;
   }
   
   .badge-success { 
-    @apply bg-[#094037] text-white dark:bg-[#094037]/30; 
+    background-color: var(--color-success);
+    @apply text-white;
   }
   
   .badge-warning { 
-    @apply bg-[#eab308] text-white dark:bg-[#eab308]/30; 
+    background-color: var(--color-warning);
+    @apply text-white;
   }
 
-  /* ── PermissionButtons Variants */
+  .badge-error {
+    background-color: var(--color-error);
+    @apply text-white;
+  }
+
   .btn-outline {
     @apply inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl text-base font-semibold transition-all;
     background: var(--bg-surface);
@@ -174,12 +183,11 @@
 
   .btn-danger {
     @apply inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl text-base font-semibold transition-all;
-    background: #dc2626;
-    border: 1px solid #dc2626;
+    background: var(--color-error);
+    border: 1px solid var(--color-error);
     color: #fff;
   }
 
-  /* ── Data Table (محسّنة) */
   .data-table {
     width: 100%;
     border-collapse: collapse;
@@ -210,19 +218,15 @@
 }
 
 /* 6. Animations */
-.animate-fade-in {
-  animation: fade-in 0.3s ease-out forwards;
-}
+.animate-fade-in { animation: fade-in 0.3s ease-out forwards; }
+.animate-spin-slow { animation: spin 3s linear infinite; }
+.loader-spin { animation: spin 1s linear infinite; }
 
-.animate-spin-slow {
-  animation: spin 3s linear infinite;
-}
+/* ── Progress (متطابقة مع Flutter) */
+.progress-success { background-color: #2E7D32; }
+.progress-primary { background-color: #F2C055; }
+.progress-warning { background-color: #F57C00; }
 
-.loader-spin {
-  animation: spin 1s linear infinite;
-}
-
-/* ── Progress */
-.progress-success { background-color: #094037; }
-.progress-primary { background-color: #eab308; }
-.progress-warning { background-color: #eab308; }
+.logo-dark { display: none; }
+.dark-mode .logo-dark { display: block; }
+.dark-mode .logo-light { display: none; }

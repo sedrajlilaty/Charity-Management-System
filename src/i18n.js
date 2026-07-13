@@ -7,7 +7,11 @@ import LanguageDetector from 'i18next-browser-languagedetector'
 // ═══════════════════════════════════════════════════════════════════════════════
 const ar = {
     translation: {
-
+        brand:
+        {
+            name: "عطاء",
+            subtitle: "منصة العمل الخيري"
+        },
         // ── Navigation ────────────────────────────────────────────────────────
         nav: {
             dashboard: 'لوحة التحكم',
@@ -613,6 +617,11 @@ const ar = {
 // ═══════════════════════════════════════════════════════════════════════════════
 const en = {
     translation: {
+        brand:
+        {
+            name: "Ataa",
+            subtitle: "Charity Platform"
+        },
 
         // ── Navigation ────────────────────────────────────────────────────────
         nav: {
