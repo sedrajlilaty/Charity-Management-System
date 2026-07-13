@@ -1,10 +1,16 @@
-// features/campaigns/Campaigns.jsx  (النسخة المحدّثة)
+// features/campaigns/Campaigns.jsx  (مربوطة بالباك الحقيقي)
 import { useState } from 'react'
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import { useSearchParams } from 'react-router-dom'
-import { Megaphone, Plus, Trash2, Edit2, Users, CheckCircle2, ImageOff } from 'lucide-react'
-import { campaignsService }  from '../../service/ServiceLayer'
+import { Megaphone, Plus, Trash2, Edit2, Users, CheckCircle2, ImageOff, XCircle } from 'lucide-react'
+import {
+  useCampaignsQuery,
+  useCreateCampaign,
+  useUpdateCampaign,
+  useDeleteCampaign,
+  useCloseCampaign,
+} from '../../hooks/Usecampaigns '         
+import { buildCampaignFormData } from '../../api/campaignsApi' 
 import { ProgressBar }        from '../../ui/Progressbar'
 import { formatCurrency, formatDate } from '../../utlis/helper'
 import { SpinnerPage }        from '../../ui/Spinner'
@@ -15,9 +21,10 @@ import { EmptyState }         from '../../ui/EmptyState'
 import CampaignModal          from './CampaignModal'
 import Pagination             from '../../ui/Pagination'
 import PermissionButton       from '../../ui/PermissionButton'
-import { Users2 } from 'lucide-react' // أيقونة إضافية للزر
+import { Users2 } from 'lucide-react'
 import CampaignVolunteersModal from './CampaignVolunteersModal'
-const LIMIT = 9
+
+const LIMIT = 8
 
 // ── مكوّن شريط تقدم المتطوعين ──────────────────────────────
 function VolunteerProgress({ needed, count = 0 }) {
@@ -56,8 +63,6 @@ function VolunteerProgress({ needed, count = 0 }) {
           </span>
         )}
       </div>
-
-      {/* شريط التقدم */}
       <div style={{ height: 5, background: 'var(--bg-base)', borderRadius: 99, overflow: 'hidden' }}>
         <div style={{
           width: `${pct}%`, height: '100%', borderRadius: 99,
@@ -70,12 +75,14 @@ function VolunteerProgress({ needed, count = 0 }) {
 }
 
 // ── بطاقة حملة واحدة ────────────────────────────────────────
-function CampaignCard({ c, onEdit, onDelete,onShowVolunteers  }) {
+function CampaignCard({ c, onEdit, onDelete, onClose, onShowVolunteers }) {
   const { t } = useTranslation()
-  const pct   = c.targetAmount > 0
-    ? Math.min(100, Math.round((c.collectedAmount / c.targetAmount) * 100))
+  const pct   = c.amountNeeded > 0
+    ? Math.min(100, Math.round((c.amountCollected / c.amountNeeded) * 100))
     : 0
   const color = pct >= 100 ? 'success' : pct >= 60 ? 'primary' : 'warning'
+  const coverUrl = c.media?.[0]?.url || null
+  const isClosed = c.status === 'closed'
 
   return (
     <Card style={{
@@ -85,12 +92,11 @@ function CampaignCard({ c, onEdit, onDelete,onShowVolunteers  }) {
       display: 'flex', flexDirection: 'column',
       overflow: 'hidden', padding: 0,
     }}>
-      {/* ✅ صورة الغلاف */}
       <div style={{ position: 'relative', height: 140, flexShrink: 0 }}>
-        {c.coverImage ? (
+        {coverUrl ? (
           <img
-            src={c.coverImage}
-            alt={c.name}
+            src={coverUrl}
+            alt={c.title}
             style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
           />
         ) : (
@@ -102,11 +108,9 @@ function CampaignCard({ c, onEdit, onDelete,onShowVolunteers  }) {
             <ImageOff size={28} color="rgba(255,255,255,0.4)" />
           </div>
         )}
-        {/* Badge على الصورة */}
         <div style={{ position: 'absolute', top: 10, left: 10 }}>
           <Badge status={c.status} />
         </div>
-        {/* أيقونة الحملة على الصورة */}
         <div style={{
           position: 'absolute', top: 10, right: 10,
           width: 36, height: 36, borderRadius: 10,
@@ -117,120 +121,100 @@ function CampaignCard({ c, onEdit, onDelete,onShowVolunteers  }) {
         </div>
       </div>
 
-      {/* المحتوى */}
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: '1.125rem' }}>
         <h3 style={{ margin: '0 0 6px', fontSize: '1rem', fontWeight: 800, color: 'var(--text-primary)' }}>
-          {c.name}
+          {c.title}
         </h3>
         <p style={{ margin: '0 0 1rem', fontSize: '0.83rem', color: 'var(--text-secondary)', lineHeight: 1.6, minHeight: 40 }}>
           {c.description}
         </p>
 
-        {/* تفاصيل التبرعات */}
         <div style={{ marginTop: 'auto' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6, fontSize: '0.78rem' }}>
-            <span style={{ color: 'var(--color-primary-500)', fontWeight: 700 }}>{t('campaigns.raised')}</span>
-            <span style={{ color: 'var(--text-primary)', fontWeight: 800 }}>{pct}%</span>
+          {c.acceptsDonations && (
+            <>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6, fontSize: '0.78rem' }}>
+                <span style={{ color: 'var(--color-primary-500)', fontWeight: 700 }}>{t('campaigns.raised')}</span>
+                <span style={{ color: 'var(--text-primary)', fontWeight: 800 }}>{pct}%</span>
+              </div>
+              <ProgressBar value={c.amountCollected} max={c.amountNeeded} color={color} />
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 6, fontSize: '0.72rem', color: 'var(--text-muted)' }}>
+                <span>{formatCurrency(c.amountCollected)}</span>
+                <span>{formatCurrency(c.amountNeeded)}</span>
+              </div>
+            </>
+          )}
+
+          {c.acceptsVolunteers && (
+            <VolunteerProgress
+              needed={c.volunteersNeeded}
+              count={c.volunteersJoined || 0}
+            />
+          )}
+
+          <div style={{ display: 'flex', gap: 10, marginTop: '1rem', paddingTop: '0.875rem', borderTop: '1px solid var(--border-subtle)' }}>
+            <PermissionButton
+              permission="campaigns.edit"
+              onClick={() => onEdit(c)}
+              style={{
+                flex: 1, height: 42,
+                background: 'linear-gradient(135deg, var(--color-primary-500), var(--color-primary-600))',
+                color: '#fff', border: 'none', borderRadius: 12, cursor: 'pointer',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                fontFamily: 'Cairo, sans-serif', fontWeight: 700, fontSize: '0.82rem',
+                transition: 'all 0.25s ease', boxShadow: '0 6px 16px rgba(0,0,0,0.08)',
+              }}
+            >
+              <Edit2 size={15} />
+              {t('campaigns.actions.edit')}
+            </PermissionButton>
+
+            {!isClosed && (
+              <PermissionButton
+                permission="campaigns.edit"
+                onClick={() => onClose(c.id)}
+                title="إغلاق الحملة"
+                style={{
+                  width: 42, height: 42,
+                  background: 'rgba(234,179,8,0.1)', color: '#b45309',
+                  border: '1px solid rgba(234,179,8,0.25)', borderRadius: 12, cursor: 'pointer',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                }}
+              >
+                <XCircle size={16} />
+              </PermissionButton>
+            )}
+
+            <PermissionButton
+              permission="campaigns.delete"
+              onClick={() => onDelete(c.id)}
+              style={{
+                width: 42, height: 42,
+                background: 'rgba(220,38,38,0.08)', color: '#dc2626',
+                border: '1px solid rgba(220,38,38,0.15)', borderRadius: 12, cursor: 'pointer',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                transition: 'all 0.25s ease', boxShadow: '0 4px 12px rgba(220,38,38,0.08)',
+              }}
+            >
+              <Trash2 size={16} />
+            </PermissionButton>
           </div>
-          <ProgressBar value={c.collectedAmount} max={c.targetAmount} color={color} />
-
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 6, fontSize: '0.72rem', color: 'var(--text-muted)' }}>
-            <span>{formatCurrency(c.collectedAmount)}</span>
-            <span>{formatCurrency(c.targetAmount)}</span>
-          </div>
-
-          {/* ✅ شريط المتطوعين */}
-          <VolunteerProgress
-            needed={c.volunteersNeeded}
-            count={c.volunteersCount || 0}
-          />
-
-          {/* إجراءات */}
-          {/* إجراءات */}
-<div
-  style={{
-    display: 'flex',
-    gap: 10,
-    marginTop: '1rem',
-    paddingTop: '0.875rem',
-    borderTop: '1px solid var(--border-subtle)',
-  }}
->
-  {/* زر التعديل */}
-  <PermissionButton
-    permission="campaigns.edit"
-    onClick={() => onEdit(c)}
-    style={{
-      flex: 1,
-      height: 42,
-      background:
-        'linear-gradient(135deg, var(--color-primary-500), var(--color-primary-600))',
-      color: '#fff',
-      border: 'none',
-      borderRadius: 12,
-      cursor: 'pointer',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      gap: 6,
-      fontFamily: 'Cairo, sans-serif',
-      fontWeight: 700,
-      fontSize: '0.82rem',
-      transition: 'all 0.25s ease',
-      boxShadow: '0 6px 16px rgba(0,0,0,0.08)',
-    }}
-  >
-    <Edit2 size={15} />
-    {t('campaigns.actions.edit')}
-  </PermissionButton>
-
-  {/* زر الحذف */}
-  <PermissionButton
-    permission="campaigns.delete"
-    onClick={() => onDelete(c.id)}
-    style={{
-      width: 42,
-      height: 42,
-      background: 'rgba(220,38,38,0.08)',
-      color: '#dc2626',
-      border: '1px solid rgba(220,38,38,0.15)',
-      borderRadius: 12,
-      cursor: 'pointer',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      transition: 'all 0.25s ease',
-      boxShadow: '0 4px 12px rgba(220,38,38,0.08)',
-    }}
-  >
-    <Trash2 size={16} />
-  </PermissionButton>
-</div>
         </div>
-        {/* ✅ صف جديد: زر "متطوعو الحملة" */}
-        <PermissionButton
-          onClick={() => onShowVolunteers(c)}
-          style={{
-            width: '100%',
-            marginTop: '8px',
-            height: 40,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: 6,
-            background: 'var(--bg-muted)',
-            color: 'var(--color-primary-700)',
-            border: '1px solid var(--border-subtle)',
-            borderRadius: 12,
-            cursor: 'pointer',
-            fontFamily: 'Cairo, sans-serif',
-            fontWeight: 700,
-            fontSize: '0.82rem',
-          }}
-        >
-          <Users2 size={15} />
-          متطوعو الحملة وساعاتهم
-        </PermissionButton>
+
+        {c.acceptsVolunteers && (
+          <PermissionButton
+            onClick={() => onShowVolunteers(c)}
+            style={{
+              width: '100%', marginTop: '8px', height: 40,
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+              background: 'var(--bg-muted)', color: 'var(--color-primary-700)',
+              border: '1px solid var(--border-subtle)', borderRadius: 12, cursor: 'pointer',
+              fontFamily: 'Cairo, sans-serif', fontWeight: 700, fontSize: '0.82rem',
+            }}
+          >
+            <Users2 size={15} />
+            متطوعو الحملة وساعاتهم
+          </PermissionButton>
+        )}
       </div>
     </Card>
   )
@@ -239,7 +223,6 @@ function CampaignCard({ c, onEdit, onDelete,onShowVolunteers  }) {
 // ── الصفحة الرئيسية ─────────────────────────────────────────
 export default function Campaigns() {
   const { t }  = useTranslation()
-  const qc     = useQueryClient()
   const [modalOpen, setModalOpen] = useState(false)
   const [editItem,  setEditItem]  = useState(null)
   const [params, setParams]       = useSearchParams()
@@ -250,45 +233,70 @@ export default function Campaigns() {
 
   const [volunteersModalOpen, setVolunteersModalOpen] = useState(false)
   const [activeCampaign, setActiveCampaign] = useState(null)
- 
+
   const handleShowVolunteers = (campaign) => {
     setActiveCampaign(campaign)
     setVolunteersModalOpen(true)
   }
-  const { data, isLoading } = useQuery({
-    queryKey: ['campaigns', page, search, status],
-    queryFn:  () => campaignsService.getList({ page, limit: LIMIT, search, status }),
+
+  // ── الربط الحقيقي بالباك ──
+  const { data, isLoading } = useCampaignsQuery({
+    page,
+    per_page: LIMIT,
+    search: search || undefined,
+    status: status || undefined,
   })
 
-  const remove = useMutation({
-    mutationFn: campaignsService.remove,
-    onSuccess:  () => qc.invalidateQueries(['campaigns']),
-  })
+  const items = data?.items ?? []
+  const total = data?.meta?.total ?? 0
 
-  const saveMut = useMutation({
-    mutationFn: (form) => editItem
-      ? campaignsService.update(editItem.id, form)
-      : campaignsService.create(form),
-    onSuccess: () => { qc.invalidateQueries(['campaigns']); setModalOpen(false); setEditItem(null) },
-  })
+  const createMut = useCreateCampaign()
+  const updateMut = useUpdateCampaign()
+  const deleteMut = useDeleteCampaign()
+  const closeMut  = useCloseCampaign()
 
-  const handleSave  = (form) => saveMut.mutate(form)
-  const handleEdit  = (c)    => { setEditItem(c); setModalOpen(true) }
-  const handleDelete = (id)  => {
-    if (window.confirm(t('campaigns.deleteConfirm'))) remove.mutate(id)
+  const handleSave = async (form) => {
+    const formData = buildCampaignFormData({
+      title:               form.title,
+      description:         form.description,
+      type:                form.type,
+      participation_type:  form.participationType,
+      amount_needed:       form.amountNeeded,
+      volunteers_needed:   form.volunteersNeeded,
+      status:              form.status,
+      start_date:          form.startDate,
+      end_date:            form.endDate,
+      media:               form.media,
+    })
+
+    if (editItem) {
+      await updateMut.mutateAsync({ id: editItem.id, formData })
+    } else {
+      await createMut.mutateAsync(formData)
+    }
+    setEditItem(null)
   }
 
-  // إجماليات من البيانات الحالية
-  const totalVolunteersNeeded = data?.data?.reduce((s, c) => s + (c.volunteersNeeded || 0), 0) ?? 0
-  const totalVolunteersFilled = data?.data?.reduce((s, c) => s + Math.min(c.volunteersCount || 0, c.volunteersNeeded || 0), 0) ?? 0
+  const handleEdit = (c) => { setEditItem(c); setModalOpen(true) }
+
+  const handleDelete = (id) => {
+    if (window.confirm(t('campaigns.deleteConfirm'))) deleteMut.mutate(id)
+  }
+
+  const handleClose = (id) => {
+    if (window.confirm('هل أنت متأكد من إغلاق هذه الحملة؟')) closeMut.mutate(id)
+  }
+
+  // إجماليات المتطوعين من الصفحة الحالية فقط (الباك ما بيرجع إجمالي شامل)
+  const totalVolunteersNeeded = items.reduce((s, c) => s + (c.volunteersNeeded || 0), 0)
+  const totalVolunteersFilled = items.reduce((s, c) => s + Math.min(c.volunteersJoined || 0, c.volunteersNeeded || 0), 0)
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem', paddingBottom: '2rem' }}>
 
-      {/* Header */}
       <PageHeader
         title={t('campaigns.title')}
-        subtitle={t('campaigns.subtitle', { count: data?.total ?? 0 })}
+        subtitle={t('campaigns.subtitle', { count: total })}
       >
         <PermissionButton
           permission="campaigns.create"
@@ -304,7 +312,6 @@ export default function Campaigns() {
         </PermissionButton>
       </PageHeader>
 
-      {/* Stats Card */}
       <Card style={{
         padding: '1.5rem', borderRadius: 24,
         background: 'linear-gradient(135deg, var(--color-primary-500) 0%, var(--color-primary-600) 100%)',
@@ -314,21 +321,19 @@ export default function Campaigns() {
           <div>
             <h3 style={{ color: '#eab308', fontSize: '1.2rem', fontWeight: 800, marginBottom: 4 }}>{t('campaigns.title')}</h3>
             <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.875rem', margin: 0 }}>
-              {t('campaigns.subtitle', { count: data?.total ?? 0 })}
+              {t('campaigns.subtitle', { count: total })}
             </p>
           </div>
 
           <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-            {/* إجمالي الحملات */}
             <div style={{ background: 'rgba(255,255,255,0.1)', padding: '10px 18px', borderRadius: 14, backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.1)' }}>
               <div style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.7rem' }}>{t('campaigns.total')}</div>
-              <div style={{ color: '#eab308', fontWeight: 800, fontSize: '1.3rem' }}>{data?.total ?? 0}</div>
+              <div style={{ color: '#eab308', fontWeight: 800, fontSize: '1.3rem' }}>{total}</div>
             </div>
 
-            {/* ✅ إجمالي المتطوعين */}
             {totalVolunteersNeeded > 0 && (
               <div style={{ background: 'rgba(255,255,255,0.1)', padding: '10px 18px', borderRadius: 14, backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.1)' }}>
-                <div style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.7rem' }}>المتطوعون</div>
+                <div style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.7rem' }}>المتطوعون (بهذه الصفحة)</div>
                 <div style={{ color: '#eab308', fontWeight: 800, fontSize: '1.3rem' }}>
                   {totalVolunteersFilled}
                   <span style={{ fontSize: '0.85rem', fontWeight: 400, color: 'rgba(255,255,255,0.6)' }}>/{totalVolunteersNeeded}</span>
@@ -339,51 +344,50 @@ export default function Campaigns() {
         </div>
       </Card>
 
-      {/* Grid */}
       {isLoading ? (
         <SpinnerPage />
       ) : (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '1.25rem' }}>
-          {data?.data?.length === 0 ? (
+          {items.length === 0 ? (
             <div style={{ gridColumn: '1/-1' }}>
               <Card style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-default)' }}>
                 <EmptyState icon={Megaphone} title={t('campaigns.empty')} />
               </Card>
             </div>
           ) : (
-            data?.data?.map(c => (
+            items.map(c => (
               <CampaignCard
                 key={c.id}
                 c={c}
                 onEdit={handleEdit}
                 onDelete={handleDelete}
-                onShowVolunteers={handleShowVolunteers} 
+                onClose={handleClose}
+                onShowVolunteers={handleShowVolunteers}
               />
             ))
           )}
         </div>
       )}
 
-      {/* Pagination */}
-      {(data?.total ?? 0) > LIMIT && (
+      {total > LIMIT && (
         <Card style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-default)', padding: '1rem', borderRadius: 16 }}>
           <Pagination
             page={page}
-            total={data?.total ?? 0}
+            total={total}
             limit={LIMIT}
             onPageChange={next => setParams(prev => { const n = new URLSearchParams(prev); n.set('page', String(next)); return n })}
           />
         </Card>
       )}
 
-      {/* Modal */}
       <CampaignModal
         open={modalOpen}
         onClose={() => { setModalOpen(false); setEditItem(null) }}
         onSave={handleSave}
         editItem={editItem}
       />
-       <CampaignVolunteersModal
+      {/* ⚠️ لسا مربوطة بسيرفس محلي (mock) — الباك تبع المتطوعين لسا ما جاهز */}
+      <CampaignVolunteersModal
         open={volunteersModalOpen}
         onClose={() => setVolunteersModalOpen(false)}
         campaign={activeCampaign}

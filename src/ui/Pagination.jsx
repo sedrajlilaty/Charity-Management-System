@@ -1,3 +1,5 @@
+import PermissionButton from './PermissionButton'
+
 export default function Pagination({ page = 1, total = 0, limit = 10, onPageChange }) {
   const totalPages = Math.max(1, Math.ceil(total / limit))
 
