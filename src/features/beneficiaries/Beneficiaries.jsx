@@ -38,8 +38,8 @@ const LIMIT = 10
 
 // ── Category config ───────────────────────────────────────
 export const CAT_CFG = {
-  patient:            { icon: Heart,         color: '#094037', bg: 'var(--color-primary-50)',  labelKey: 'beneficiaries.categories.patient'            },
-  orphan:             { icon: User,          color: '#094037', bg: 'var(--color-primary-100)', labelKey: 'beneficiaries.categories.orphan'             },
+  patient:            { icon: Heart,         color: 'var(--color-primary-500)', bg: 'var(--color-primary-50)',  labelKey: 'beneficiaries.categories.patient'            },
+  orphan:             { icon: User,          color: 'var(--color-primary-500)', bg: 'var(--color-primary-100)', labelKey: 'beneficiaries.categories.orphan'             },
   school_student:     { icon: BookOpen,      color: '#92400e', bg: '#fef3c7',                  labelKey: 'beneficiaries.categories.school_student'     },
   university_student: { icon: GraduationCap, color: '#92400e', bg: '#fef3c7',                  labelKey: 'beneficiaries.categories.university_student' },
 }
@@ -244,7 +244,7 @@ export default function Beneficiaries() {
           <div>
             <div style={{ fontWeight: 700, color: 'var(--text-primary)', fontSize: '0.88rem' }}>{row.full_name}</div>
             {row.title
-              ? <div style={{ fontSize: '0.72rem', color: '#094037', fontWeight: 600 }}>📢 {row.title}</div>
+              ? <div style={{ fontSize: '0.72rem', color: 'var(--color-primary-500)', fontWeight: 600 }}>📢 {row.title}</div>
               : <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>{row.phone}</div>
             }
           </div>
@@ -279,7 +279,7 @@ export default function Beneficiaries() {
       title: t('beneficiaries.table.amount'),
       key: 'required_amount',
       render: (val) => (
-        <span style={{ fontWeight: 700, color: val > 0 ? '#094037' : 'var(--text-hint)', fontSize: '0.85rem' }}>
+        <span style={{ fontWeight: 700, color: val > 0 ? 'var(--color-primary-500)' : 'var(--text-hint)', fontSize: '0.85rem' }}>
           {val > 0 ? formatCurrency(val) : '—'}
         </span>
       ),
@@ -298,7 +298,7 @@ export default function Beneficiaries() {
           <button
             onClick={() => { setViewItem(row); setViewInitStep('view'); setCaseViewOpen(true) }}
             title={t('common.view')}
-            style={{ width: 32, height: 32, borderRadius: 8, border: 'none', cursor: 'pointer', background: 'rgba(9,64,55,0.08)', color: '#094037', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}
+            style={{ width: 32, height: 32, borderRadius: 8, border: 'none', cursor: 'pointer', background: 'rgba(9,64,55,0.08)', color: 'var(--color-primary-500)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}
           >
             <Eye size={15} />
           </button>
@@ -322,7 +322,7 @@ export default function Beneficiaries() {
   const viewBtn = (active) => ({
     display: 'flex', alignItems: 'center', justifyContent: 'center',
     width: '34px', height: '34px', borderRadius: '8px', border: 'none', cursor: 'pointer',
-    background: active ? '#094037' : 'transparent',
+    background: active ? 'var(--color-primary-500)' : 'transparent',
     color: active ? '#fff' : 'var(--text-muted)', transition: 'all 0.15s',
   })
 
@@ -385,9 +385,9 @@ export default function Beneficiaries() {
                 <span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-muted)', marginLeft: 4 }}>{t('beneficiaries.categories.label')}:</span>
                 <button onClick={() => setParam('category', '')} style={{
                   padding: '6px 14px', borderRadius: '10px', cursor: 'pointer', border: '1.5px solid',
-                  borderColor: !category ? '#094037' : 'var(--border-subtle)',
+                  borderColor: !category ? 'var(--color-primary-500)' : 'var(--border-subtle)',
                   background:  !category ? 'rgba(9,64,55,0.08)' : 'transparent',
-                  color:       !category ? '#094037' : 'var(--text-secondary)',
+                  color:       !category ? 'var(--color-primary-500)' : 'var(--text-secondary)',
                   fontSize: '0.78rem', fontWeight: 600, fontFamily: 'Cairo, sans-serif',
                 }}>
                   {t('beneficiaries.categories.all')}

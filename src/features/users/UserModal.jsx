@@ -127,9 +127,9 @@ export default function UserModal({ open, onClose, onSave, editUser }) {
           onClick={() => fileInputRef.current.click()}
           style={{
             width: '80px', height: '80px', borderRadius: '50%',
-            background: '#f0fdfa', color: '#094037',
+            background: '#f0fdfa', color: 'var(--color-primary-500)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            border: '2px dashed #094037', cursor: 'pointer',
+            border: '2px dashed var(--color-primary-500)', cursor: 'pointer',
             position: 'relative', overflow: 'hidden',
           }}
         >

@@ -93,7 +93,7 @@ export default function Volunteers() {
   const viewBtn = (active) => ({
     display: 'flex', alignItems: 'center', justifyContent: 'center',
     width: '34px', height: '34px', borderRadius: '8px', border: 'none', cursor: 'pointer',
-    background: active ? '#094037' : 'transparent',
+    background: active ? 'var(--color-primary-500)' : 'transparent',
     color: active ? '#fff' : 'var(--text-muted)',
     transition: 'all 0.15s',
   })
@@ -310,7 +310,7 @@ return (
           title="ترتيب حسب ساعات التطوع"
           style={{
             display: 'flex', alignItems: 'center', gap: 8,
-            background: sortByHours ? '#094037' : 'var(--bg-muted)',
+            background: sortByHours ? 'var(--color-primary-500)' : 'var(--bg-muted)',
             color: sortByHours ? '#fff' : 'var(--text-secondary)',
             border: sortByHours ? 'none' : '1px solid var(--border-default)',
             borderRadius: '14px',

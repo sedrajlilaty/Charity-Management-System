@@ -25,7 +25,7 @@ const CertificateTemplate = forwardRef(({ volunteerName, hours, issueDate, certi
         style={{
           position: 'absolute',
           inset: '24px',
-          border: '3px solid #094037',
+          border: '3px solid var(--color-primary-500)',
           borderRadius: '12px',
         }}
       />
@@ -59,7 +59,7 @@ const CertificateTemplate = forwardRef(({ volunteerName, hours, issueDate, certi
               width: '70px',
               height: '70px',
               borderRadius: '50%',
-              background: '#094037',
+              background: 'var(--color-primary-500)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -70,13 +70,13 @@ const CertificateTemplate = forwardRef(({ volunteerName, hours, issueDate, certi
           >
             عطاء
           </div>
-          <div style={{ fontSize: '14px', color: '#094037', fontWeight: 600, letterSpacing: '1px' }}>
+          <div style={{ fontSize: '14px', color: 'var(--color-primary-500)', fontWeight: 600, letterSpacing: '1px' }}>
             جمعية عطاء الخيرية
           </div>
         </div>
 
         {/* عنوان الشهادة */}
-        <div style={{ fontSize: '40px', fontWeight: 800, color: '#094037', marginTop: '10px' }}>
+        <div style={{ fontSize: '40px', fontWeight: 800, color: 'var(--color-primary-500)', marginTop: '10px' }}>
           شهادة تقدير وشكر
         </div>
 
@@ -99,7 +99,7 @@ const CertificateTemplate = forwardRef(({ volunteerName, hours, issueDate, certi
 
         <div style={{ fontSize: '18px', color: '#6b7280', maxWidth: '700px', lineHeight: 1.8 }}>
           لما قدّمه من جهد وعطاء، حيث أتم
-          <span style={{ color: '#094037', fontWeight: 800, padding: '0 6px' }}>{hours}</span>
+          <span style={{ color: 'var(--color-primary-500)', fontWeight: 800, padding: '0 6px' }}>{hours}</span>
           ساعة تطوعية، وذلك تقديراً لمساهمته الفعالة في خدمة المجتمع
         </div>
 
@@ -126,10 +126,10 @@ const CertificateTemplate = forwardRef(({ volunteerName, hours, issueDate, certi
             <div
               style={{
                 width: '130px',
-                borderTop: '2px solid #094037',
+                borderTop: '2px solid var(--color-primary-500)',
                 paddingTop: '8px',
                 fontWeight: 700,
-                color: '#094037',
+                color: 'var(--color-primary-500)',
               }}
             >
               التوقيع والختم

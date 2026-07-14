@@ -20,7 +20,7 @@ import PermissionButton from '../../ui/PermissionButton'
 function KpiCard({ label, value, icon: Icon, accent }) {
   return (
     <div style={{
-      background: '#094037', borderRadius: '14px', padding: '1.1rem 1.25rem',
+      background: 'var(--color-primary-500)', borderRadius: '14px', padding: '1.1rem 1.25rem',
       display: 'flex', flexDirection: 'column', gap: '12px',
       border: '1px solid rgba(255,255,255,0.06)',
       boxShadow: '0 2px 12px rgba(9,64,55,0.2)', transition: 'transform 0.2s, box-shadow 0.2s',
@@ -111,14 +111,14 @@ function Tr({ children }) {
 
 function Td({ children, bold, accent, muted, minW }) {
   return (
-    <td style={{ padding: '11px 16px', fontWeight: bold ? 700 : 400, color: accent ? '#094037' : muted ? 'var(--text-muted)' : 'var(--text-primary)', fontSize: muted ? '0.72rem' : '0.82rem', minWidth: minW ? `${minW}px` : undefined, whiteSpace: 'nowrap' }}>
+    <td style={{ padding: '11px 16px', fontWeight: bold ? 700 : 400, color: accent ? 'var(--color-primary-500)' : muted ? 'var(--text-muted)' : 'var(--text-primary)', fontSize: muted ? '0.72rem' : '0.82rem', minWidth: minW ? `${minW}px` : undefined, whiteSpace: 'nowrap' }}>
       {children}
     </td>
   )
 }
 
 function ProgressCell({ pct }) {
-  const color = pct >= 100 ? '#16a34a' : pct >= 60 ? '#094037' : '#d97706'
+  const color = pct >= 100 ? '#16a34a' : pct >= 60 ? 'var(--color-primary-500)' : '#d97706'
   return (
     <td style={{ padding: '11px 16px', minWidth: '120px' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -171,8 +171,8 @@ export default function Dashboard() {
                 <AreaChart data={monthly} margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
                   <defs>
                     <linearGradient id="gd" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%"  stopColor="#094037" stopOpacity={0.15} />
-                      <stop offset="95%" stopColor="#094037" stopOpacity={0} />
+                      <stop offset="5%"  stopColor="var(--color-primary-500)" stopOpacity={0.15} />
+                      <stop offset="95%" stopColor="var(--color-primary-500)" stopOpacity={0} />
                     </linearGradient>
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" stroke="var(--border-subtle)" vertical={false} />
@@ -181,8 +181,8 @@ export default function Dashboard() {
                   <Tooltip content={<ChartTooltip />} />
                   {/* الباك اند بيرجع amount_usd مش amount */}
                   <Area type="monotone" dataKey="amount_usd" name={t('dashboard.totalDonations')}
-                    stroke="#094037" strokeWidth={2.5} fill="url(#gd)" dot={false}
-                    activeDot={{ r: 5, fill: '#094037', stroke: '#fff', strokeWidth: 2 }}
+                    stroke="var(--color-primary-500)" strokeWidth={2.5} fill="url(#gd)" dot={false}
+                    activeDot={{ r: 5, fill: 'var(--color-primary-500)', stroke: '#fff', strokeWidth: 2 }}
                   />
                 </AreaChart>
               </ResponsiveContainer>

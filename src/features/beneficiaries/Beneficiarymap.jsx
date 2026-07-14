@@ -196,7 +196,7 @@ export default function BeneficiaryMap() {
                   <Tooltip direction="top" offset={[0, -radius]} opacity={0.96}>
                     <div style={{ fontFamily: 'Cairo,sans-serif', direction: 'rtl', minWidth: 140 }}>
                       <p style={{ fontWeight: 700, color: '#0D5247', marginBottom: 2 }}>{b.full_name}</p>
-                      {b.title && <p style={{ fontSize: '0.72rem', color: '#094037', fontWeight: 600, marginBottom: 1 }}>📢 {b.title}</p>}
+                      {b.title && <p style={{ fontSize: '0.72rem', color: 'var(--color-primary-500)', fontWeight: 600, marginBottom: 1 }}>📢 {b.title}</p>}
                       <p style={{ fontSize: '0.72rem', color: '#64748b' }}>📍 {[b.governorate, b.region].filter(Boolean).join(' — ')}</p>
                       {cat && <p style={{ fontSize: '0.7rem', color: cat.color, fontWeight: 700 }}>{cat.ar}</p>}
                     </div>
@@ -204,7 +204,7 @@ export default function BeneficiaryMap() {
                   <Popup maxWidth={240}>
                     <div style={{ fontFamily: 'Cairo,sans-serif', direction: 'rtl', minWidth: 200 }}>
                       <p style={{ fontWeight: 700, color: '#0D5247', fontSize: '0.95rem', marginBottom: 4 }}>{b.full_name}</p>
-                      {b.title && <p style={{ fontSize: '0.78rem', color: '#094037', fontWeight: 600, marginBottom: 4 }}>📢 {b.title}</p>}
+                      {b.title && <p style={{ fontSize: '0.78rem', color: 'var(--color-primary-500)', fontWeight: 600, marginBottom: 4 }}>📢 {b.title}</p>}
                       <p style={{ fontSize: '0.78rem', color: '#64748b', marginBottom: 6 }}>{b.phone}</p>
                       <div style={{ background: '#e6f0ee', borderRadius: 7, padding: '6px 9px', marginBottom: 8 }}>
                         {b.governorate && <p style={{ fontSize: '0.875rem', fontWeight: 700, color: '#0D5247', marginBottom: 1 }}>🏛 {b.governorate}</p>}

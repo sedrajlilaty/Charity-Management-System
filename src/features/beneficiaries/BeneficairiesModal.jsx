@@ -8,8 +8,8 @@ import { useGovernorates, useRegions } from '../../hooks/useLocations'
 
 // ─── Category Config ───────────────────────────────────────
 const CATEGORIES = [
-  { key: 'patient',            icon: Heart,         color: '#094037', bg: 'var(--color-primary-50)',  label: 'مريض'        },
-  { key: 'orphan',             icon: User,          color: '#094037', bg: 'var(--color-primary-100)', label: 'يتيم'         },
+  { key: 'patient',            icon: Heart,         color: 'var(--color-primary-500)', bg: 'var(--color-primary-50)',  label: 'مريض'        },
+  { key: 'orphan',             icon: User,          color: 'var(--color-primary-500)', bg: 'var(--color-primary-100)', label: 'يتيم'         },
   { key: 'school_student',     icon: BookOpen,      color: '#92400e', bg: '#fef3c7',                  label: 'طالب مدرسة'  },
   { key: 'university_student', icon: GraduationCap, color: '#92400e', bg: '#fef3c7',                  label: 'طالب جامعة'  },
 ]
@@ -69,7 +69,7 @@ function FileUpload({ label, value, onChange, accept = 'image/*,.pdf', required,
         {value ? (
           <>
             <div style={{ width: 38, height: 38, borderRadius: 6, background: '#eff6ff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-              <FileText size={18} color="#094037" />
+              <FileText size={18} color="var(--color-primary-500)" />
             </div>
             <span style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', fontWeight: 500, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
               {fileName ?? 'تم رفع الملف'}
@@ -105,7 +105,7 @@ function FileUpload({ label, value, onChange, accept = 'image/*,.pdf', required,
 }
 
 // ─── Section divider ───────────────────────────────────────
-function Section({ title, color = '#094037' }) {
+function Section({ title, color = 'var(--color-primary-500)' }) {
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 8, margin: '8px 0 4px' }}>
       <span style={{ fontSize: '0.72rem', fontWeight: 700, color, textTransform: 'uppercase', letterSpacing: '0.06em', whiteSpace: 'nowrap' }}>{title}</span>
@@ -153,7 +153,7 @@ function LocationFields({ form, set, errors }) {
 function PatientForm({ form, set, errors }) {
   return (
     <>
-      <Section title="المعلومات الشخصية" color="#094037" />
+      <Section title="المعلومات الشخصية" color="var(--color-primary-500)" />
       <FormRow compact label="الاسم الكامل" required>
         <input className="input" placeholder="الاسم الرباعي" value={form.full_name} onChange={e => set('full_name', e.target.value)} />
         <FieldError msg={errors.full_name} />
@@ -171,10 +171,10 @@ function PatientForm({ form, set, errors }) {
         </FormRow>
       </div>
 
-      <Section title="الموقع" color="#094037" />
+      <Section title="الموقع" color="var(--color-primary-500)" />
       <LocationFields form={form} set={set} errors={errors} />
 
-      <Section title="الحالة الطبية" color="#094037" />
+      <Section title="الحالة الطبية" color="var(--color-primary-500)" />
       <FormRow compact label="عنوان الحالة" required>
         <input className="input" placeholder="مثال: مريض سرطان يحتاج تمويل علاج" value={form.title} onChange={e => set('title', e.target.value)} />
         <FieldError msg={errors.title} />
@@ -188,7 +188,7 @@ function PatientForm({ form, set, errors }) {
         <FieldError msg={errors.required_amount} />
       </FormRow>
 
-      <Section title="المستندات" color="#094037" />
+      <Section title="المستندات" color="var(--color-primary-500)" />
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.75rem' }}>
         <FileUpload label="الصورة الشخصية"  value={form.personal_picture}    onChange={v => set('personal_picture', v)}    accept="image/*"      required error={errors.personal_picture} />
         <FileUpload label="التقرير الطبي"    value={form.medical_report}       onChange={v => set('medical_report', v)}       accept="image/*,.pdf" required error={errors.medical_report} />

@@ -52,7 +52,7 @@ function KpiCard({ label, value, change, icon: Icon }) {
   return (
     <div
       style={{
-        background: '#094037', borderRadius: 16,
+        background: 'var(--color-primary-500)', borderRadius: 16,
         padding: '1.1rem 1.25rem',
         display: 'flex', flexDirection: 'column', gap: 12,
         border: '1px solid rgba(255,255,255,0.06)',
@@ -139,7 +139,7 @@ function DisburseModal({ walletBalance, campaigns, cases, onClose, onConfirm }) 
         </div>
 
         {/* رصيد متاح */}
-        <div style={{ background: 'rgba(9,64,55,0.08)', borderRadius: 10, padding: '10px 14px', marginBottom: '1rem', display: 'flex', justifyContent: 'space-between', fontSize: '0.88rem', color: '#094037' }}>
+        <div style={{ background: 'rgba(9,64,55,0.08)', borderRadius: 10, padding: '10px 14px', marginBottom: '1rem', display: 'flex', justifyContent: 'space-between', fontSize: '0.88rem', color: 'var(--color-primary-500)' }}>
           <span>{t('wallet.modal.available')}</span>
           <span style={{ fontWeight: 800 }}>{fmt(walletBalance)}</span>
         </div>
@@ -153,8 +153,8 @@ function DisburseModal({ walletBalance, campaigns, cases, onClose, onConfirm }) 
                 style={{
                   flex: 1, padding: '9px', borderRadius: 10, fontSize: '0.88rem',
                   fontFamily: 'Cairo, sans-serif', cursor: 'pointer', fontWeight: 600,
-                  border: `1px solid ${targetType === val ? '#094037' : 'var(--border-default)'}`,
-                  background: targetType === val ? '#094037' : 'transparent',
+                  border: `1px solid ${targetType === val ? 'var(--color-primary-500)' : 'var(--border-default)'}`,
+                  background: targetType === val ? 'var(--color-primary-500)' : 'transparent',
                   color: targetType === val ? '#fff' : 'var(--text-secondary)',
                   transition: '0.15s',
                 }}
@@ -186,7 +186,7 @@ function DisburseModal({ walletBalance, campaigns, cases, onClose, onConfirm }) 
             {[
               { label: t('wallet.modal.totalRaised'), val: fmt(selected.raised ?? 0),    color: 'var(--text-primary)' },
               { label: t('wallet.modal.disbursed'),   val: fmt(selected.disbursed ?? 0), color: '#BA7517'             },
-              { label: t('wallet.modal.remaining'),   val: fmt(remaining),               color: '#094037', bold: true  },
+              { label: t('wallet.modal.remaining'),   val: fmt(remaining),               color: 'var(--color-primary-500)', bold: true  },
             ].map(({ label, val, color, bold }) => (
               <div key={label} style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', borderBottom: '0.5px solid var(--border-subtle)', fontSize: '0.82rem' }}>
                 <span style={{ color: 'var(--text-muted)' }}>{label}</span>
@@ -224,7 +224,7 @@ function DisburseModal({ walletBalance, campaigns, cases, onClose, onConfirm }) 
           <button onClick={onClose} style={{ flex: 1, padding: 10, borderRadius: 10, border: '1px solid var(--border-default)', background: 'transparent', cursor: 'pointer', fontSize: '0.88rem', color: 'var(--text-secondary)', fontFamily: 'Cairo, sans-serif', fontWeight: 600 }}>
             {t('common.cancel')}
           </button>
-          <button onClick={handleConfirm} style={{ flex: 1, padding: 10, borderRadius: 10, border: 'none', background: '#094037', color: '#fff', cursor: 'pointer', fontSize: '0.88rem', fontWeight: 700, fontFamily: 'Cairo, sans-serif', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+          <button onClick={handleConfirm} style={{ flex: 1, padding: 10, borderRadius: 10, border: 'none', background: 'var(--color-primary-500)', color: '#fff', cursor: 'pointer', fontSize: '0.88rem', fontWeight: 700, fontFamily: 'Cairo, sans-serif', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
             <Send size={14} /> {t('wallet.modal.confirm')}
           </button>
         </div>
@@ -253,7 +253,7 @@ function DisburseCard({ item, onDisburse }) {
             ? (isCompleted ? 'var(--color-primary-50)' : '#fef3c7')
             : 'var(--bg-muted)',
           color: item.status
-            ? (isCompleted ? '#094037' : '#92400e')
+            ? (isCompleted ? 'var(--color-primary-500)' : '#92400e')
             : 'var(--text-muted)',
           padding: '2px 10px', borderRadius: 99, fontSize: '0.72rem', fontWeight: 700,
         }}>
@@ -268,7 +268,7 @@ function DisburseCard({ item, onDisburse }) {
             <span>{t('wallet.raised')}</span><span>{pct}%</span>
           </div>
           <div style={{ height: 6, background: 'var(--bg-muted)', borderRadius: 10, overflow: 'hidden' }}>
-            <div style={{ height: '100%', width: `${pct}%`, background: isCompleted ? '#eab308' : '#094037', borderRadius: 10, transition: 'width 0.3s' }} />
+            <div style={{ height: '100%', width: `${pct}%`, background: isCompleted ? '#eab308' : 'var(--color-primary-500)', borderRadius: 10, transition: 'width 0.3s' }} />
           </div>
         </div>
       )}
@@ -277,7 +277,7 @@ function DisburseCard({ item, onDisburse }) {
         {[
           { label: t('wallet.totalRaised'), val: fmt(raised),    color: 'var(--text-primary)' },
           { label: t('wallet.disbursed'),   val: fmt(disbursed), color: '#BA7517'             },
-          { label: t('wallet.remaining'),   val: fmt(remaining), color: '#094037'             },
+          { label: t('wallet.remaining'),   val: fmt(remaining), color: 'var(--color-primary-500)'             },
         ].map(({ label, val, color }) => (
           <div key={label} style={{ background: 'var(--bg-muted)', borderRadius: 8, padding: '6px 8px' }}>
             <p style={{ margin: '0 0 2px', fontSize: '0.65rem', color: 'var(--text-muted)' }}>{label}</p>
@@ -293,7 +293,7 @@ function DisburseCard({ item, onDisburse }) {
           width: '100%', padding: '8px', borderRadius: 10, fontSize: '0.82rem',
           border: 'none', cursor: fullyDone ? 'default' : 'pointer',
           fontFamily: 'Cairo, sans-serif', fontWeight: 700,
-          background: fullyDone ? 'var(--bg-muted)' : '#094037',
+          background: fullyDone ? 'var(--bg-muted)' : 'var(--color-primary-500)',
           color: fullyDone ? 'var(--text-muted)' : '#fff',
           display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
           transition: '0.15s', opacity: fullyDone ? 0.7 : 1,
@@ -353,7 +353,7 @@ export default function WalletPage() {
 
   // ── columns جدول المصروفات ──
   const TYPE_META = {
-    campaign: { bg: 'var(--color-primary-50)', text: '#094037',         label: t('wallet.type.campaign') },
+    campaign: { bg: 'var(--color-primary-50)', text: 'var(--color-primary-500)',         label: t('wallet.type.campaign') },
     case:     { bg: '#fef3c7',                 text: '#92400e',         label: t('wallet.type.case')     },
   }
 
@@ -495,7 +495,7 @@ export default function WalletPage() {
       {toast && (
         <div style={{
           position: 'fixed', bottom: '1.5rem', right: '1.5rem', zIndex: 200,
-          background: toast.error ? '#A32D2D' : '#094037',
+          background: toast.error ? '#A32D2D' : 'var(--color-primary-500)',
           color: '#fff', padding: '12px 20px', borderRadius: 12,
           fontSize: '0.88rem', fontFamily: 'Cairo, sans-serif', fontWeight: 600,
           display: 'flex', alignItems: 'center', gap: 8,

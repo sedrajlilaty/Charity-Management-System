@@ -27,7 +27,7 @@ export default function ExportPDFPermissionButton ({ onClick, loading = false, l
         borderRadius:   '10px',
         border:         '1px solid var(--border-default)',
         background:     loading ? 'var(--color-secondary-500)' : 'var(--color-secondary-500)',
-        color:          loading ? '#111' : '#094037',
+        color:          loading ? '#111' : 'var(--color-primary-500)',
         fontSize:       '0.82rem',
         fontWeight:     600,
         fontFamily:     'Cairo, sans-serif',

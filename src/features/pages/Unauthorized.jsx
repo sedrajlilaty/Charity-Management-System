@@ -83,7 +83,7 @@ const s = {
     marginTop: '8px',
     display: 'flex', alignItems: 'center', gap: '8px',
     padding: '10px 24px', borderRadius: '12px',
-    background: '#094037', color: '#fff',
+    background: 'var(--color-primary-500)', color: '#fff',
     border: 'none', cursor: 'pointer',
     fontSize: '0.875rem', fontWeight: 700,
     fontFamily: 'Cairo, sans-serif',

@@ -112,11 +112,11 @@ export default function AppUsers() {
   align: 'center',
   render: (_, user) => (
   <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-    <Wallet size={14} style={{ color: '#094037' }} />
+    <Wallet size={14} style={{ color: 'var(--color-primary-500)' }} />
     <span style={{
       fontSize: '0.9rem',
       fontWeight: 700,
-      color: user.balances?.USD > 0 ? '#094037' : 'var(--text-muted)',
+      color: user.balances?.USD > 0 ? 'var(--color-primary-500)' : 'var(--text-muted)',
     }}>
       {Number(user.balances?.USD || 0).toLocaleString('en-US')} USD
     </span>
@@ -146,7 +146,7 @@ export default function AppUsers() {
         <PermissionButton
           style={{
             padding: '6px 14px', borderRadius: '8px',
-            backgroundColor: '#094037', color: '#fff',
+            backgroundColor: 'var(--color-primary-500)', color: '#fff',
             border: 'none', cursor: 'pointer',
             display: 'flex', alignItems: 'center', gap: '6px',
             fontSize: '0.85rem', fontFamily: 'Cairo, sans-serif',

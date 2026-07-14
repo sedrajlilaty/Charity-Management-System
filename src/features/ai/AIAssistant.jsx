@@ -62,15 +62,15 @@ function MessageBubble({ msg, isAr }) {
       flexDirection: isUser ? (isAr ? 'row' : 'row-reverse') : (isAr ? 'row-reverse' : 'row'),
       alignItems: 'flex-end',
     }}>
-      <div style={{ width: '28px', height: '28px', borderRadius: '50%', flexShrink: 0, background: isUser ? '#094037' : '#e6f0ee', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        {isUser ? <User size={14} color="#fff" /> : <Bot size={14} color="#094037" />}
+      <div style={{ width: '28px', height: '28px', borderRadius: '50%', flexShrink: 0, background: isUser ? 'var(--color-primary-500)' : '#e6f0ee', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        {isUser ? <User size={14} color="#fff" /> : <Bot size={14} color="var(--color-primary-500)" />}
       </div>
       <div style={{
         maxWidth: '78%', padding: '10px 13px',
         borderRadius: isUser
           ? (isAr ? '16px 4px 16px 16px' : '4px 16px 16px 16px')
           : (isAr ? '4px 16px 16px 16px' : '16px 4px 16px 16px'),
-        background: isUser ? '#094037' : 'var(--bg-muted)',
+        background: isUser ? 'var(--color-primary-500)' : 'var(--bg-muted)',
         color: isUser ? '#fff' : 'var(--text-primary)',
         fontSize: '0.84rem', lineHeight: 1.65,
         whiteSpace: 'pre-wrap', wordBreak: 'break-word',
@@ -87,11 +87,11 @@ function TypingIndicator({ isAr }) {
   return (
     <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-end', flexDirection: isAr ? 'row-reverse' : 'row' }}>
       <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: '#e6f0ee', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-        <Bot size={14} color="#094037" />
+        <Bot size={14} color="var(--color-primary-500)" />
       </div>
       <div style={{ background: 'var(--bg-muted)', borderRadius: '16px 4px 16px 16px', padding: '12px 16px', display: 'flex', gap: '4px', alignItems: 'center' }}>
         {[0, 1, 2].map(i => (
-          <span key={i} style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#094037', animation: `bounce 1.2s ease-in-out ${i * 0.2}s infinite` }} />
+          <span key={i} style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'var(--color-primary-500)', animation: `bounce 1.2s ease-in-out ${i * 0.2}s infinite` }} />
         ))}
       </div>
       <style>{`@keyframes bounce{0%,60%,100%{transform:translateY(0)}30%{transform:translateY(-6px)}}`}</style>
@@ -103,7 +103,7 @@ function TypingIndicator({ isAr }) {
 function WelcomeScreen({ suggestions, onSuggest, isAr }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', flex: 1, padding: '1.5rem', gap: '1rem', textAlign: 'center' }}>
-      <div style={{ width: '56px', height: '56px', borderRadius: '50%', background: 'linear-gradient(135deg,#094037,#0D5247)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 16px rgba(9,64,55,0.3)' }}>
+      <div style={{ width: '56px', height: '56px', borderRadius: '50%', background: 'linear-gradient(135deg,var(--color-primary-500),#0D5247)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 16px rgba(9,64,55,0.3)' }}>
         <Sparkles size={24} color="#eab308" />
       </div>
       <div>
@@ -121,7 +121,7 @@ function WelcomeScreen({ suggestions, onSuggest, isAr }) {
         {suggestions.map((q, i) => (
           <PermissionButton  key={i} onClick={() => onSuggest(q)}
             style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-default)', borderRadius: '10px', padding: '8px 12px', fontSize: '0.8rem', color: 'var(--text-secondary)', cursor: 'pointer', textAlign: isAr ? 'right' : 'left', transition: 'all 0.15s', fontFamily: 'Cairo, sans-serif' }}
-            onMouseEnter={e => { e.currentTarget.style.background = '#e6f0ee'; e.currentTarget.style.color = '#094037'; e.currentTarget.style.borderColor = '#094037' }}
+            onMouseEnter={e => { e.currentTarget.style.background = '#e6f0ee'; e.currentTarget.style.color = 'var(--color-primary-500)'; e.currentTarget.style.borderColor = 'var(--color-primary-500)' }}
             onMouseLeave={e => { e.currentTarget.style.background = 'var(--bg-surface)'; e.currentTarget.style.color = 'var(--text-secondary)'; e.currentTarget.style.borderColor = 'var(--border-default)' }}>
             {q}
           </PermissionButton >
@@ -187,7 +187,7 @@ export default function AIAssistant() {
           position: 'fixed', bottom: '24px',
           [isAr ? 'left' : 'right']: '24px',
           zIndex: 1000, width: '52px', height: '52px', borderRadius: '50%',
-          background: 'linear-gradient(135deg, #094037 0%, #0D5247 100%)',
+          background: 'linear-gradient(135deg, var(--color-primary-500) 0%, #0D5247 100%)',
           border: 'none', cursor: 'pointer',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           boxShadow: '0 4px 20px rgba(9,64,55,0.4)',
@@ -230,7 +230,7 @@ export default function AIAssistant() {
           <style>{`@keyframes slideUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:none}}`}</style>
 
           {/* Header */}
-          <div style={{ background: 'linear-gradient(135deg, #094037 0%, #0D6050 100%)', padding: '14px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
+          <div style={{ background: 'linear-gradient(135deg, var(--color-primary-500) 0%, #0D6050 100%)', padding: '14px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
               <div style={{ width: '34px', height: '34px', borderRadius: '50%', background: 'rgba(255,255,255,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <Sparkles size={17} color="#eab308" />
@@ -305,7 +305,7 @@ export default function AIAssistant() {
             ) : (
               <PermissionButton  onClick={() => handleSend()}
                 disabled={!input.trim() || !hasApiKey}
-                style={{ width: '38px', height: '38px', borderRadius: '12px', border: 'none', background: input.trim() && hasApiKey ? '#094037' : 'var(--bg-muted)', cursor: input.trim() && hasApiKey ? 'pointer' : 'not-allowed', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, transition: 'background 0.15s' }}>
+                style={{ width: '38px', height: '38px', borderRadius: '12px', border: 'none', background: input.trim() && hasApiKey ? 'var(--color-primary-500)' : 'var(--bg-muted)', cursor: input.trim() && hasApiKey ? 'pointer' : 'not-allowed', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, transition: 'background 0.15s' }}>
                 <Send size={16} color={input.trim() && hasApiKey ? '#fff' : 'var(--text-muted)'} style={{ transform: isAr ? 'scaleX(-1)' : 'none' }} />
               </PermissionButton >
             )}

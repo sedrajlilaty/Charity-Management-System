@@ -27,7 +27,7 @@ function SummaryCard({ label, value, icon: Icon, accent }) {
   return (
     <div
       style={{
-        background: '#094037',
+        background: 'var(--color-primary-500)',
         borderRadius: '16px',
         padding: '1.1rem 1.25rem',
         display: 'flex',

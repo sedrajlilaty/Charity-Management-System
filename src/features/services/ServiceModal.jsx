@@ -233,7 +233,7 @@ export default function ServiceModal({
                   set('active', opt.v)
                 }
                 style={{
-                  accentColor: '#094037',
+                  accentColor: 'var(--color-primary-500)',
                 }}
               />
 

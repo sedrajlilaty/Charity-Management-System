@@ -214,7 +214,7 @@ export default function Users() {
       align: 'center',
       render: (val) => (
         <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.8rem', color: 'var(--text-secondary)', fontWeight: 'bold' }}>
-          <Shield size={13} style={{ color: '#094037' }} />
+          <Shield size={13} style={{ color: 'var(--color-primary-500)' }} />
           {ROLE_LABEL[val] ?? val}
         </div>
       ),

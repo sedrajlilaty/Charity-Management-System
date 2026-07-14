@@ -161,7 +161,7 @@ export default function Navbar({ onMenuClick }) {
             height: '35px',
             borderRadius: '10px',
             overflow: 'hidden',
-            border: '2px solid #094037', // لون تطبيقك الأخضر
+            border: '2px solid var(--color-primary-500)', // لون تطبيقك الأخضر
             background: '#eee',
             display: 'flex',
             alignItems: 'center',
@@ -170,7 +170,7 @@ export default function Navbar({ onMenuClick }) {
             {user?.avatar ? (
               <img src={user.avatar} alt="User" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
             ) : (
-              <span style={{ fontWeight: 'bold', color: '#094037', fontSize: '0.9rem' }}>
+              <span style={{ fontWeight: 'bold', color: 'var(--color-primary-500)', fontSize: '0.9rem' }}>
                 {user?.name?.charAt(0).toUpperCase()}
               </span>
             )}

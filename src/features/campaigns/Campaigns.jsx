@@ -68,7 +68,7 @@ function VolunteerProgress({ needed, count = 0 }) {
       <div style={{ height: 5, background: 'var(--bg-base)', borderRadius: 99, overflow: 'hidden' }}>
         <div style={{
           width: `${pct}%`, height: '100%', borderRadius: 99,
-          background: isFull ? '#16a34a' : '#094037',
+          background: isFull ? '#16a34a' : 'var(--color-primary-500)',
           transition: 'width 0.6s ease',
         }} />
       </div>

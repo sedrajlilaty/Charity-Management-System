@@ -231,7 +231,7 @@ export const mockMonthlyDonations = [
 
 // ── Cases by Status (Pie Data) ─────────────────────────────
 export const mockCasesByStatus = [
-    { name: 'Active', value: 142, color: '#094037' },
+    { name: 'Active', value: 142, color: 'var(--color-primary-500)' },
     { name: 'Under Review', value: 38, color: '#eab308' },
     { name: 'Rejected', value: 24, color: '#ef4444' },
     { name: 'Archived', value: 56, color: '#6b7280' },

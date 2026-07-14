@@ -67,15 +67,15 @@ function MessageBubble({ msg, isAr }) {
         : (isAr ? 'row-reverse' : 'row'),
       alignItems:'flex-end',
     }}>
-      <div style={{ width:'34px', height:'34px', borderRadius:'50%', flexShrink:0, background: isUser ? '#094037' : '#e6f0ee', display:'flex', alignItems:'center', justifyContent:'center', boxShadow:'0 2px 6px rgba(0,0,0,0.1)' }}>
-        {isUser ? <User size={16} color="#fff" /> : <Bot size={16} color="#094037" />}
+      <div style={{ width:'34px', height:'34px', borderRadius:'50%', flexShrink:0, background: isUser ? 'var(--color-primary-500)' : '#e6f0ee', display:'flex', alignItems:'center', justifyContent:'center', boxShadow:'0 2px 6px rgba(0,0,0,0.1)' }}>
+        {isUser ? <User size={16} color="#fff" /> : <Bot size={16} color="var(--color-primary-500)" />}
       </div>
       <div style={{
         maxWidth:'72%', padding:'12px 16px',
         borderRadius: isUser
           ? (isAr ? '18px 4px 18px 18px' : '4px 18px 18px 18px')
           : (isAr ? '4px 18px 18px 18px' : '18px 4px 18px 18px'),
-        background:  isUser ? '#094037' : 'var(--bg-surface)',
+        background:  isUser ? 'var(--color-primary-500)' : 'var(--bg-surface)',
         color:       isUser ? '#fff' : 'var(--text-primary)',
         fontSize:    '1rem',
         lineHeight:  1.7,
@@ -95,11 +95,11 @@ function TypingIndicator({ isAr }) {
   return (
     <div style={{ display:'flex', gap:'10px', alignItems:'flex-end', flexDirection: isAr ? 'row-reverse' : 'row' }}>
       <div style={{ width:'34px', height:'34px', borderRadius:'50%', background:'#e6f0ee', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
-        <Bot size={16} color="#094037" />
+        <Bot size={16} color="var(--color-primary-500)" />
       </div>
       <div style={{ background:'var(--bg-surface)', border:'1px solid var(--border-default)', borderRadius:'18px 4px 18px 18px', padding:'14px 18px', display:'flex', gap:'5px', alignItems:'center' }}>
         {[0,1,2].map(i => (
-          <span key={i} style={{ width:'7px', height:'7px', borderRadius:'50%', background:'#094037', display:'block', animation:`typing 1.2s ease-in-out ${i*0.2}s infinite` }} />
+          <span key={i} style={{ width:'7px', height:'7px', borderRadius:'50%', background:'var(--color-primary-500)', display:'block', animation:`typing 1.2s ease-in-out ${i*0.2}s infinite` }} />
         ))}
       </div>
       <style>{`@keyframes typing{0%,60%,100%{transform:translateY(0);opacity:.4}30%{transform:translateY(-6px);opacity:1}}`}</style>
@@ -113,7 +113,7 @@ function WelcomeScreen({ suggestions, onSuggest, isAr, kpis }) {
     <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:'1.5rem', padding:'2rem 1rem', maxWidth:'520px', margin:'0 auto' }}>
 
       {/* أيقونة */}
-      <div style={{ width:'72px', height:'72px', borderRadius:'50%', background:'linear-gradient(135deg,#094037,#0D5247)', display:'flex', alignItems:'center', justifyContent:'center', boxShadow:'0 8px 24px rgba(9,64,55,0.3)' }}>
+      <div style={{ width:'72px', height:'72px', borderRadius:'50%', background:'linear-gradient(135deg,var(--color-primary-500),#0D5247)', display:'flex', alignItems:'center', justifyContent:'center', boxShadow:'0 8px 24px rgba(9,64,55,0.3)' }}>
         <Sparkles size={30} color="#eab308" />
       </div>
 
@@ -157,10 +157,10 @@ function WelcomeScreen({ suggestions, onSuggest, isAr, kpis }) {
           {suggestions.map((q, i) => (
             <PermissionButton  key={i} onClick={() => onSuggest(q)}
               style={{ background:'var(--bg-surface)', border:'1px solid var(--border-default)', borderRadius:'10px', padding:'10px 14px', fontSize:'0.83rem', color:'var(--text-secondary)', cursor:'pointer', textAlign: isAr ? 'right' : 'left', transition:'all 0.15s', fontFamily:'Cairo,sans-serif', display:'flex', alignItems:'center', gap:'8px' }}
-              onMouseEnter={e => { e.currentTarget.style.background='#e6f0ee'; e.currentTarget.style.color='#094037'; e.currentTarget.style.borderColor='#094037' }}
+              onMouseEnter={e => { e.currentTarget.style.background='#e6f0ee'; e.currentTarget.style.color='var(--color-primary-500)'; e.currentTarget.style.borderColor='var(--color-primary-500)' }}
               onMouseLeave={e => { e.currentTarget.style.background='var(--bg-surface)'; e.currentTarget.style.color='var(--text-secondary)'; e.currentTarget.style.borderColor='var(--border-default)' }}
             >
-              <ChevronLeft size={14} style={{ flexShrink:0, transform: isAr ? 'none' : 'scaleX(-1)', color:'#094037' }} />
+              <ChevronLeft size={14} style={{ flexShrink:0, transform: isAr ? 'none' : 'scaleX(-1)', color:'var(--color-primary-500)' }} />
               {q}
             </PermissionButton >
           ))}
@@ -206,7 +206,7 @@ export default function AIPage() {
     <div style={{ display:'flex', flexDirection:'column', height:'calc(100vh - var(--navbar-height) - 2rem)', borderRadius:'16px', overflow:'hidden', background:'var(--bg-surface)', border:'1px solid var(--border-default)', boxShadow:'var(--shadow-card)' }}>
 
       {/* ── Header ── */}
-      <div style={{ background:'linear-gradient(135deg, #094037 0%, #0D5247 100%)', padding:'16px 20px', display:'flex', alignItems:'center', justifyContent:'space-between', flexShrink:0 }}>
+      <div style={{ background:'linear-gradient(135deg, var(--color-primary-500) 0%, #0D5247 100%)', padding:'16px 20px', display:'flex', alignItems:'center', justifyContent:'space-between', flexShrink:0 }}>
         <div style={{ display:'flex', alignItems:'center', gap:'12px' }}>
           <div style={{ width:'40px', height:'40px', borderRadius:'50%', background:'rgba(255,255,255,0.15)', display:'flex', alignItems:'center', justifyContent:'center' }}>
             <Sparkles size={20} color="#eab308" />
@@ -275,7 +275,7 @@ export default function AIPage() {
           ) : (
             <PermissionButton  onClick={() => handleSend()}
               disabled={!input.trim() || !hasApiKey}
-              style={{ width:'38px', height:'38px', borderRadius:'10px', border:'none', background: input.trim() && hasApiKey ? '#094037' : 'var(--bg-muted)', cursor: input.trim() && hasApiKey ? 'pointer' : 'not-allowed', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0, transition:'background 0.15s' }}>
+              style={{ width:'38px', height:'38px', borderRadius:'10px', border:'none', background: input.trim() && hasApiKey ? 'var(--color-primary-500)' : 'var(--bg-muted)', cursor: input.trim() && hasApiKey ? 'pointer' : 'not-allowed', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0, transition:'background 0.15s' }}>
               <Send size={16} color={input.trim() && hasApiKey ? '#fff' : 'var(--text-muted)'} style={{ transform: isAr ? 'scaleX(-1)' : 'none' }} />
             </PermissionButton >
           )}

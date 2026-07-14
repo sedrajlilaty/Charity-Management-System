@@ -12,7 +12,7 @@ export function ActionModal({ row, isOpen, onClose, onAction }) {
       key: 'view',
       label: 'عرض التفاصيل',
       icon: <Eye size={15} />,
-      color: '#094037',
+      color: 'var(--color-primary-500)',
       bg: 'rgba(9,64,55,0.08)',
       show: true,
     },
@@ -21,7 +21,7 @@ export function ActionModal({ row, isOpen, onClose, onAction }) {
       label: 'قبول ونشر',
       icon: <Check size={15} />,
       color: '#fff',
-      bg: '#094037',
+      bg: 'var(--color-primary-500)',
       show: row.status === 'pending',
     },
     {

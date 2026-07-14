@@ -111,7 +111,7 @@ export default function Notifications() {
             onClick={() => markAll.mutate()}
             className="btn-primary"
             style={{
-              background: '#094037',
+              background: 'var(--color-primary-500)',
               border: 'none',
               borderRadius: '14px',
               padding: '10px 18px',
@@ -165,7 +165,7 @@ export default function Notifications() {
               margin: '10px 0 0',
               fontSize: '1.9rem',
               fontWeight: 800,
-              color: '#094037',
+              color: 'var(--color-primary-500)',
             }}
           >
             {list.length}
@@ -342,7 +342,7 @@ export default function Notifications() {
                       unread.length,
                   }
                 )}
-                color="#094037"
+                color="var(--color-primary-500)"
               />
 
               {unread.map((n) => (
@@ -462,7 +462,7 @@ function NotifCard({
         borderInlineStart:
           notif.read
             ? '1px solid var(--border-default)'
-            : '4px solid #094037',
+            : '4px solid var(--color-primary-500)',
 
         borderRadius: '20px',
         padding: '18px',
@@ -553,7 +553,7 @@ function NotifCard({
                 height: '8px',
                 borderRadius: '50%',
                 background:
-                  '#094037',
+                  'var(--color-primary-500)',
 
                 flexShrink: 0,
               }}
@@ -618,7 +618,7 @@ function NotifCard({
                 border: 'none',
 
                 background:
-                  '#094037',
+                  'var(--color-primary-500)',
 
                 color: '#fff',
 

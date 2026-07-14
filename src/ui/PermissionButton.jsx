@@ -44,7 +44,7 @@ export default function PermissionButton({
   }
 
   const variants = {
-    primary: { background: '#094037', color: '#fff' },
+    primary: { background: 'var(--color-primary-500)', color: '#fff' },
     danger:  { background: '#fee2e2', color: '#dc2626', border: '1px solid #fecaca' },
     success: { background: '#dcfce7', color: '#16a34a', border: '1px solid #bbf7d0' },
     warning: { background: '#fef3c7', color: '#92400e', border: '1px solid #fde68a' },

@@ -76,7 +76,7 @@ export default function TopUpModal({ open, onClose, user, onConfirm, loading }) 
       {t('topUp.currentBalance')}
     </p>
     {user?.balances && Object.entries(user.balances).map(([currency, amount]) => (
-      <p key={currency} style={{ margin: 0, fontWeight: 800, fontSize: '0.95rem', color: '#094037' }}>
+      <p key={currency} style={{ margin: 0, fontWeight: 800, fontSize: '0.95rem', color: 'var(--color-primary-500)' }}>
         {Number(amount).toLocaleString('ar-SY')} {currency}
       </p>
     ))}
@@ -92,9 +92,9 @@ export default function TopUpModal({ open, onClose, user, onConfirm, loading }) 
               onClick={() => { setAmount(String(q)); setError('') }}
               style={{
                 padding: '7px 14px', borderRadius: '10px',
-                border: amount === String(q) ? '1.5px solid #094037' : '1px solid var(--border-default)',
+                border: amount === String(q) ? '1.5px solid var(--color-primary-500)' : '1px solid var(--border-default)',
                 background: amount === String(q) ? '#e8f0ef' : 'transparent',
-                color: amount === String(q) ? '#094037' : 'var(--text-secondary)',
+                color: amount === String(q) ? 'var(--color-primary-500)' : 'var(--text-secondary)',
                 fontWeight: amount === String(q) ? 700 : 500,
                 fontSize: '0.85rem', cursor: 'pointer',
                 fontFamily: 'Cairo, sans-serif', transition: '0.15s',
@@ -137,10 +137,10 @@ export default function TopUpModal({ open, onClose, user, onConfirm, loading }) 
     display: 'flex', alignItems: 'center', justifyContent: 'space-between',
     marginTop: '4px',
   }}>
-    <span style={{ fontSize: '0.82rem', color: '#094037', fontWeight: 600 }}>
+    <span style={{ fontSize: '0.82rem', color: 'var(--color-primary-500)', fontWeight: 600 }}>
       {t('topUp.balanceAfter')}
     </span>
-    <span style={{ fontSize: '1rem', fontWeight: 800, color: '#094037' }}>
+    <span style={{ fontSize: '1rem', fontWeight: 800, color: 'var(--color-primary-500)' }}>
       {(Number(user?.balances?.[currency] || 0) + Number(amount)).toLocaleString('en-US')} {currency}
     </span>
   </div>

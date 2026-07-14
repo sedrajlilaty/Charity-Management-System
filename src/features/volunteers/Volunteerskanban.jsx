@@ -60,7 +60,7 @@ function DetailModal({ volunteer, onClose, onAction, isAr }) {
         style={{ background:'var(--bg-surface)', borderRadius:'16px', width:'100%', maxWidth:'440px', overflow:'hidden', boxShadow:'0 20px 60px rgba(0,0,0,0.2)' }}
       >
         {/* Header */}
-        <div style={{ background:'#094037', padding:'20px', display:'flex', alignItems:'flex-start', justifyContent:'space-between', gap:'12px' }}>
+        <div style={{ background:'var(--color-primary-500)', padding:'20px', display:'flex', alignItems:'flex-start', justifyContent:'space-between', gap:'12px' }}>
           <div style={{ display:'flex', alignItems:'center', gap:'12px' }}>
             <Avatar name={volunteer.name} size={44} />
             <div>
@@ -167,7 +167,7 @@ function InfoRow({ icon: Icon, label, value, highlight, children }) {
         <span style={{ fontSize:'0.78rem', color:'var(--text-muted)', fontWeight:600 }}>{label}</span>
       </div>
       {children ?? (
-        <span style={{ fontSize:'0.82rem', fontWeight: highlight ? 700 : 400, color: highlight ? '#094037' : 'var(--text-secondary)', textAlign:'end' }}>
+        <span style={{ fontSize:'0.82rem', fontWeight: highlight ? 700 : 400, color: highlight ? 'var(--color-primary-500)' : 'var(--text-secondary)', textAlign:'end' }}>
           {value ?? '—'}
         </span>
       )}
@@ -397,7 +397,7 @@ export default function VolunteersKanban() {
       {changingId && (
         <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.04)', zIndex:100, pointerEvents:'none', display:'flex', alignItems:'center', justifyContent:'center' }}>
           <div style={{ background:'var(--bg-surface)', borderRadius:'12px', padding:'12px 20px', display:'flex', alignItems:'center', gap:'8px', boxShadow:'0 4px 20px rgba(0,0,0,0.1)' }}>
-            <Loader2 size={16} color="#094037" style={{ animation:'spin 1s linear infinite' }} />
+            <Loader2 size={16} color="var(--color-primary-500)" style={{ animation:'spin 1s linear infinite' }} />
             <span style={{ fontSize:'0.82rem', fontWeight:600, color:'var(--text-primary)' }}>
               {isAr ? 'جاري التحديث...' : 'Updating...'}
             </span>

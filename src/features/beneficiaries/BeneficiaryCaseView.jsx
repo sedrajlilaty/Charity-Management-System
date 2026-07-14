@@ -19,8 +19,8 @@ const fileUrl = (path) => {
 }
 
 const CAT_CFG = {
-  patient:            { icon: Heart,         labelKey: 'beneficiaries.categories.patient',            color: '#094037', bg: 'var(--color-primary-50)'  },
-  orphan:             { icon: User,          labelKey: 'beneficiaries.categories.orphan',             color: '#094037', bg: 'var(--color-primary-100)' },
+  patient:            { icon: Heart,         labelKey: 'beneficiaries.categories.patient',            color: 'var(--color-primary-500)', bg: 'var(--color-primary-50)'  },
+  orphan:             { icon: User,          labelKey: 'beneficiaries.categories.orphan',             color: 'var(--color-primary-500)', bg: 'var(--color-primary-100)' },
   school_student:     { icon: BookOpen,      labelKey: 'beneficiaries.categories.school_student',     color: '#92400e', bg: '#fef3c7'                  },
   university_student: { icon: GraduationCap, labelKey: 'beneficiaries.categories.university_student', color: '#92400e', bg: '#fef3c7'                  },
 }
@@ -55,7 +55,7 @@ function FilePreview({ label, src }) {
           onError={e => { e.currentTarget.style.display = 'none' }}
         />
       )}
-      <a href={url} target="_blank" rel="noreferrer" style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: '0.75rem', color: '#094037', fontWeight: 600, textDecoration: 'none' }}>
+      <a href={url} target="_blank" rel="noreferrer" style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: '0.75rem', color: 'var(--color-primary-500)', fontWeight: 600, textDecoration: 'none' }}>
         <FileText size={13} />
         {label} — عرض
         <ExternalLink size={11} />
@@ -68,7 +68,7 @@ function FilePreview({ label, src }) {
 function ProgressBar({ donated, required, progress }) {
   if (!required || required <= 0) return null
   const pct   = Math.min(progress ?? 0, 100)
-  const color = pct >= 100 ? '#16a34a' : pct >= 60 ? '#094037' : '#d97706'
+  const color = pct >= 100 ? '#16a34a' : pct >= 60 ? 'var(--color-primary-500)' : '#d97706'
   return (
     <div style={{ padding: '12px 14px', background: 'var(--bg-muted)', borderRadius: 10, border: '1px solid var(--border-subtle)' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
@@ -79,7 +79,7 @@ function ProgressBar({ donated, required, progress }) {
         <div style={{ width: `${pct}%`, height: '100%', background: color, borderRadius: 99, transition: 'width 0.6s ease' }} />
       </div>
       <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 6 }}>
-        <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>تم جمع: <b style={{ color: '#094037' }}>{formatCurrency(donated ?? 0)}</b></span>
+        <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>تم جمع: <b style={{ color: 'var(--color-primary-500)' }}>{formatCurrency(donated ?? 0)}</b></span>
         <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>المطلوب: <b>{formatCurrency(required)}</b></span>
       </div>
     </div>
@@ -103,14 +103,14 @@ function ViewStep({ c }) {
               onError={e => e.currentTarget.style.display = 'none'}
             />
           : (
-            <div style={{ width: 68, height: 68, borderRadius: 12, flexShrink: 0, background: 'linear-gradient(135deg,#094037,#0a5244)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.3rem', fontWeight: 800, color: '#eab308' }}>
+            <div style={{ width: 68, height: 68, borderRadius: 12, flexShrink: 0, background: 'linear-gradient(135deg,var(--color-primary-500),#0a5244)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.3rem', fontWeight: 800, color: '#eab308' }}>
               {c.full_name?.slice(0, 2)}
             </div>
           )
         }
         <div style={{ flex: 1, minWidth: 0 }}>
           <h3 style={{ margin: '0 0 3px', fontSize: '1rem', fontWeight: 800, color: 'var(--text-primary)' }}>{c.full_name}</h3>
-          {c.title && <p style={{ margin: '0 0 6px', fontSize: '0.78rem', color: '#094037', fontWeight: 600 }}>📢 {c.title}</p>}
+          {c.title && <p style={{ margin: '0 0 6px', fontSize: '0.78rem', color: 'var(--color-primary-500)', fontWeight: 600 }}>📢 {c.title}</p>}
           <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
             <Badge status={c.status} />
             {cat && (
@@ -215,7 +215,7 @@ function PublishStep({ caseData, form, setForm, errors }) {
 
       {/* بيانات الحالة */}
       <div style={{ display: 'flex', gap: 12, alignItems: 'center', padding: '0.875rem 1rem', background: 'rgba(9,64,55,0.06)', borderRadius: 12, border: '1px solid rgba(9,64,55,0.12)' }}>
-        <div style={{ width: 42, height: 42, borderRadius: 10, background: '#094037', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.85rem', fontWeight: 800, color: '#eab308' }}>
+        <div style={{ width: 42, height: 42, borderRadius: 10, background: 'var(--color-primary-500)', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.85rem', fontWeight: 800, color: '#eab308' }}>
           {caseData.full_name?.slice(0, 2)}
         </div>
         <div>
@@ -405,7 +405,7 @@ export default function BeneficiaryCaseView({ isOpen, onClose, caseData, initial
 }
 
 const base       = { display: 'inline-flex', alignItems: 'center', gap: 6, padding: '9px 18px', borderRadius: 10, fontSize: '0.85rem', fontWeight: 700, fontFamily: 'Cairo, sans-serif', cursor: 'pointer', border: 'none', transition: 'opacity 0.15s' }
-const btnPrimary = { ...base, background: '#094037', color: '#fff' }
+const btnPrimary = { ...base, background: 'var(--color-primary-500)', color: '#fff' }
 const btnDanger  = { ...base, background: '#fee2e2', color: '#dc2626', border: '1px solid #fecaca' }
 const btnMuted   = { ...base, background: 'var(--bg-muted)', color: 'var(--text-secondary)', border: '1px solid var(--border-default)' }
 const btnGhost   = { ...base, background: 'transparent', color: 'var(--text-secondary)', border: '1px solid var(--border-default)' }

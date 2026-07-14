@@ -69,7 +69,7 @@ export default function ImageUpload({
         background: 'var(--bg-muted)', transition: 'border-color 0.2s, background 0.2s',
         userSelect: 'none',
       }}
-      onMouseEnter={e => e.currentTarget.style.borderColor = '#094037'}
+      onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--color-primary-500)'}
       onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--border-default)'}
     >
       <ImageIcon size={32} style={{ color: 'var(--text-muted)', marginBottom: 8 }} />
