@@ -1,16 +1,18 @@
-// features/campaigns/Campaigns.jsx  (مربوطة بالباك الحقيقي)
+
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useSearchParams } from 'react-router-dom'
 import { Megaphone, Plus, Trash2, Edit2, Users, CheckCircle2, ImageOff, XCircle } from 'lucide-react'
 import {
-  useCampaignsQuery,
+  useCampaignsFilterQuery,
   useCreateCampaign,
   useUpdateCampaign,
   useDeleteCampaign,
   useCloseCampaign,
-} from '../../hooks/Usecampaigns '         
-import { buildCampaignFormData } from '../../api/campaignsApi' 
+} from '../../hooks/Usecampaigns '          // ⚠️ عدّلي المسار حسب مكان الملف عندك
+import { buildCampaignFormData } from '../../api/campaignsApi' // ⚠️ عدّلي المسار
+import CampaignFilters, { EMPTY_FILTERS } from './Campaignfilters'
+import ConfirmModal            from '../../ui/ConfirmModal'
 import { ProgressBar }        from '../../ui/Progressbar'
 import { formatCurrency, formatDate } from '../../utlis/helper'
 import { SpinnerPage }        from '../../ui/Spinner'
@@ -35,8 +37,8 @@ function VolunteerProgress({ needed, count = 0 }) {
 
   return (
     <div style={{
-      marginTop: '0.875rem',
-      padding: '10px 12px',
+      marginTop: '0.625rem',
+      padding: '8px 10px',
       borderRadius: 10,
       background: isFull ? 'rgba(22,163,74,0.08)' : 'var(--bg-muted)',
       border: `1px solid ${isFull ? 'rgba(22,163,74,0.25)' : 'var(--border-subtle)'}`,
@@ -92,7 +94,7 @@ function CampaignCard({ c, onEdit, onDelete, onClose, onShowVolunteers }) {
       display: 'flex', flexDirection: 'column',
       overflow: 'hidden', padding: 0,
     }}>
-      <div style={{ position: 'relative', height: 140, flexShrink: 0 }}>
+      <div style={{ position: 'relative', height: 170, flexShrink: 0 }}>
         {coverUrl ? (
           <img
             src={coverUrl}
@@ -121,16 +123,21 @@ function CampaignCard({ c, onEdit, onDelete, onClose, onShowVolunteers }) {
         </div>
       </div>
 
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: '1.125rem' }}>
-        <h3 style={{ margin: '0 0 6px', fontSize: '1rem', fontWeight: 800, color: 'var(--text-primary)' }}>
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: '0.875rem 1rem' }}>
+        <h3 style={{ margin: '0 0 4px', fontSize: '0.92rem', fontWeight: 800, color: 'var(--text-primary)' }}>
           {c.title}
         </h3>
-        <p style={{ margin: '0 0 1rem', fontSize: '0.83rem', color: 'var(--text-secondary)', lineHeight: 1.6, minHeight: 40 }}>
-          {c.description}
-        </p>
+        {c.description && (
+          <p style={{
+            margin: '0 0 0.75rem', fontSize: '0.78rem', color: 'var(--text-secondary)',
+            lineHeight: 1.5, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden',
+          }}>
+            {c.description}
+          </p>
+        )}
 
         <div style={{ marginTop: 'auto' }}>
-          {c.acceptsDonations && (
+          {c.amountNeeded > 0 && (
             <>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6, fontSize: '0.78rem' }}>
                 <span style={{ color: 'var(--color-primary-500)', fontWeight: 700 }}>{t('campaigns.raised')}</span>
@@ -144,27 +151,27 @@ function CampaignCard({ c, onEdit, onDelete, onClose, onShowVolunteers }) {
             </>
           )}
 
-          {c.acceptsVolunteers && (
+          {c.volunteersNeeded > 0 && (
             <VolunteerProgress
               needed={c.volunteersNeeded}
               count={c.volunteersJoined || 0}
             />
           )}
 
-          <div style={{ display: 'flex', gap: 10, marginTop: '1rem', paddingTop: '0.875rem', borderTop: '1px solid var(--border-subtle)' }}>
+          <div style={{ display: 'flex', gap: 8, marginTop: '0.75rem', paddingTop: '0.75rem', borderTop: '1px solid var(--border-subtle)' }}>
             <PermissionButton
               permission="campaigns.edit"
               onClick={() => onEdit(c)}
               style={{
-                flex: 1, height: 42,
+                flex: 1, height: 38,
                 background: 'linear-gradient(135deg, var(--color-primary-500), var(--color-primary-600))',
-                color: '#fff', border: 'none', borderRadius: 12, cursor: 'pointer',
+                color: '#fff', border: 'none', borderRadius: 10, cursor: 'pointer',
                 display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-                fontFamily: 'Cairo, sans-serif', fontWeight: 700, fontSize: '0.82rem',
+                fontFamily: 'Cairo, sans-serif', fontWeight: 700, fontSize: '0.8rem',
                 transition: 'all 0.25s ease', boxShadow: '0 6px 16px rgba(0,0,0,0.08)',
               }}
             >
-              <Edit2 size={15} />
+              <Edit2 size={14} />
               {t('campaigns.actions.edit')}
             </PermissionButton>
 
@@ -174,13 +181,13 @@ function CampaignCard({ c, onEdit, onDelete, onClose, onShowVolunteers }) {
                 onClick={() => onClose(c.id)}
                 title="إغلاق الحملة"
                 style={{
-                  width: 42, height: 42,
+                  width: 38, height: 38,
                   background: 'rgba(234,179,8,0.1)', color: '#b45309',
-                  border: '1px solid rgba(234,179,8,0.25)', borderRadius: 12, cursor: 'pointer',
+                  border: '1px solid rgba(234,179,8,0.25)', borderRadius: 10, cursor: 'pointer',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                 }}
               >
-                <XCircle size={16} />
+                <XCircle size={15} />
               </PermissionButton>
             )}
 
@@ -188,14 +195,14 @@ function CampaignCard({ c, onEdit, onDelete, onClose, onShowVolunteers }) {
               permission="campaigns.delete"
               onClick={() => onDelete(c.id)}
               style={{
-                width: 42, height: 42,
+                width: 38, height: 38,
                 background: 'rgba(220,38,38,0.08)', color: '#dc2626',
-                border: '1px solid rgba(220,38,38,0.15)', borderRadius: 12, cursor: 'pointer',
+                border: '1px solid rgba(220,38,38,0.15)', borderRadius: 10, cursor: 'pointer',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 transition: 'all 0.25s ease', boxShadow: '0 4px 12px rgba(220,38,38,0.08)',
               }}
             >
-              <Trash2 size={16} />
+              <Trash2 size={15} />
             </PermissionButton>
           </div>
         </div>
@@ -204,11 +211,11 @@ function CampaignCard({ c, onEdit, onDelete, onClose, onShowVolunteers }) {
           <PermissionButton
             onClick={() => onShowVolunteers(c)}
             style={{
-              width: '100%', marginTop: '8px', height: 40,
+              width: '100%', marginTop: '8px', height: 36,
               display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
               background: 'var(--bg-muted)', color: 'var(--color-primary-700)',
-              border: '1px solid var(--border-subtle)', borderRadius: 12, cursor: 'pointer',
-              fontFamily: 'Cairo, sans-serif', fontWeight: 700, fontSize: '0.82rem',
+              border: '1px solid var(--border-subtle)', borderRadius: 10, cursor: 'pointer',
+              fontFamily: 'Cairo, sans-serif', fontWeight: 700, fontSize: '0.78rem',
             }}
           >
             <Users2 size={15} />
@@ -224,12 +231,41 @@ function CampaignCard({ c, onEdit, onDelete, onClose, onShowVolunteers }) {
 export default function Campaigns() {
   const { t }  = useTranslation()
   const [modalOpen, setModalOpen] = useState(false)
-  const [editItem,  setEditItem]  = useState(null)
+  const [editingId, setEditingId] = useState(null)
+  const [deleteTargetId, setDeleteTargetId] = useState(null)
+  const [closeTargetId,  setCloseTargetId]  = useState(null)
   const [params, setParams]       = useSearchParams()
 
-  const page   = Number(params.get('page') || 1)
-  const search = params.get('search') || ''
-  const status = params.get('status') || ''
+  const page = Number(params.get('page') || 1)
+
+  // ── قراءة كل الفلاتر من الـ URL (نفس نمط useSearchParams المستخدم بالباقي) ──
+  const filters = Object.keys(EMPTY_FILTERS).reduce((acc, key) => {
+    acc[key] = params.get(key) || EMPTY_FILTERS[key]
+    return acc
+  }, {})
+
+  // تحديث فلتر وحدة — بيصفر الصفحة لـ 1 تلقائياً
+  const handleFilterChange = (key, value) => {
+    setParams(prev => {
+      const n = new URLSearchParams(prev)
+      if (value) n.set(key, value)
+      else n.delete(key)
+      n.set('page', '1')
+      return n
+    })
+  }
+
+  // تصفير كل الفلاتر (ما عدا الترتيب)
+  const handleClearFilters = () => {
+    setParams(prev => {
+      const n = new URLSearchParams(prev)
+      Object.keys(EMPTY_FILTERS).forEach(k => {
+        if (k !== 'sort_by' && k !== 'sort_dir') n.delete(k)
+      })
+      n.set('page', '1')
+      return n
+    })
+  }
 
   const [volunteersModalOpen, setVolunteersModalOpen] = useState(false)
   const [activeCampaign, setActiveCampaign] = useState(null)
@@ -239,12 +275,22 @@ export default function Campaigns() {
     setVolunteersModalOpen(true)
   }
 
-  // ── الربط الحقيقي بالباك ──
-  const { data, isLoading } = useCampaignsQuery({
+  // ── الربط الحقيقي بالباك — /campaignsfilter بيرجع كل الحقول ويدعم كل الفلاتر ──
+  const { data, isLoading } = useCampaignsFilterQuery({
     page,
     per_page: LIMIT,
-    search: search || undefined,
-    status: status || undefined,
+    search:              filters.search || undefined,
+    type:                filters.type || undefined,
+    participation_type:  filters.participation_type || undefined,
+    status:              filters.status || undefined,
+    min_amount_needed:   filters.min_amount_needed || undefined,
+    max_amount_needed:   filters.max_amount_needed || undefined,
+    start_date_from:     filters.start_date_from || undefined,
+    start_date_to:       filters.start_date_to || undefined,
+    end_date_from:       filters.end_date_from || undefined,
+    end_date_to:         filters.end_date_to || undefined,
+    sort_by:             filters.sort_by,
+    sort_dir:            filters.sort_dir,
   })
 
   const items = data?.items ?? []
@@ -269,23 +315,30 @@ export default function Campaigns() {
       media:               form.media,
     })
 
-    if (editItem) {
-      await updateMut.mutateAsync({ id: editItem.id, formData })
+    if (editingId) {
+      await updateMut.mutateAsync({ id: editingId, formData })
     } else {
       await createMut.mutateAsync(formData)
     }
-    setEditItem(null)
+    setEditingId(null)
   }
 
-  const handleEdit = (c) => { setEditItem(c); setModalOpen(true) }
+  const handleEdit = (c) => { setEditingId(c.id); setModalOpen(true) }
 
-  const handleDelete = (id) => {
-    if (window.confirm(t('campaigns.deleteConfirm'))) deleteMut.mutate(id)
+  // ── حذف: بيفتح Confirm Modal بدل window.confirm ──
+  const handleDelete = (id) => setDeleteTargetId(id)
+  const confirmDelete = () => {
+    deleteMut.mutate(deleteTargetId, { onSuccess: () => setDeleteTargetId(null) })
   }
 
-  const handleClose = (id) => {
-    if (window.confirm('هل أنت متأكد من إغلاق هذه الحملة؟')) closeMut.mutate(id)
+  // ── إغلاق: بيفتح Confirm Modal بدل window.confirm ──
+  const handleClose = (id) => setCloseTargetId(id)
+  const confirmCloseCampaign = () => {
+    closeMut.mutate(closeTargetId, { onSuccess: () => setCloseTargetId(null) })
   }
+
+  const deleteTargetCampaign = items.find(c => c.id === deleteTargetId)
+  const closeTargetCampaign  = items.find(c => c.id === closeTargetId)
 
   // إجماليات المتطوعين من الصفحة الحالية فقط (الباك ما بيرجع إجمالي شامل)
   const totalVolunteersNeeded = items.reduce((s, c) => s + (c.volunteersNeeded || 0), 0)
@@ -300,7 +353,7 @@ export default function Campaigns() {
       >
         <PermissionButton
           permission="campaigns.create"
-          onClick={() => { setEditItem(null); setModalOpen(true) }}
+          onClick={() => { setEditingId(null); setModalOpen(true) }}
           style={{
             display: 'flex', alignItems: 'center', gap: 8,
             backgroundColor: 'var(--color-secondary-500)', color: '#111',
@@ -344,6 +397,12 @@ export default function Campaigns() {
         </div>
       </Card>
 
+      <CampaignFilters
+        filters={filters}
+        onChange={handleFilterChange}
+        onClear={handleClearFilters}
+      />
+
       {isLoading ? (
         <SpinnerPage />
       ) : (
@@ -382,10 +441,47 @@ export default function Campaigns() {
 
       <CampaignModal
         open={modalOpen}
-        onClose={() => { setModalOpen(false); setEditItem(null) }}
+        onClose={() => { setModalOpen(false); setEditingId(null) }}
         onSave={handleSave}
-        editItem={editItem}
+        campaignId={editingId}
       />
+
+      {/* ── تأكيد الحذف ── */}
+      <ConfirmModal
+        open={!!deleteTargetId}
+        onClose={() => setDeleteTargetId(null)}
+        onConfirm={confirmDelete}
+        loading={deleteMut.isLoading}
+        title="حذف الحملة"
+        danger
+        confirmLabel="حذف"
+        message={
+          <>
+            {t('campaigns.deleteConfirm')}<br />
+            <strong style={{ color: 'var(--text-primary)' }}>{deleteTargetCampaign?.title}</strong>؟<br />
+            <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>هذا الإجراء لا يمكن التراجع عنه.</span>
+          </>
+        }
+      />
+
+      {/* ── تأكيد الإغلاق ── */}
+      <ConfirmModal
+        open={!!closeTargetId}
+        onClose={() => setCloseTargetId(null)}
+        onConfirm={confirmCloseCampaign}
+        loading={closeMut.isLoading}
+        title="إغلاق الحملة"
+        danger={false}
+        confirmLabel="إغلاق"
+        message={
+          <>
+            هل أنت متأكد من إغلاق حملة<br />
+            <strong style={{ color: 'var(--text-primary)' }}>{closeTargetCampaign?.title}</strong>؟<br />
+            <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>لن يقدر أحد يتبرع أو يتطوع فيها بعد الإغلاق.</span>
+          </>
+        }
+      />
+
       {/* ⚠️ لسا مربوطة بسيرفس محلي (mock) — الباك تبع المتطوعين لسا ما جاهز */}
       <CampaignVolunteersModal
         open={volunteersModalOpen}

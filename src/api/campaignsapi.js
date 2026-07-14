@@ -142,7 +142,7 @@ export const campaignsApi = {
     createCampaign: (formData) =>
         axiosClient
             .post('/storecampaign', formData, {
-                headers: { 'Content-Type': 'multipart/form-data' },
+                headers: { 'Content-Type': undefined }, // ⚠️ لازم نلغي الـ application/json الافتراضي حتى أكسيوس يحط multipart boundary لحاله
             })
             .then((res) => res.data),
 
@@ -151,7 +151,7 @@ export const campaignsApi = {
         formData.append('_method', 'PUT');
         return axiosClient
             .post(`/updatecampaign/${id}`, formData, {
-                headers: { 'Content-Type': 'multipart/form-data' },
+                headers: { 'Content-Type': undefined }, // ⚠️ نفس الإصلاح
             })
             .then((res) => res.data);
     },

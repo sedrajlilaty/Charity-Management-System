@@ -223,7 +223,7 @@
 .loader-spin { animation: spin 1s linear infinite; }
 
 /* ── Progress (متطابقة مع Flutter) */
-.progress-success { background-color: #2E7D32; }
+.progress-success { background-color: var(--color-primary-500); }
 .progress-primary { background-color: #F2C055; }
 .progress-warning { background-color: #F57C00; }
 
