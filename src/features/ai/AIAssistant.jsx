@@ -4,19 +4,30 @@ import { useTranslation } from 'react-i18next'
 import { Bot, X, Send, Trash2, StopCircle, Sparkles, ChevronDown, User, AlertCircle } from 'lucide-react'
 
 import { useAIAssistant, SUGGESTED_QUESTIONS } from '../../hooks/useAIAssistant'
-import { dashboardService }     from '../../service/ServiceLayer'
+import { getKpis }              from '../../api/dashboard.api'        // ⚠️ عدّلي المسار لاسم الملف الحقيقي عندك
 import { donationsService }     from '../../service/ServiceLayer'
-import { beneficiariesService } from '../../service/ServiceLayer'
-import { campaignsService }     from '../../service/ServiceLayer'
 import { volunteersService }    from '../../service/ServiceLayer'
+import { useCampaignsFilterQuery } from '../../hooks/Usecampaigns '          // ⚠️ عدّلي المسار
+import { getBeneficiariesAISummary } from '../../api/aiBeneficiariesSummary' // ⚠️ عدّلي المسار
 import PermissionButton from '../../ui/PermissionButton'
+
 // ─── جلب بيانات الداشبورد ────────────────────────────────────────────────────
 function useDashboardContext() {
-  const { data: kpis }    = useQuery({ queryKey: ['kpis'],               queryFn: dashboardService.getKPIs,                              staleTime: 2 * 60_000 })
+  const { data: kpis }    = useQuery({ queryKey: ['kpis'],               queryFn: getKpis,                                               staleTime: 2 * 60_000 })
   const { data: donData } = useQuery({ queryKey: ['donations', '', 1],   queryFn: () => donationsService.getList({ page: 1, limit: 5 }), staleTime: 2 * 60_000 })
-  const { data: benData } = useQuery({ queryKey: ['beneficiaries-ai'],   queryFn: () => beneficiariesService.getList({ page: 1, limit: 1 }), staleTime: 2 * 60_000 })
-  const { data: camData } = useQuery({ queryKey: ['campaigns', 1],       queryFn: () => campaignsService.getList({ page: 1, limit: 10 }), staleTime: 2 * 60_000 })
   const { data: volData } = useQuery({ queryKey: ['volunteers-ai'],       queryFn: () => volunteersService.getList({ page: 1, limit: 1 }), staleTime: 2 * 60_000 })
+
+  // ✅ الحملات من الـ hook الحقيقي (نفس المستخدم بصفحة الحملات)
+  const { data: camData } = useCampaignsFilterQuery({
+    page: 1, per_page: 10, sort_by: 'created_at', sort_dir: 'desc',
+  })
+
+  // ✅ المستفيدين — ملخص مفصّل حسب الفئة (مرضى/أيتام/طلاب) وحسب الحالة (معلق/مقبول)
+  const { data: benSummary } = useQuery({
+    queryKey:  ['beneficiaries-ai-summary'],
+    queryFn:   getBeneficiariesAISummary,
+    staleTime: 2 * 60_000,
+  })
 
   return {
     kpis,
@@ -27,11 +38,19 @@ function useDashboardContext() {
       pending:  donData?.data?.filter(d => d.status === 'pending').length  ?? 0,
       rejected: donData?.data?.filter(d => d.status === 'rejected').length ?? 0,
     },
-    beneficiaries: { total: benData?.total ?? 0, active: 0, pending: 0, urgent: 0 },
+    beneficiaries: benSummary
+      ? {
+          total:         benSummary.total,
+          totalPending:  benSummary.totalPending,
+          totalAccepted: benSummary.totalAccepted,
+          pending:       benSummary.pending,
+          accepted:      benSummary.accepted,
+        }
+      : { total: 0, active: 0, pending: 0, urgent: 0 },
     campaigns: {
-      total:  camData?.total ?? 0,
-      active: camData?.data?.filter(c => c.status === 'active').length ?? 0,
-      list:   camData?.data ?? [],
+      total:  camData?.meta?.total ?? 0,
+      active: camData?.items?.filter(c => c.status === 'open').length ?? 0,
+      list:   camData?.items ?? [],
     },
     volunteers: { total: volData?.total ?? 0, pending: 0, approved: 0, completed: 0 },
   }
@@ -143,7 +162,6 @@ export default function AIAssistant() {
 
   const dashboardData = useDashboardContext()
 
-  // ✅ stopGeneration الآن موجودة في الـ hook
   const { messages, isLoading, error, sendMessage, clearChat, stopGeneration } = useAIAssistant()
 
   const messagesEndRef = useRef(null)
@@ -201,7 +219,6 @@ export default function AIAssistant() {
           <span style={{ position: 'absolute', top: '4px', [isAr ? 'left' : 'right']: '4px', width: '10px', height: '10px', borderRadius: '50%', background: '#22c55e', border: '2px solid #fff' }} />
         )}
       </PermissionButton >
-{/* أضف هذا مباشرة قبل نافذة الدردشة */}
 {isOpen && (
   <div
     onClick={() => setIsOpen(false)}
@@ -220,7 +237,7 @@ export default function AIAssistant() {
           position: 'fixed', bottom: '88px',
           [isAr ? 'left' : 'right']: '24px',
           zIndex: 999,
-          width: 'min(400px, calc(100vw - 48px))', height: '540px',
+          width: 'min(400px, calc(100vw - 48px))', height: 'min(540px, calc(100vh - 140px))',
           background: 'var(--bg-surface)', border: '1px solid var(--border-default)',
           borderRadius: '18px', boxShadow: '0 20px 60px rgba(0,0,0,0.18)',
           display: 'flex', flexDirection: 'column', overflow: 'hidden',
@@ -246,7 +263,7 @@ export default function AIAssistant() {
             </div>
             {messages.length > 0 && (
               <PermissionButton  onClick={clearChat}
-                style={{ width: '30px', height: '30px', borderRadius: '8px', border: 'none', background: 'rgba(255,255,255,0.12)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'rgba(255,255,255,0.75)' }}>
+                style={{ width: '30px', height: '30px', borderRadius: '8px', border: 'none', background: 'rgba(255,255,255,0.12)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'rgba(147, 24, 24, 0.75)' }}>
                 <Trash2 size={14} />
               </PermissionButton >
             )}
