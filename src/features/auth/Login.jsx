@@ -1,18 +1,14 @@
 // features/auth/Login.jsx
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
- import toast from 'react-hot-toast'
-import {
-  Eye,
-  EyeOff,
-  LogIn,
-  HeartHandshake,
-  Mail,
-  LockKeyhole,
-} from 'lucide-react'
+import toast from 'react-hot-toast'
+import { Eye, EyeOff, LogIn, Mail, LockKeyhole } from 'lucide-react'
 
 import { useAuth } from '../../context/AuthContext'
+
+// ✏️ عدّلي المسار حسب مكان ملف اللوغو الفعلي عندك بالمشروع
+import logo from '../../image/logo-green.png'
 
 // الصفحة الرئيسية لكل دور
 const HOME_BY_ROLE = {
@@ -21,1000 +17,412 @@ const HOME_BY_ROLE = {
   fieldWorker: '/campaigns',
 }
 
-// الصور
-import imgMedical from '../../image/Screenshot 2026-05-15 140344.png'
-import imgVolunteer from '../../image/Screenshot 2026-05-15 140324.png'
-import imgChild from '../../image/children.jpg'
-import imgEnvironment from '../../image/Screenshot 2026-05-15 140313.png'
-
-const SLIDES = [
-  {
-    image: imgChild,
-    title: 'نغيّر حياة الأطفال',
-    sub: 'نسعى لمستقبل أفضل لكل طفل محتاج',
-
-    stats: [
-      {
-        title: 'الأطفال المكفولين',
-        value: '2,480',
-        progress: '78%',
-      },
-      {
-        title: 'التبرعات الشهرية',
-        value: '$84K',
-        progress: '64%',
-      },
-    ],
-  },
-
-  {
-    image: imgMedical,
-    title: 'رعاية صحية للجميع',
-    sub: 'توفير الخدمات الطبية لمن لا يقدر عليها',
-
-    stats: [
-      {
-        title: 'الحالات الطبية',
-        value: '1,320',
-        progress: '72%',
-      },
-      {
-        title: 'العمليات المدعومة',
-        value: '285',
-        progress: '48%',
-      },
-    ],
-  },
-
-  {
-    image: imgVolunteer,
-    title: 'متطوعون بقلب كبير',
-    sub: 'آلاف المتطوعين يعملون يداً بيد كل يوم',
-
-    stats: [
-      {
-        title: 'المتطوعون النشطون',
-        value: '950',
-        progress: '82%',
-      },
-      {
-        title: 'ساعات التطوع',
-        value: '14K',
-        progress: '67%',
-      },
-    ],
-  },
-
-  {
-    image: imgEnvironment,
-    title: 'نحمي بيئتنا',
-    sub: 'مبادرات بيئية لغدٍ أكثر خضرة',
-
-    stats: [
-      {
-        title: 'الأشجار المزروعة',
-        value: '12,500',
-        progress: '88%',
-      },
-      {
-        title: 'الحملات البيئية',
-        value: '98',
-        progress: '53%',
-      },
-    ],
-  },
-]
-
 export default function Login() {
   const { t } = useTranslation()
   const { login } = useAuth()
-
   const navigate = useNavigate()
 
-  const [email, setEmail] = useState('admin@charity.org')
-  const [password, setPassword] = useState('123456')
-
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
   const [showPass, setShowPass] = useState(false)
-
   const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
 
-  const [slide, setSlide] = useState(0)
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+    setLoading(true)
 
-  // slider
-  useEffect(() => {
-    const id = setInterval(() => {
-      setSlide((s) => (s + 1) % SLIDES.length)
-    }, 4000)
-
-    return () => clearInterval(id)
-  }, [])
-
-  const current = SLIDES[slide]
-
- 
-
-const handleSubmit = async (e) => {
-  e.preventDefault()
-  setLoading(true)
-
-  try {
-    const user = await login(email, password)
-    toast.success(`أهلاً ${user.name} 👋`)
-    const home = HOME_BY_ROLE[user.role] ?? '/campaigns'
-    navigate(home, { replace: true })
-  } catch (err) {
-    toast.error(err.message ?? t('auth.loginError'))
-  } finally {
-    setLoading(false)
+    try {
+      const user = await login(email, password)
+      toast.success(t('auth.welcomeToast', { name: user.name }))
+      const home = HOME_BY_ROLE[user.role] ?? '/campaigns'
+      navigate(home, { replace: true })
+    } catch (err) {
+      toast.error(err.message ?? t('auth.loginError'))
+    } finally {
+      setLoading(false)
+    }
   }
-}
 
   return (
     <div style={s.page}>
-      <div style={s.wrapper}>
-        {/* ================= LEFT ================= */}
-        <div style={s.formSection}>
-          {/* Logo */}
-          <div style={s.brand}>
-            <div style={s.brandIcon}>
-              <HeartHandshake size={24} color="#0b4b43" />
-            </div>
+      {/* Scoped styles لعناصر تحتاج pseudo-classes (focus/hover) ما بتنعمل بالـ inline style */}
+      <style>{`
+        @keyframes ataa-spin { to { transform: rotate(360deg); } }
+        .ataa-input-wrap:focus-within {
+          border-color: #F2C055 !important;
+          background: #fffdf7 !important;
+        }
+        .ataa-social-btn:hover {
+          border-color: #F2C055 !important;
+          background: #fffdf7 !important;
+        }
+        .ataa-tab-btn:hover:not(.ataa-tab-active) {
+          color: #334155;
+        }
+        .ataa-link:hover {
+          text-decoration: underline;
+        }
+      `}</style>
 
-            <div>
-              <p style={s.brandTitle}>
-                {t('brand.name')}
-              </p>
+      <div style={{ ...s.watermark, ...s.wm1 }} />
+      <div style={{ ...s.watermark, ...s.wm2 }} />
 
-              <p style={s.brandSub}>
-                {t('brand.subtitle')}
-              </p>
-            </div>
+      <div style={s.card}>
+        {/* ================= Brand: Logo + Name + Tagline ================= */}
+        <div style={s.brand}>
+          <div style={s.brandIcon}>
+            <img src={logo} alt={t('brand.name')} style={s.brandIconImg} />
           </div>
+          <h1 style={s.brandTitle}>{t('brand.name')}</h1>
+          <p style={s.brandSub}>{t('brand.subtitle')}</p>
+        </div>
 
-          {/* Welcome */}
-          <div style={s.header}>
-            <h1 style={s.heading}>
-              أهلاً بعودتك
-            </h1>
-
-            <p style={s.subHeading}>
-              قم بتسجيل الدخول للمتابعة إلى لوحة التحكم
-            </p>
-          </div>
-
-          {/* Tabs */}
-          <div style={s.tabs}>
-            <button style={s.activeTab}>
-              تسجيل الدخول
-            </button>
-
-            <button style={s.tab}>
-              إنشاء حساب
-            </button>
-          </div>
-
-          {/* Form */}
-          <form
-            onSubmit={handleSubmit}
-            style={s.form}
+        {/* ================= Tabs ================= */}
+        <div style={s.tabs}>
+          <button type="button" style={{ ...s.tabBtn, ...s.tabBtnActive }} className="ataa-tab-btn ataa-tab-active">
+            {t('auth.tabs.login')}
+          </button>
+          <button
+            type="button"
+            style={s.tabBtn}
+            className="ataa-tab-btn"
+            onClick={() => navigate('/register')}
           >
-            {/* Email */}
-            <div>
-              <label style={s.label}>
-                البريد الإلكتروني
-              </label>
-
-              <div style={s.inputWrap}>
-                <Mail
-                  size={16}
-                  color="#94a3b8"
-                />
-
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) =>
-                    setEmail(e.target.value)
-                  }
-                  placeholder="ادخل البريد الإلكتروني"
-                  style={s.input}
-                  required
-                />
-              </div>
-            </div>
-
-            {/* Password */}
-            <div>
-              <label style={s.label}>
-                كلمة المرور
-              </label>
-
-              <div style={s.inputWrap}>
-                <LockKeyhole
-                  size={16}
-                  color="#94a3b8"
-                />
-
-                <input
-                  type={
-                    showPass ? 'text' : 'password'
-                  }
-                  value={password}
-                  onChange={(e) =>
-                    setPassword(e.target.value)
-                  }
-                  placeholder="ادخل كلمة المرور"
-                  style={s.input}
-                  required
-                />
-
-                <button
-                  type="button"
-                  onClick={() =>
-                    setShowPass((p) => !p)
-                  }
-                  style={s.eyeBtn}
-                >
-                  {showPass ? (
-                    <EyeOff size={16} />
-                  ) : (
-                    <Eye size={16} />
-                  )}
-                </button>
-              </div>
-            </div>
-
-            {/* Error */}
-            {error && (
-              <div style={s.errorBox}>
-                {error}
-              </div>
-            )}
-
-            {/* Submit */}
-            <button
-              type="submit"
-              disabled={loading}
-              style={s.submitBtn}
-            >
-              {loading ? (
-                <span style={s.spinner} />
-              ) : (
-                <>
-                  <LogIn size={16} />
-                  تسجيل الدخول
-                </>
-              )}
-            </button>
-          </form>
-
-          {/* Divider */}
-          <div style={s.divider}>
-            <span>أو المتابعة عبر</span>
-          </div>
-
-          {/* Social */}
-          <div style={s.socials}>
-            {['G', '', 'f', '✕'].map((scl) => (
-              <button
-                key={scl}
-                style={s.socialBtn}
-              >
-                {scl}
-              </button>
-            ))}
-          </div>
-
-          {/* Footer */}
-          <div style={s.footer}>
-            Copyright © Kezak. All Right Reserved
-          </div>
+            {t('auth.tabs.register')}
+          </button>
         </div>
 
-        {/* ================= RIGHT ================= */}
-        <div style={s.visualSection}>
-          {/* Background */}
-          <div
-            style={{
-              ...s.bg,
-              backgroundImage: `url(${current.image})`,
-            }}
-          />
-
-          {/* Overlay */}
-          <div style={s.overlay} />
-
-          {/* Floating Cards */}
-          {/* Floating Statistics */}
-<div style={s.floatingWrap}>
-  {current.stats.map((item, index) => (
-    <div
-      key={item.title}
-      style={{
-        ...s.floatCard,
-        transform:
-          index === 1
-            ? 'translate(120px, 40px)'
-            : 'translate(0px, 0px)',
-      }}
-    >
-      {/* Header */}
-      <div style={s.floatHeader}>
-        <div>
-          <p style={s.floatLabel}>
-            {item.title}
-          </p>
-
-          <h3 style={s.floatValue}>
-            {item.value}
-          </h3>
-        </div>
-
-        <div style={s.floatIcon}>
-          <HeartHandshake
-            size={16}
-            color="#0f766e"
-          />
-        </div>
-      </div>
-
-      {/* Progress */}
-      <div style={s.progressWrap}>
-        <div
-          style={{
-            ...s.progressBar,
-            width: item.progress,
-          }}
-        />
-      </div>
-
-      {/* Footer */}
-      <div style={s.floatFooter}>
-        <span>نسبة الإنجاز</span>
-        <span>{item.progress}</span>
-      </div>
-    </div>
-  ))}
-</div>
-
-          {/* Content */}
-          <div style={s.visualContent}>
-            <div style={s.visualLogo}>
-              <HeartHandshake
-                size={22}
-                color="#fff"
+        {/* ================= Form ================= */}
+        <form onSubmit={handleSubmit} style={s.formStack}>
+          {/* Email */}
+          <div>
+            <label style={s.label}>{t('auth.fields.email')}</label>
+            <div style={s.inputWrap} className="ataa-input-wrap">
+              <Mail size={19} color="#94a3b8" />
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder={t('auth.fields.emailPlaceholder')}
+                style={s.input}
+                required
               />
             </div>
+          </div>
 
-            <h2 style={s.visualTitle}>
-              منصة ذكية لإدارة
-              <br />
-              العمل الخيري
-            </h2>
-
-            <p style={s.visualSub}>
-              نظام موحد يساعد الجمعيات على
-              إدارة الحملات والتبرعات
-              والمستفيدين بكفاءة عالية.
-            </p>
-
-            {/* Dots */}
-            <div style={s.dots}>
-              {SLIDES.map((_, i) => (
-                <button
-                  key={i}
-                  onClick={() => setSlide(i)}
-                  style={{
-                    ...s.dot,
-                    width:
-                      i === slide
-                        ? 36
-                        : 10,
-                    opacity:
-                      i === slide
-                        ? 1
-                        : 0.4,
-                  }}
-                />
-              ))}
+          {/* Password */}
+          <div>
+            <label style={s.label}>{t('auth.fields.password')}</label>
+            <div style={s.inputWrap} className="ataa-input-wrap">
+              <LockKeyhole size={19} color="#94a3b8" />
+              <input
+                type={showPass ? 'text' : 'password'}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder={t('auth.fields.passwordPlaceholder')}
+                style={s.input}
+                required
+              />
+              <button
+                type="button"
+                onClick={() => setShowPass((p) => !p)}
+                style={s.eyeBtn}
+                aria-label={showPass ? t('auth.hidePassword') : t('auth.showPassword')}
+              >
+                {showPass ? <EyeOff size={18} color="#94a3b8" /> : <Eye size={18} color="#94a3b8" />}
+              </button>
             </div>
           </div>
+
+          {/* Forgot password */}
+          <div style={s.forgotRow}>
+            <button
+              type="button"
+              onClick={() => navigate('/forgot-password')}
+              style={s.forgotLink}
+              className="ataa-link"
+            >
+              {t('auth.forgotPassword')}
+            </button>
+          </div>
+
+          {/* Submit */}
+          <button type="submit" disabled={loading} style={s.submitBtn}>
+            {loading ? (
+              <span style={s.spinner} />
+            ) : (
+              <>
+                <LogIn size={19} />
+                {t('auth.submit')}
+              </>
+            )}
+          </button>
+        </form>
+
+        {/* Divider */}
+        <div style={s.divider}>{t('auth.orContinueWith')}</div>
+
+        {/* Socials */}
+        <div style={s.socials}>
+          {['G', 'f', '', '✕'].map((scl) => (
+            <button key={scl} type="button" style={s.socialBtn} className="ataa-social-btn">
+              {scl}
+            </button>
+          ))}
+        </div>
+
+        {/* Footer */}
+        <div style={s.footerRow}>
+          {t('auth.noAccount')}{' '}
+          <button
+            type="button"
+            onClick={() => navigate('/register')}
+            style={s.footerLink}
+            className="ataa-link"
+          >
+            {t('auth.registerNow')}
+          </button>
         </div>
       </div>
     </div>
   )
 }
 
+// ═══════════════════════════════════════════════════════════════
+// Styles
+// ═══════════════════════════════════════════════════════════════
 const s = {
   page: {
     minHeight: '100vh',
-
-    background: '#dfe7ea',
-
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-
-    padding: '24px',
-
-    fontFamily: 'Cairo, sans-serif',
-  },
-
-  wrapper: {
-    width: '100%',
-    maxWidth: '1320px',
-
-    minHeight: '90vh',
-
-    background: '#ffffff',
-
-    borderRadius: '28px',
-
+    padding: '32px 16px',
+    position: 'relative',
     overflow: 'hidden',
-
-    display: 'flex',
-
-    boxShadow: '0 25px 80px rgba(0,0,0,0.08)',
+    background: 'radial-gradient(circle at 78% 12%, #1f6d61, #0b3530 62%)',
+    fontFamily: 'Cairo, sans-serif',
   },
 
-  // ================= LEFT =================
+  watermark: {
+    position: 'absolute',
+    inset: 0,
+    backgroundImage: `url(${logo})`,
+    backgroundRepeat: 'no-repeat',
+    pointerEvents: 'none',
+  },
+  wm1: {
+    backgroundSize: '620px',
+    backgroundPosition: '88% 8%',
+    opacity: 0.09,
+    filter: 'brightness(4)',
+  },
+  wm2: {
+    backgroundSize: '380px',
+    backgroundPosition: '4% 105%',
+    opacity: 0.07,
+    filter: 'brightness(4)',
+  },
 
-  formSection: {
-    width: '42%',
-
-    minWidth: '420px',
-
-    background: '#ffffff',
-
-    padding: '36px 48px',
-
+  card: {
+    position: 'relative',
+    zIndex: 2,
+    width: '100%',
+    maxWidth: '660px',
+    background: 'rgba(255,255,255,0.98)',
+    borderRadius: '30px',
+    padding: '40px 64px 34px',
+    boxShadow: '0 35px 90px rgba(0,0,0,0.5)',
     display: 'flex',
     flexDirection: 'column',
-    justifyContent: 'center',
-  },
-
-  brand: {
-    display: 'flex',
-    alignItems: 'center',
-
-    gap: '12px',
-
-    marginBottom: '42px',
-  },
-
-  brandIcon: {
-    width: 52,
-    height: 52,
-
-    borderRadius: 16,
-
-    background: '#e7f3ef',
-
-    border: '1px solid #cfe5de',
-
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-
-  brandTitle: {
-    margin: 0,
-
-    fontSize: '1rem',
-    fontWeight: 800,
-
-    color: '#0b4b43',
-  },
-
-  brandSub: {
-    margin: '4px 0 0',
-
-    fontSize: '0.72rem',
-
-    color: '#94a3b8',
-  },
-
-  header: {
-    marginBottom: '26px',
-  },
-
-  heading: {
-    margin: 0,
-
-    fontSize: '2rem',
-
-    fontWeight: 800,
-
-    color: '#0f172a',
-  },
-
-  subHeading: {
-    margin: '10px 0 0',
-
-    color: '#64748b',
-
-    fontSize: '0.95rem',
-
-    lineHeight: 1.7,
-  },
-
-  tabs: {
-    display: 'flex',
-
-    background: '#f1f5f9',
-
-    padding: 4,
-
-    borderRadius: 14,
-
-    marginBottom: '28px',
-  },
-
-  activeTab: {
-    flex: 1,
-
-    height: 42,
-
-    border: 'none',
-
-    borderRadius: 10,
-
-    background: '#ffffff',
-
-    color: '#0f172a',
-
-    fontWeight: 700,
-
-    fontFamily: 'Cairo, sans-serif',
-
-    boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
-
-    cursor: 'pointer',
-  },
-
-  tab: {
-    flex: 1,
-
-    height: 42,
-
-    border: 'none',
-
-    borderRadius: 10,
-
-    background: 'transparent',
-
-    color: '#64748b',
-
-    fontWeight: 600,
-
-    fontFamily: 'Cairo, sans-serif',
-
-    cursor: 'pointer',
-  },
-
-  form: {
-    display: 'flex',
-    flexDirection: 'column',
-
     gap: '18px',
   },
 
-  label: {
-    display: 'block',
-
-    marginBottom: 8,
-
-    fontSize: '0.82rem',
-
-    fontWeight: 700,
-
-    color: '#334155',
-  },
-
-  inputWrap: {
-    height: 54,
-
-    borderRadius: 14,
-
-    border: '1px solid #e2e8f0',
-
-    background: '#ffffff',
-
+  // ---- Brand ----
+  brand: {
+    textAlign: 'center',
     display: 'flex',
+    flexDirection: 'column',
     alignItems: 'center',
-
-    gap: 10,
-
-    padding: '0 16px',
-
-    transition: '0.2s',
+    gap: '10px',
   },
-
-  input: {
-    flex: 1,
-
-    border: 'none',
-    outline: 'none',
-
-    background: 'transparent',
-
-    fontSize: '0.92rem',
-
-    color: '#0f172a',
-
-    fontFamily: 'Cairo, sans-serif',
-  },
-
-  eyeBtn: {
-    border: 'none',
-    background: 'none',
-
-    display: 'flex',
-
-    cursor: 'pointer',
-
-    color: '#94a3b8',
-  },
-
-  errorBox: {
-    background: '#fff1f2',
-
-    border: '1px solid #fecdd3',
-
-    color: '#be123c',
-
-    padding: '12px 14px',
-
-    borderRadius: 12,
-
-    fontSize: '0.82rem',
-  },
-
-  submitBtn: {
-    height: 54,
-
-    border: 'none',
-
-    borderRadius: 14,
-
-    cursor: 'pointer',
-
-    background:
-      'linear-gradient(135deg, #0b4b43 0%, #0f766e 100%)',
-
-    color: '#ffffff',
-
-    fontSize: '0.95rem',
-
-    fontWeight: 700,
-
-    fontFamily: 'Cairo, sans-serif',
-
+  brandIcon: {
+    width: 80,
+    height: 80,
+    borderRadius: 24,
+    background: '#e7f3ef',
+    border: '2px solid #F2C055',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-
-    gap: 8,
-
-    marginTop: 6,
-
-    boxShadow:
-      '0 10px 24px rgba(11,75,67,0.22)',
+    boxShadow: '0 6px 18px rgba(242,192,85,0.25)',
+  },
+  brandIconImg: {
+    width: 46,
+    height: 46,
+    objectFit: 'contain',
+  },
+  brandTitle: {
+    margin: '4px 0 0',
+    fontSize: '1.9rem',
+    fontWeight: 900,
+    color: '#0b4b43',
+    letterSpacing: '0.5px',
+  },
+  brandSub: {
+    margin: 0,
+    fontSize: '0.92rem',
+    color: '#94a3b8',
+    fontWeight: 500,
   },
 
+  // ---- Tabs ----
+  tabs: {
+    display: 'flex',
+    background: '#f1f5f4',
+    borderRadius: 16,
+    padding: 6,
+    gap: 6,
+  },
+  tabBtn: {
+    flex: 1,
+    border: 'none',
+    background: 'transparent',
+    padding: '10px 10px',
+    fontFamily: 'Cairo, sans-serif',
+    fontWeight: 700,
+    fontSize: '0.95rem',
+    color: '#64748b',
+    borderRadius: 10,
+    cursor: 'pointer',
+    transition: 'all .2s ease',
+  },
+  tabBtnActive: {
+    background: '#F2C055',
+    color: '#3a2c05',
+    boxShadow: '0 4px 12px rgba(242,192,85,0.4)',
+  },
+
+  // ---- Form ----
+  formStack: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: 16,
+  },
+  label: {
+    display: 'block',
+    fontSize: '0.88rem',
+    fontWeight: 700,
+    color: '#334155',
+    marginBottom: 8,
+  },
+  inputWrap: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 10,
+    border: '1.5px solid #e2e8f0',
+    borderRadius: 14,
+    padding: '12px 20px',
+    background: '#f8fafc',
+    transition: 'border-color .2s ease, background .2s ease',
+  },
+  input: {
+    border: 'none',
+    outline: 'none',
+    background: 'transparent',
+    fontFamily: 'Cairo, sans-serif',
+    fontSize: '1rem',
+    width: '100%',
+    color: '#1f2937',
+  },
+  eyeBtn: {
+    background: 'transparent',
+    border: 'none',
+    cursor: 'pointer',
+    display: 'flex',
+    alignItems: 'center',
+  },
+
+  forgotRow: {
+    display: 'flex',
+    justifyContent: 'flex-start',
+    marginTop: -6,
+  },
+  forgotLink: {
+    background: 'transparent',
+    border: 'none',
+    cursor: 'pointer',
+    padding: 0,
+    fontSize: '0.86rem',
+    fontWeight: 700,
+    color: '#caa03f',
+    fontFamily: 'Cairo, sans-serif',
+  },
+
+  submitBtn: {
+    width: '100%',
+    padding: '13px',
+    border: 'none',
+    borderRadius: 15,
+    background: '#1A5C52',
+    color: '#fff',
+    fontFamily: 'Cairo, sans-serif',
+    fontWeight: 800,
+    fontSize: '1.05rem',
+    cursor: 'pointer',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    transition: 'background .2s ease, transform .1s ease',
+  },
   spinner: {
     width: 18,
     height: 18,
-
-    borderRadius: '50%',
-
-    border:
-      '2px solid rgba(255,255,255,0.3)',
-
+    border: '2.5px solid rgba(255,255,255,0.4)',
     borderTopColor: '#fff',
-
-    animation:
-      'spin 0.7s linear infinite',
+    borderRadius: '50%',
+    animation: 'ataa-spin 0.7s linear infinite',
+    display: 'inline-block',
   },
 
   divider: {
-    margin: '26px 0 18px',
-
-    position: 'relative',
-
-    textAlign: 'center',
-
+    display: 'flex',
+    alignItems: 'center',
+    gap: 12,
     color: '#94a3b8',
-
-    fontSize: '0.8rem',
+    fontSize: '0.75rem',
   },
 
   socials: {
     display: 'flex',
-    justifyContent: 'center',
-
-    gap: 12,
-  },
-
-  socialBtn: {
-    width: 44,
-    height: 44,
-
-    borderRadius: 12,
-
-    border: '1px solid #e2e8f0',
-
-    background: '#ffffff',
-
-    cursor: 'pointer',
-
-    fontSize: '1rem',
-
-    color: '#334155',
-  },
-
-  footer: {
-    marginTop: 'auto',
-
-    paddingTop: '34px',
-
-    textAlign: 'center',
-
-    fontSize: '0.72rem',
-
-    color: '#94a3b8',
-  },
-
-  // ================= RIGHT =================
-
-  visualSection: {
-    flex: 1,
-
-    position: 'relative',
-
-    overflow: 'hidden',
-
-    background: '#0b4b43',
-
-    display: 'flex',
-    alignItems: 'flex-end',
-  },
-
-  bg: {
-    position: 'absolute',
-    inset: 0,
-
-    backgroundSize: 'cover',
-    backgroundPosition: 'center',
-
-    opacity: 0.24,
-  },
-
-  overlay: {
-    position: 'absolute',
-    inset: 0,
-
-    background:
-      'linear-gradient(to bottom, rgba(11,75,67,0.82), rgba(3,33,29,0.96))',
-  },
-
-  floatingWrap: {
-    position: 'absolute',
-
-    top: 80,
-    left: 80,
-
-    zIndex: 2,
-  },
-
-  floatCard: {
-    width: 220,
-
-    background: 'rgba(255,255,255,0.92)',
-
-    borderRadius: 24,
-
-    padding: 18,
-
-    backdropFilter: 'blur(10px)',
-
-    boxShadow:
-      '0 18px 40px rgba(0,0,0,0.18)',
-  },
-floatHeader: {
-  display: 'flex',
-  alignItems: 'flex-start',
-  justifyContent: 'space-between',
-
-  marginBottom: 18,
-},
-
-floatLabel: {
-  margin: 0,
-
-  fontSize: '0.78rem',
-
-  color: '#64748b',
-
-  fontWeight: 600,
-},
-
-floatValue: {
-  margin: '6px 0 0',
-
-  fontSize: '1.7rem',
-
-  fontWeight: 800,
-
-  color: '#0f172a',
-},
-
-floatIcon: {
-  width: 42,
-  height: 42,
-
-  borderRadius: 14,
-
-  background: '#e6fffa',
-
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-},
-
-progressWrap: {
-  height: 10,
-
-  borderRadius: 999,
-
-  background: '#edf2f7',
-
-  overflow: 'hidden',
-},
-
-progressBar: {
-  height: '100%',
-
-  borderRadius: 999,
-
-  background:
-    'linear-gradient(90deg,#0f766e,#14b8a6)',
-},
-
-floatFooter: {
-  marginTop: 14,
-
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'space-between',
-
-  fontSize: '0.76rem',
-
-  color: '#64748b',
-
-  fontWeight: 600,
-},
-  floatTop: {
-    display: 'flex',
-    alignItems: 'center',
-
     gap: 10,
-
-    marginBottom: 16,
   },
-
-  circle: {
-    width: 14,
-    height: 14,
-
-    borderRadius: '50%',
-
-    background: '#0f766e',
-  },
-
-  line: {
-    height: 10,
-
-    width: 90,
-
-    borderRadius: 99,
-
-    background: '#dbeafe',
-  },
-
-  chartFake: {
-    height: 90,
-
-    borderRadius: 16,
-
-    background: '#f8fafc',
-
-    display: 'flex',
-    alignItems: 'center',
-
-    padding: 18,
-  },
-
-  bar: {
-    height: 12,
-
-    borderRadius: 99,
-
-    background:
-      'linear-gradient(90deg,#0f766e,#14b8a6)',
-  },
-
-  visualContent: {
-    position: 'relative',
-
-    zIndex: 2,
-
-    padding: '70px',
-
-    maxWidth: 580,
-  },
-
-  visualLogo: {
-    width: 60,
-    height: 60,
-
-    borderRadius: 18,
-
-    background: 'rgba(255,255,255,0.12)',
-
-    border:
-      '1px solid rgba(255,255,255,0.16)',
-
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-
-    marginBottom: 28,
-
-    backdropFilter: 'blur(12px)',
-  },
-
-  visualTitle: {
-    margin: 0,
-
-    fontSize: '3rem',
-
-    lineHeight: 1.25,
-
-    fontWeight: 800,
-
-    color: '#ffffff',
-  },
-
-  visualSub: {
-    margin: '22px 0 34px',
-
-    fontSize: '1rem',
-
-    lineHeight: 1.9,
-
-    color: 'rgba(255,255,255,0.72)',
-  },
-
-  dots: {
-    display: 'flex',
-    alignItems: 'center',
-
-    gap: 8,
-  },
-
-  dot: {
-    height: 10,
-
-    borderRadius: 999,
-
-    border: 'none',
-
-    background: '#ffffff',
-
+  socialBtn: {
+    flex: 1,
+    height: 46,
+    borderRadius: 14,
+    border: '1.5px solid #e2e8f0',
+    background: '#fff',
+    fontFamily: 'Cairo, sans-serif',
+    fontWeight: 700,
+    fontSize: '0.95rem',
+    color: '#334155',
     cursor: 'pointer',
+  },
 
-    transition: '0.3s',
+  footerRow: {
+    textAlign: 'center',
+    fontSize: '0.92rem',
+    color: '#64748b',
+  },
+  footerLink: {
+    background: 'transparent',
+    border: 'none',
+    cursor: 'pointer',
+    padding: 0,
+    color: '#caa03f',
+    fontWeight: 800,
+    fontFamily: 'Cairo, sans-serif',
   },
 }
