@@ -8,7 +8,7 @@ import { Eye, EyeOff, LogIn, Mail, LockKeyhole } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 
 // ✏️ عدّلي المسار حسب مكان ملف اللوغو الفعلي عندك بالمشروع
-import logo from '../../image/logo-green.png'
+import logo from '../../assets/logo-green.png'
 
 // الصفحة الرئيسية لكل دور
 const HOME_BY_ROLE = {
