@@ -19,6 +19,44 @@ export const getAllNonUserAccounts = () =>
 
 export const deleteUser = (id) =>
     axiosInstance.delete(`/deleteUser/${id}`).then(r => r.data)
+
+// ── تحديث البروفايل الشخصي ──────────────────────────────────
+// تحويل base64 (الجاي من ImageUpload) لـ File حقيقي قابل للرفع
+const base64ToFile = (base64, filename = 'upload.png') => {
+    const [header, data] = base64.split(',')
+    const mimeMatch = header.match(/:(.*?);/)
+    const mime = mimeMatch ? mimeMatch[1] : 'image/png'
+    const binary = atob(data)
+    const bytes = new Uint8Array(binary.length)
+    for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i)
+    return new File([bytes], filename, { type: mime })
+}
+
+const FILE_FIELDS = ['profile_image', 'national_id', 'international_passport']
+
+// ⚠️ أسماء الحقول (name/first_name.../إلخ) لسا لازم تتأكد من UpdateProfileRequest
+// data: { name?, email?, phone?, password?, password_confirmation?, profile_image?: base64|File, national_id?: base64|File, international_passport?: base64|File }
+export const updateProfile = (data) => {
+    const formData = new FormData()
+
+    Object.entries(data).forEach(([key, value]) => {
+        if (value === null || value === undefined || value === '') return
+
+        if (FILE_FIELDS.includes(key)) {
+            const file = typeof value === 'string' && value.startsWith('data:')
+                ? base64ToFile(value, `${key}-${Date.now()}.png`)
+                : value
+            formData.append(key, file)
+        } else {
+            formData.append(key, value)
+        }
+    })
+
+    return axiosInstance.post('/userprofile/update', formData, {
+        headers: { 'Content-Type': undefined }, // ⚠️ لازم فاضي حتى أكسيوس يحط multipart boundary لحاله (نفس مشكلة الحملات)
+    }).then(r => r.data)
+}
+
 // ── إجراءات على المستخدمين ──────────────────────────────────
 
 // ⚠️ لازم FormData لأن فيه profile_image (file upload)
@@ -33,7 +71,7 @@ export const createEmployee = (data) => {
     })
 
     return axiosInstance.post('/createEmployee', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
+        headers: { 'Content-Type': undefined }, // ⚠️ نفس الإصلاح (كان "multipart/form-data" يدوي وهاد غلط بدون boundary)
     }).then(r => r.data)
 }
 

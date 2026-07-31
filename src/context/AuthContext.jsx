@@ -3,6 +3,8 @@ import axiosInstance from '../api/axiosInstance'
 
 const AuthContext = createContext(null)
 
+const STORAGE_URL = import.meta.env.VITE_STORAGE_URL // ⚠️ نفس المتغيّر المستخدم بالحملات لبناء روابط الصور
+
 // ── تحويل الـ role من الباك اند للداشبورد ──────────
 const mapRole = (backendRole) => {
   switch (backendRole) {
@@ -49,6 +51,22 @@ export const ROUTE_PERMISSIONS = {
   'ai-assistant': ['admin', 'supervisor', 'fieldWorker'],
 }
 
+// ✅ جديد — دالة موحّدة لتحويل يوزر الباك اند لشكل الداشبورد
+// تُستخدم بالـ login وكمان بعد تعديل البروفايل، حتى يضلوا متطابقين دايماً
+// ⚠️ تأكدي إنه /userprofile فعلاً بيرجع first_name/last_name/phone/address/profile_image
+const mapBackendUser = (backendUser) => ({
+  id:         backendUser.id,
+  name:       backendUser.name ?? `${backendUser.first_name ?? ''} ${backendUser.last_name ?? ''}`.trim(),
+  first_name: backendUser.first_name ?? '',
+  last_name:  backendUser.last_name  ?? '',
+  email:      backendUser.email,
+  phone:      backendUser.phone   ?? '',
+  address:    backendUser.address ?? '',
+  role:       mapRole(backendUser.role),
+  // ✅ صورة حقيقية بدل أول حرفين من الاسم (كانت الغلطة القديمة)
+  avatar:     backendUser.profile_image ? `${STORAGE_URL}/${backendUser.profile_image}` : null,
+})
+
 // ── Provider ─────────────────────────────────────────
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(() => {
@@ -78,14 +96,8 @@ export function AuthProvider({ children }) {
       // ...
     }
 
-    // 5. بناء الـ user object
-    const userData = {
-      id:     backendUser.id,
-      name:   backendUser.name,
-      email:  backendUser.email,
-      role:   dashboardRole,
-      avatar: backendUser.name?.slice(0, 2).toLowerCase() ?? 'us',
-    }
+    // ✅ صار عم يستخدم mapBackendUser الموحّدة بدل بناء object يدوي ناقص
+    const userData = mapBackendUser(backendUser)
 
     // 6. حفظ المستخدم
     localStorage.setItem('user', JSON.stringify(userData))
@@ -106,6 +118,15 @@ export function AuthProvider({ children }) {
     }
   }
 
+  // ✅ جديد — لتحديث بيانات المستخدم بعد نجاح تعديل البروفايل
+  // منمررلها الـ backendUser الراجع من response تبع updateProfile (user: $user->fresh())
+  const updateUser = (backendUser) => {
+    const userData = mapBackendUser(backendUser)
+    localStorage.setItem('user', JSON.stringify(userData))
+    setUser(userData)
+    return userData
+  }
+
   const hasPermission = (permission) => {
     if (!user) return false
     const perms = PERMISSIONS[user.role] ?? []
@@ -121,7 +142,7 @@ export function AuthProvider({ children }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, hasPermission, canAccessRoute }}>
+    <AuthContext.Provider value={{ user, login, logout, hasPermission, canAccessRoute, updateUser }}>
       {children}
     </AuthContext.Provider>
   )

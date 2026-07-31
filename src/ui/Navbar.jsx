@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import { Menu, Search, Bell, Globe, Sun, Moon } from 'lucide-react'
@@ -6,6 +7,7 @@ import { notificationsService } from '../service/ServiceLayer'
 import { useTheme } from '../context/ThemeContext'
 import { useAuth } from '../context/AuthContext' // استيراد السياق الخاص بالمستخدم
 import PermissionButton from './PermissionButton'
+import ProfileEditModal from './Profileeditmodal' // ✅ جديد
 
 export default function Navbar({ onMenuClick }) {
   const { t, i18n } = useTranslation()
@@ -13,6 +15,8 @@ export default function Navbar({ onMenuClick }) {
   const { user } = useAuth() // جلب بيانات المستخدم (الاسم والصورة)
   const navigate = useNavigate()
   const isRtl = i18n.language?.startsWith('ar')
+
+  const [profileModalOpen, setProfileModalOpen] = useState(false) // ✅ جديد
 
   const { data: unread = 0 } = useQuery({
     queryKey: ['notifications', 'unread'],
@@ -135,9 +139,9 @@ export default function Navbar({ onMenuClick }) {
         {/* فاصل بسيط */}
         <div style={{ width: '1px', height: '20px', background: 'var(--border-default)', margin: '0 4px' }} />
 
-        {/* ── صورة البروفايل ── */}
+        {/* ── صورة البروفايل — ✅ هلق بتفتح مودال التعديل بدل الانتقال لصفحة ── */}
         <div 
-          onClick={() => navigate('/settings')}
+          onClick={() => setProfileModalOpen(true)}
           style={{
             display: 'flex',
             alignItems: 'center',
@@ -177,6 +181,9 @@ export default function Navbar({ onMenuClick }) {
           </div>
         </div>
       </div>
+
+      {/* ✅ مودال تعديل البروفايل */}
+      <ProfileEditModal open={profileModalOpen} onClose={() => setProfileModalOpen(false)} />
     </header>
   )
-}
+} 

@@ -66,11 +66,24 @@ const ar = {
 
         // ── Auth ──────────────────────────────────────────────────────────────
         auth: {
-            login: 'تسجيل الدخول',
-            logout: 'تسجيل الخروج',
-            username: 'اسم المستخدم',
-            password: 'كلمة المرور',
-            welcome: 'مرحباً بك',
+            tabs: {
+                login: 'تسجيل الدخول',
+                register: 'إنشاء حساب',
+            },
+            fields: {
+                email: 'البريد الإلكتروني',
+                emailPlaceholder: 'ادخلي البريد الإلكتروني',
+                password: 'كلمة المرور',
+                passwordPlaceholder: 'ادخلي كلمة المرور',
+            },
+            forgotPassword: 'نسيت كلمة المرور؟',
+            submit: 'تسجيل الدخول',
+            orContinueWith: 'أو المتابعة عبر',
+            noAccount: 'ليس لديك حساب؟',
+            registerNow: 'سجّلي الآن',
+            welcomeToast: 'أهلاً {{name}} 👋',
+            showPassword: 'إظهار كلمة المرور',
+            hidePassword: 'إخفاء كلمة المرور',
         },
 
         // ── Roles ─────────────────────────────────────────────────────────────
@@ -708,11 +721,24 @@ const en = {
 
         // ── Auth ──────────────────────────────────────────────────────────────
         auth: {
-            login: 'Login',
-            logout: 'Logout',
-            username: 'Username',
-            password: 'Password',
-            welcome: 'Welcome',
+            tabs: {
+                login: 'Login',
+                register: 'Create Account',
+            },
+            fields: {
+                email: 'Email',
+                emailPlaceholder: 'Enter your email',
+                password: 'Password',
+                passwordPlaceholder: 'Enter your password',
+            },
+            forgotPassword: 'Forgot password?',
+            submit: 'Login',
+            orContinueWith: 'Or continue with',
+            noAccount: "Don't have an account?",
+            registerNow: 'Register now',
+            welcomeToast: 'Welcome {{name}} 👋',
+            showPassword: 'Show password',
+            hidePassword: 'Hide password',
         },
 
         // ── Roles ─────────────────────────────────────────────────────────────
