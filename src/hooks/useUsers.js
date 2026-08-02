@@ -1,6 +1,5 @@
 // src/hooks/useUsers.js
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import toast from 'react-hot-toast'
 import {
     getAllUsers,
     getUserById,
@@ -15,11 +14,8 @@ import {
     changePassword,
     addBalanceToUser,
     deleteUser,
-    updateProfile,
+    updateProfile, // ✅ جديد
 } from '../api/users.api'
-
-// رسالة الخطأ من لارافيل إذا موجودة، وإلا رسالة افتراضية
-const errMsg = (err, fallback) => err.response?.data?.message || fallback
 
 // ── Queries ──────────────────────────────────────────────────
 
@@ -80,11 +76,7 @@ export const useCreateEmployee = () => {
     const qc = useQueryClient()
     return useMutation({
         mutationFn: createEmployee,
-        onSuccess: () => {
-            qc.invalidateQueries({ queryKey: ['users'] })
-            toast.success('تم إنشاء الموظف بنجاح')
-        },
-        onError: (err) => toast.error(errMsg(err, 'فشل إنشاء الموظف')),
+        onSuccess: () => qc.invalidateQueries({ queryKey: ['users'] }),
     })
 }
 
@@ -92,11 +84,7 @@ export const useApproveUser = () => {
     const qc = useQueryClient()
     return useMutation({
         mutationFn: approveUser, // (id)
-        onSuccess: () => {
-            qc.invalidateQueries({ queryKey: ['users'] })
-            toast.success('تم قبول المستخدم بنجاح')
-        },
-        onError: (err) => toast.error(errMsg(err, 'فشل قبول المستخدم')),
+        onSuccess: () => qc.invalidateQueries({ queryKey: ['users'] }),
     })
 }
 
@@ -104,11 +92,7 @@ export const useSetPending = () => {
     const qc = useQueryClient()
     return useMutation({
         mutationFn: setPending, // (id)
-        onSuccess: () => {
-            qc.invalidateQueries({ queryKey: ['users'] })
-            toast.success('تم تعليق المستخدم بنجاح')
-        },
-        onError: (err) => toast.error(errMsg(err, 'فشلت العملية')),
+        onSuccess: () => qc.invalidateQueries({ queryKey: ['users'] }),
     })
 }
 
@@ -117,11 +101,7 @@ export const usePromoteUser = () => {
     const qc = useQueryClient()
     return useMutation({
         mutationFn: ({ id, role }) => promoteUser(id, role),
-        onSuccess: () => {
-            qc.invalidateQueries({ queryKey: ['users'] })
-            toast.success('تمت ترقية المستخدم بنجاح')
-        },
-        onError: (err) => toast.error(errMsg(err, 'فشلت الترقية')),
+        onSuccess: () => qc.invalidateQueries({ queryKey: ['users'] }),
     })
 }
 
@@ -129,31 +109,19 @@ export const useDemoteUser = () => {
     const qc = useQueryClient()
     return useMutation({
         mutationFn: demoteUser, // (id)
-        onSuccess: () => {
-            qc.invalidateQueries({ queryKey: ['users'] })
-            toast.success('تم تخفيض رتبة المستخدم بنجاح')
-        },
-        onError: (err) => toast.error(errMsg(err, 'فشلت العملية')),
+        onSuccess: () => qc.invalidateQueries({ queryKey: ['users'] }),
     })
 }
 
 export const useChangePassword = () =>
-    useMutation({
-        mutationFn: changePassword,
-        onSuccess: () => toast.success('تم تغيير كلمة المرور بنجاح'),
-        onError: (err) => toast.error(errMsg(err, 'فشل تغيير كلمة المرور')),
-    })
+    useMutation({ mutationFn: changePassword })
 
 // الاستخدام: addBalanceMut.mutate({ userId, currency: 'USD', amount: 100 })
 export const useAddBalanceToUser = () => {
     const qc = useQueryClient()
     return useMutation({
         mutationFn: ({ userId, ...data }) => addBalanceToUser(userId, data),
-        onSuccess: () => {
-            qc.invalidateQueries({ queryKey: ['users'] })
-            toast.success('تمت إضافة الرصيد بنجاح')
-        },
-        onError: (err) => toast.error(errMsg(err, 'فشلت إضافة الرصيد')),
+        onSuccess: () => qc.invalidateQueries({ queryKey: ['users'] }),
     })
 }
 
@@ -161,25 +129,20 @@ export const useDeleteUser = () => {
     const qc = useQueryClient()
     return useMutation({
         mutationFn: deleteUser, // (id)
-        onSuccess: () => {
-            qc.invalidateQueries({ queryKey: ['users'] })
-            toast.success('تم حذف المستخدم بنجاح')
-        },
-        onError: (err) => toast.error(errMsg(err, 'فشل حذف المستخدم')),
+        onSuccess: () => qc.invalidateQueries({ queryKey: ['users'] }),
     })
 }
 
-// ✅ جديد — تحديث البروفايل الشخصي (المستخدم الحالي فقط)
+// ══════════════════════════════════════════════════════════════
+// ✅ تعديل معلوماتي أنا (البروفايل الشخصي لليوزر المسجّل دخول)
+// اسم الـ hook هون matching تماماً مع الاستيراد بـ ProfileEditModal.jsx: useUpdateProfile
+// ══════════════════════════════════════════════════════════════
 export const useUpdateProfile = () => {
     const qc = useQueryClient()
     return useMutation({
         mutationFn: updateProfile,
-        onSuccess: () => {
-            qc.invalidateQueries({ queryKey: ['users'] })
-            // ⚠️ إذا عندك query key تاني لبيانات المستخدم الحالي (auth/me مثلاً) ضيفيه هون كمان
-            // qc.invalidateQueries({ queryKey: ['auth', 'me'] })
-            toast.success('تم تحديث الملف الشخصي بنجاح')
-        },
-        onError: (err) => toast.error(errMsg(err, 'فشل تحديث الملف الشخصي')),
+        onSuccess: () => qc.invalidateQueries({ queryKey: ['users'] }),
+        // ✅ تحديث الـ AuthContext (updateUser) عم يصير جوا ProfileEditModal.jsx نفسه
+        // بعد نجاح mutateAsync، مش هون — حتى الـ hook يضل عام وممكن يُستخدم بأي مكان
     })
 }

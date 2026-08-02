@@ -27,33 +27,64 @@ export default function ImageUpload({
     reader.readAsDataURL(file)
   }
 
+  // ✅ الـ input صار برا الـ if/else حتى يضل موجود بالـ DOM بالحالتين
+  // (كان قبل جوا الـ return الثانية بس، فما كان فيه وجود أصلاً بوضع المعاينة)
+  const hiddenInput = (
+    <input
+      ref={inputRef}
+      type="file"
+      accept="image/*"
+      style={{ display: 'none' }}
+      onChange={(e) => handleFile(e.target.files[0])}
+    />
+  )
+
   if (value) {
     return (
-      <div style={{ position: 'relative', borderRadius: 12, overflow: 'hidden', border: '1px solid var(--border-default)' }}>
+      <div
+        // ✅ جديد — نفس منطق السحب والإفلات تبع وضع الـ dropzone، بس هلق شغال
+        // حتى لو أصلاً في صورة معروضة، فبيصير ممكن تستبدليها مباشرة
+        onDragOver={(e) => e.preventDefault()}
+        onDrop={(e) => { e.preventDefault(); handleFile(e.dataTransfer.files[0]) }}
+        style={{ position: 'relative', borderRadius: 12, overflow: 'hidden', border: '1px solid var(--border-default)' }}
+      >
         <img
           src={value}
           alt="preview"
-          style={{ width: '100%', height: maxHeight, objectFit: 'cover', display: 'block' }}
+          // ✅ جديد — الضغط على الصورة نفسها بيفتح اختيار ملف بديل
+          onClick={() => inputRef.current?.click()}
+          style={{ width: '100%', height: maxHeight, objectFit: 'cover', display: 'block', cursor: 'pointer' }}
         />
         <div style={{
           position: 'absolute', inset: 0,
           background: 'linear-gradient(to top, rgba(0,0,0,0.4), transparent)',
-          display: 'flex', alignItems: 'flex-end', justifyContent: 'flex-end',
+          display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between',
           padding: '10px',
+          pointerEvents: 'none', // حتى الـ overlay ما يمنع الضغط عالصورة تحته
         }}>
+          {/* ✅ جديد — تلميح واضح إنو الصورة قابلة للاستبدال */}
+          <span style={{
+            fontSize: '0.7rem', color: '#fff', fontWeight: 600,
+            background: 'rgba(0,0,0,0.35)', padding: '4px 8px', borderRadius: 6,
+          }}>
+            اضغطي للاستبدال
+          </span>
+
           <button
             type="button"
-            onClick={() => onChange?.(null)}
+            onClick={(e) => { e.stopPropagation(); onChange?.(null) }}
             style={{
               width: 30, height: 30, borderRadius: '50%',
               background: 'rgba(239,68,68,0.9)', border: 'none',
               cursor: 'pointer', display: 'flex', alignItems: 'center',
               justifyContent: 'center', color: '#fff',
+              pointerEvents: 'auto', // نرجع نفعّل الضغط بس على الزر
             }}
           >
             <X size={14} />
           </button>
         </div>
+        {hiddenInput}
       </div>
     )
   }
@@ -79,13 +110,7 @@ export default function ImageUpload({
       <p style={{ margin: 0, fontSize: '0.72rem', color: 'var(--text-hint)' }}>
         PNG · JPG · WEBP — الحد الأقصى 5MB
       </p>
-      <input
-        ref={inputRef}
-        type="file"
-        accept="image/*"
-        style={{ display: 'none' }}
-        onChange={(e) => handleFile(e.target.files[0])}
-      />
+      {hiddenInput}
     </div>
   )
 }

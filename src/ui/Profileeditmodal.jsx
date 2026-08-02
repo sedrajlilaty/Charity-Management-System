@@ -33,8 +33,6 @@ export default function ProfileEditModal({ open, onClose }) {
     if (open && user) {
       setForm({
         ...EMPTY,
-        // ⚠️ إذا الباك اند بيرجع first_name/last_name منفصلين استخدميهن مباشرة،
-        // وإلا هاد fallback بيقسم user.name لكلمتين
         first_name: user.first_name ?? user.name?.split(' ')[0] ?? '',
         last_name:  user.last_name  ?? user.name?.split(' ').slice(1).join(' ') ?? '',
         email:      user.email   || '',
@@ -129,6 +127,8 @@ export default function ProfileEditModal({ open, onClose }) {
           label="اضغط أو اسحب صورة شخصية"
           maxHeight={160}
         />
+        {/* ✅ جديد — كانت ناقصة، فأي خطأ 422 راجع من الباك اند عالصورة كان يصير بصمت */}
+        <FieldError msg={errors.profile_image} />
       </FormRow>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
@@ -167,6 +167,7 @@ export default function ProfileEditModal({ open, onClose }) {
             label="اضغط لرفع صورة الهوية"
             maxHeight={130}
           />
+          <FieldError msg={errors.national_id} />
         </FormRow>
         <FormRow label="صورة جواز السفر (اختياري)">
           <ImageUpload
@@ -175,6 +176,7 @@ export default function ProfileEditModal({ open, onClose }) {
             label="اضغط لرفع صورة الجواز"
             maxHeight={130}
           />
+          <FieldError msg={errors.international_passport} />
         </FormRow>
       </div>
 
