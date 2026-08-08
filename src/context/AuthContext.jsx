@@ -63,6 +63,7 @@ const mapBackendUser = (backendUser) => ({
   phone:      backendUser.phone   ?? '',
   address:    backendUser.address ?? '',
   role:       mapRole(backendUser.role),
+   balances:   backendUser.balances ?? { USD: 0 },
   // ✅ صورة حقيقية بدل أول حرفين من الاسم (كانت الغلطة القديمة)
   avatar:     backendUser.profile_image ? `${STORAGE_URL}/${backendUser.profile_image}` : null,
 })
@@ -81,10 +82,8 @@ export function AuthProvider({ children }) {
     console.log('1. signin response:', data)
 
     localStorage.setItem('token', data.token)
-
-    const { data: profileData } = await axiosInstance.get('/userprofile')
-    console.log('2. profile response:', profileData)
-
+const { data: profileData } = await axiosInstance.get('/userprofile')
+console.log('2. profile response:', profileData)
     const backendUser = profileData.user
     console.log('3. backendUser:', backendUser)
 

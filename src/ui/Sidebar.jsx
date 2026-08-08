@@ -213,44 +213,58 @@ export default function Sidebar({ open, onClose, isDesktop }) {
         </div>
 
         {/* User */}
-        {user && (
-          <div style={{ padding: '10px', borderTop: '1px solid var(--border-default)' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, background: 'var(--bg-surface)', border: '1px solid var(--border-default)', borderRadius: 18, padding: '10px' }}>
-              <div
-                style={{
-                  width: 42, height: 42, borderRadius: '50%', flexShrink: 0,
-                  background: av.bg, color: av.text, border: `1px solid ${av.border}`,
-                  fontSize: '0.82rem', fontWeight: 800,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                }}
-              >
-                {user.avatar ?? user.name?.slice(0, 2)}
-              </div>
+{user && (
+  <div style={{ padding: '10px', borderTop: '1px solid var(--border-default)' }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: 10, background: 'var(--bg-surface)', border: '1px solid var(--border-default)', borderRadius: 18, padding: '10px' }}>
+      <div
+        style={{
+          width: 42, height: 42, borderRadius: '50%', flexShrink: 0,
+          background: av.bg, color: av.text, border: `1px solid ${av.border}`,
+          fontSize: '0.82rem', fontWeight: 800,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          overflow: 'hidden',
+        }}
+      >
+        {user.avatar ? (
+          <img
+            src={user.avatar}
+            alt={user.name}
+            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+            onError={(e) => {
+              e.target.style.display = 'none'
+              e.target.nextSibling.style.display = 'flex'
+            }}
+          />
+        ) : null}
+        <span style={{ display: user.avatar ? 'none' : 'flex' }}>
+          {user.name?.slice(0, 2)}
+        </span>
+      </div>
 
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <p style={{ margin: 0, fontSize: '0.88rem', fontWeight: 700, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                  {user.name}
-                </p>
-                <p style={{ margin: 0, fontSize: '0.7rem', color: 'var(--text-hint)' }}>
-                  {ROLE_LABEL[user.role]}
-                </p>
-              </div>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <p style={{ margin: 0, fontSize: '0.88rem', fontWeight: 700, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          {user.name}
+        </p>
+        <p style={{ margin: 0, fontSize: '0.7rem', color: 'var(--text-hint)' }}>
+          {ROLE_LABEL[user.role]}
+        </p>
+      </div>
 
-              <button
-                onClick={logout}
-                title={t('auth.logout')}
-                style={{
-                  width: 34, height: 34, borderRadius: 10,
-                  border: '1px solid #fee2e2', background: '#fff5f5',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  cursor: 'pointer', color: '#ef4444',
-                }}
-              >
-                <LogOut size={15} />
-              </button>
-            </div>
-          </div>
-        )}
+      <button
+        onClick={logout}
+        title={t('auth.logout')}
+        style={{
+          width: 34, height: 34, borderRadius: 10,
+          border: '1px solid #fee2e2', background: '#fff5f5',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          cursor: 'pointer', color: '#ef4444',
+        }}
+      >
+        <LogOut size={15} />
+      </button>
+    </div>
+  </div>
+)}
       </aside>
     </>
   )

@@ -467,34 +467,24 @@ const ar = {
         ,
         // ── Services ──────────────────────────────────────────────────────────
         services: {
-            title: 'الخدمات والبرامج',
-            subtitle: '{{count}} خدمة',
-            addBtn: 'خدمة جديدة',
-            empty: 'لا توجد خدمات في هذا التصنيف.',
-            addFirst: 'أضف خدمة',
-            amount: 'قيمة الخدمة',
-            beneficiaries: 'المستفيدون',
-            free: 'مجانية',
-            categories: { all: 'الكل', education: 'التعليم', orphan: 'الأيتام', medical: 'الطبي', food: 'الغذاء', housing: 'السكن' },
-            modal: {
-                titleAdd: 'إضافة خدمة جديدة',
-                titleEdit: 'تعديل خدمة',
-                name: 'اسم الخدمة',
-                namePlaceholder: 'مثال: كفالة اليتيم',
-                category: 'التصنيف',
-                amount: 'قيمة الخدمة (ر.س)',
-                description: 'الوصف',
-                descPlaceholder: 'وصف مختصر للخدمة...',
-                status: 'الحالة',
-                active: 'نشطة',
-                inactive: 'موقوفة',
-                PermissionButtons: { cancel: 'إلغاء', save: 'حفظ التغييرات', add: 'إضافة الخدمة' },
-                errors: { nameRequired: 'اسم الخدمة مطلوب' },
+            title: 'الخدمات والبرامج', subtitle: '{{count}} مستفيد نشط',
+            heroSubtitle: 'إدارة البرامج والخدمات المجتمعية',
+            currentSupport: 'إجمالي الدعم الحالي',
+            actions: { edit: 'تعديل' },
+            stats: { active: 'حالات مستفيدة', pending: 'قيد الانتظار', totalActive: 'المستفيدون النشطون' },
+            types: {
+                orphan: { title: 'كفالة يتيم', description: 'دعم شهري ثابت للأيتام وأسرهم لتأمين احتياجاتهم الأساسية' },
+                medical: { title: 'حالات طبية', description: 'تغطية التكاليف الطبية والأدوية للحالات المرضية المحتاجة' },
+                schoolStudent: { title: 'طالب مدرسي', description: 'دعم الطلاب بالمرحلة المدرسية بالمستلزمات والرسوم الدراسية' },
+                universityStudent: { title: 'طالب جامعي', description: 'منح ودعم مالي للطلاب الجامعيين المتفوقين المحتاجين' },
             },
-            stats: {
-                "total": "الخدمات",
-                "beneficiaries": "المستفيدون"
-            }
+            modal: {
+                titleEdit: 'تعديل الخدمة',
+                description: 'الوصف', descPlaceholder: 'وصف مختصر للخدمة...',
+                amount: 'مبلغ الدعم الشهري (ل.س)',
+                buttons: { cancel: 'إلغاء', save: 'حفظ التعديلات' },
+                errors: { descRequired: 'الوصف مطلوب' },
+            },
         },
 
         // ── Settings ──────────────────────────────────────────────────────────
@@ -1088,18 +1078,23 @@ const en = {
 
         // ── Services ──────────────────────────────────────────────────────────
         services: {
-            title: 'Services & Programs', subtitle: '{{count}} services', addBtn: 'New service',
-            empty: 'No services in this category.', addFirst: 'Add service',
-            amount: 'Service amount', beneficiaries: 'Beneficiaries', free: 'Free',
-            categories: { all: 'All', education: 'Education', orphan: 'Orphans', medical: 'Medical', food: 'Food', housing: 'Housing' },
+            title: 'Services & Programs', subtitle: '{{count}} active beneficiaries',
+            heroSubtitle: 'Managing community programs and services',
+            currentSupport: 'Total current support',
+            actions: { edit: 'Edit' },
+            stats: { active: 'Active cases', pending: 'Pending', totalActive: 'Active beneficiaries' },
+            types: {
+                orphan: { title: 'Orphan Sponsorship', description: 'Fixed monthly support for orphans and their families to secure basic needs' },
+                medical: { title: 'Medical Cases', description: 'Covering medical costs and medication for needy patients' },
+                schoolStudent: { title: 'School Student', description: 'Supporting school students with supplies and tuition fees' },
+                universityStudent: { title: 'University Student', description: 'Scholarships and financial support for outstanding needy university students' },
+            },
             modal: {
-                titleAdd: 'New Service', titleEdit: 'Edit Service',
-                name: 'Service name', namePlaceholder: 'e.g. Orphan Sponsorship',
-                category: 'Category', amount: 'Service amount (SAR)',
+                titleEdit: 'Edit Service',
                 description: 'Description', descPlaceholder: 'Short service description...',
-                status: 'Status', active: 'Active', inactive: 'Inactive',
-                PermissionButtons: { cancel: 'Cancel', save: 'Save changes', add: 'Add service' },
-                errors: { nameRequired: 'Service name is required' },
+                amount: 'Monthly support amount (SAR)',
+                buttons: { cancel: 'Cancel', save: 'Save changes' },
+                errors: { descRequired: 'Description is required' },
             },
         },
 

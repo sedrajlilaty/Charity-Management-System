@@ -1,205 +1,308 @@
 // ── CampaignVolunteersModal.jsx ─────────────────────────────────────────────
-// مودال يُفتح من بطاقة الحملة: يعرض المتطوعين المشاركين بهاي الحملة
-// ويسمح بتحديد/تعديل عدد ساعات تطوع كل واحد منهم لهذه الحملة بالتحديد
-
-import { useState, useEffect, useMemo } from 'react'
+import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { Users, Save, Clock, Smartphone } from 'lucide-react'
+import { Users, Clock, Check, X, Plus, ChevronDown, ChevronUp } from 'lucide-react'
 import Modal from '../../ui/Modal'
 import { Avatar } from '../../ui/Avatar'
 import { SpinnerPage } from '../../ui/Spinner'
 import { EmptyState } from '../../ui/EmptyState'
 import PermissionButton from '../../ui/PermissionButton'
-import { volunteersService } from '../../service/ServiceLayer'
+import { volunteersService, getSkillLabel, SKILLS_LABELS_AR } from '../../hooks/volunteersService'
+import { useAuth } from '../../context/AuthContext'
+
+const STATUS_TABS = [
+  { key: 'pending', label: 'قيد المراجعة' },
+  { key: 'approved', label: 'مقبولين' },
+  { key: 'rejected', label: 'مرفوضين' },
+]
 
 export default function CampaignVolunteersModal({ open, onClose, campaign }) {
   const qc = useQueryClient()
-  const [hoursMap, setHoursMap] = useState({}) // { volunteerId: hours }
+  const { user } = useAuth()
+const isFieldWorker = user?.role === 'fieldWorker' // ✅
+  const [tab, setTab] = useState('approved')
+  const [expandedId, setExpandedId] = useState(null)
 
-  // جلب المتطوعين المشاركين بهذه الحملة فقط
   const { data, isLoading } = useQuery({
-    queryKey: ['campaign-volunteers', campaign?.id],
-    queryFn: () => volunteersService.getByCampaign(campaign.id),
+    queryKey: ['campaign-volunteers', campaign?.id, tab],
+    queryFn: () => volunteersService.getCampaignVolunteersByStatus(campaign.id, tab),
     enabled: open && !!campaign?.id,
   })
 
-  // تهيئة hoursMap عند فتح المودال (الساعات المعتمدة - hours)
-  useEffect(() => {
-    if (data?.data) {
-      const map = {}
-      data.data.forEach((v) => {
-        const entry = (v.campaignHours || []).find((c) => c.campaignId === campaign.id)
-        map[v.id] = entry?.hours ?? 0
-      })
-      setHoursMap(map)
-    }
-  }, [data, campaign?.id])
-
-  const saveMut = useMutation({
-    mutationFn: ({ volunteerId, hours }) =>
-      volunteersService.setCampaignHours(volunteerId, campaign.id, campaign.name, hours),
+  const statusMut = useMutation({
+    mutationFn: ({ volunteerId, status }) =>
+      volunteersService.updateCampaignVolunteerStatus(campaign.id, volunteerId, status),
     onSuccess: () => {
       qc.invalidateQueries(['campaign-volunteers', campaign?.id])
-      qc.invalidateQueries(['volunteers'])
     },
   })
 
-  const handleHoursChange = (volunteerId, value) => {
-    setHoursMap((m) => ({ ...m, [volunteerId]: value }))
-  }
-
-  const handleSaveRow = (volunteerId) => {
-    const hours = Number(hoursMap[volunteerId]) || 0
-    saveMut.mutate({ volunteerId, hours })
-  }
-
-  const totalHours = useMemo(
-    () => Object.values(hoursMap).reduce((s, h) => s + (Number(h) || 0), 0),
-    [hoursMap]
-  )
+  const volunteers = data?.volunteers ?? []
 
   return (
-    <Modal
-      open={open}
-      onClose={onClose}
-      title={`متطوعو حملة: ${campaign?.name || ''}`}
-    >
+    <Modal open={open} onClose={onClose} title={`متطوعو حملة: ${campaign?.name || campaign?.title || ''}`}>
       <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
         {/* ملخص */}
         <div
           style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            padding: '12px 16px',
-            borderRadius: '12px',
-            background: 'var(--color-primary-50)',
-            border: '1px solid var(--color-primary-100)',
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+            padding: '12px 16px', borderRadius: '12px',
+            background: 'var(--color-primary-50)', border: '1px solid var(--color-primary-100)',
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <Users size={16} style={{ color: 'var(--color-primary-700)' }} />
             <span style={{ fontWeight: 700, color: 'var(--color-primary-700)', fontSize: '0.88rem' }}>
-              {data?.data?.length ?? 0} متطوع مشارك
-            </span>
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            <Clock size={15} style={{ color: 'var(--color-primary-700)' }} />
-            <span style={{ fontWeight: 800, color: 'var(--color-primary-700)', fontSize: '0.9rem' }}>
-              {totalHours} ساعة إجمالي
+              {data?.count ?? volunteers.length} متطوع
             </span>
           </div>
         </div>
 
-        {/* قائمة المتطوعين */}
-        {isLoading ? (
-          <SpinnerPage />
-        ) : !data?.data?.length ? (
-          <EmptyState title="لا يوجد متطوعون مسجلون بهذه الحملة" />
-        ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-            {/* رؤوس الأعمدة */}
-            <div
+        {/* تابات الحالة */}
+        <div style={{ display: 'flex', gap: '8px' }}>
+          {STATUS_TABS.map((t) => (
+            <button
+              key={t.key}
+              onClick={() => setTab(t.key)}
               style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '12px',
-                padding: '0 14px',
-                fontSize: '0.75rem',
-                color: 'var(--text-muted)',
-                fontWeight: 700,
+                padding: '8px 16px', borderRadius: '10px',
+                border: tab === t.key ? '1px solid var(--color-primary-100)' : '1px solid var(--border-subtle)',
+                background: tab === t.key ? 'var(--color-primary-50)' : 'transparent',
+                color: tab === t.key ? 'var(--color-primary-700)' : 'var(--text-secondary)',
+                fontWeight: tab === t.key ? 700 : 500, fontSize: '0.84rem', cursor: 'pointer',
+                fontFamily: 'Cairo, sans-serif',
               }}
             >
-              <div style={{ width: '32px' }} />
-              <div style={{ flex: 1 }}>المتطوع</div>
-              <div style={{ width: '110px', textAlign: 'center' }}>من التطبيق</div>
-              <div style={{ width: '90px', textAlign: 'center' }}>المعتمدة</div>
-              <div style={{ width: '40px' }} />
-              <div style={{ width: '78px' }} />
-            </div>
+              {t.label}
+            </button>
+          ))}
+        </div>
 
-            {data.data.map((v) => {
-              const entry = (v.campaignHours || []).find((c) => c.campaignId === campaign.id)
-              const reportedHours = entry?.appReportedHours ?? 0
-
-              return (
-              <div
-                key={v.id}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '12px',
-                  padding: '10px 14px',
-                  borderRadius: '12px',
-                  border: '1px solid var(--border-subtle)',
-                  background: 'var(--surface)',
-                }}
-              >
-                <Avatar name={v.name} size="sm" />
-
-                <div style={{ flex: 1, textAlign: 'right' }}>
-                  <div style={{ fontWeight: 700, fontSize: '0.92rem', color: 'var(--text-primary)' }}>
-                    {v.name}
-                  </div>
-                  <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>{v.phone}</div>
-                </div>
-
-                {/* ✅ الساعات المُدخلة من تطبيق الموبايل - عرض فقط */}
-                <div
-                  title="الساعات التي أدخلها المتطوع بنفسه من تطبيق الموبايل"
-                  style={{
-                    width: '110px',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px',
-                    height: '40px', borderRadius: '10px',
-                    background: 'var(--bg-muted)', border: '1px solid var(--border-subtle)',
-                    fontSize: '0.85rem', fontWeight: 700, color: 'var(--text-secondary)',
-                  }}
-                >
-                  <Smartphone size={12} />
-                  {reportedHours}
-                </div>
-
-                {/* الساعات المعتمدة - قابلة للتعديل */}
-                <input
-                  className="input"
-                  type="number"
-                  min="0"
-                  step="0.5"
-                  value={hoursMap[v.id] ?? 0}
-                  onChange={(e) => handleHoursChange(v.id, e.target.value)}
-                  style={{ width: '90px', textAlign: 'center', fontSize: '0.9rem' }}
-                />
-                <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)', width: '40px' }}>ساعة</span>
-
-                <PermissionButton
-                  onClick={() => handleSaveRow(v.id)}
-                  disabled={saveMut.isLoading}
-                  style={{
-                    width: '78px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '4px',
-                    padding: '8px 0',
-                    borderRadius: '10px',
-                    border: 'none',
-                    cursor: 'pointer',
-                    fontWeight: 700,
-                    fontSize: '0.8rem',
-                    fontFamily: 'Cairo, sans-serif',
-                    background: 'var(--color-secondary-500)',
-                    color: '#111',
-                  }}
-                >
-                  <Save size={14} />
-                  حفظ
-                </PermissionButton>
-              </div>
-              )
-            })}
+        {isLoading ? (
+          <SpinnerPage />
+        ) : !volunteers.length ? (
+          <EmptyState title="لا يوجد متطوعون بهذه الحالة" />
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            {volunteers.map((v) => (
+              <VolunteerRow
+                key={v.volunteer_id}
+                volunteer={v}
+                campaignId={campaign.id}
+                isFieldWorker={isFieldWorker}
+                isApproved={tab === 'approved'}
+                isPending={tab === 'pending'}
+                expanded={expandedId === v.volunteer_id}
+                onToggleExpand={() =>
+                  setExpandedId((id) => (id === v.volunteer_id ? null : v.volunteer_id))
+                }
+                onApprove={() => statusMut.mutate({ volunteerId: v.volunteer_id, status: 'approved' })}
+                onReject={() => statusMut.mutate({ volunteerId: v.volunteer_id, status: 'rejected' })}
+                mutLoading={statusMut.isLoading}
+              />
+            ))}
           </div>
         )}
       </div>
     </Modal>
+  )
+}
+
+function VolunteerRow({
+  volunteer: v,
+  campaignId,
+  isFieldWorker,
+  isApproved,
+  isPending,
+  expanded,
+  onToggleExpand,
+  onApprove,
+  onReject,
+  mutLoading,
+}) {
+  return (
+    <div
+      style={{
+        borderRadius: '12px', border: '1px solid var(--border-subtle)',
+        background: 'var(--surface)', overflow: 'hidden',
+      }}
+    >
+      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '10px 14px' }}>
+        <Avatar name={v.name} size="sm" />
+
+        <div style={{ flex: 1, textAlign: 'right' }}>
+          <div style={{ fontWeight: 700, fontSize: '0.92rem', color: 'var(--text-primary)' }}>{v.name}</div>
+          <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>{v.phone}</div>
+        </div>
+
+        {isPending && (
+          <>
+            <PermissionButton
+            permission="volunteers.approve"
+              onClick={onApprove}
+              disabled={mutLoading}
+              style={{
+                display: 'flex', alignItems: 'center', gap: 4, padding: '6px 12px',
+                borderRadius: 8, border: 'none', cursor: 'pointer', fontSize: '0.78rem',
+                fontWeight: 700, fontFamily: 'Cairo, sans-serif', background: '#dcfce7', color: '#16a34a',
+              }}
+            >
+              <Check size={13} /> قبول
+            </PermissionButton>
+            <PermissionButton
+             permission="volunteers.reject"
+              onClick={onReject}
+              disabled={mutLoading}
+              style={{
+                display: 'flex', alignItems: 'center', gap: 4, padding: '6px 12px',
+                borderRadius: 8, border: 'none', cursor: 'pointer', fontSize: '0.78rem',
+                fontWeight: 700, fontFamily: 'Cairo, sans-serif', background: '#fee2e2', color: '#dc2626',
+              }}
+            >
+              <X size={13} /> رفض
+            </PermissionButton>
+          </>
+        )}
+
+        {isApproved && (
+          <button
+            onClick={onToggleExpand}
+            style={{
+              display: 'flex', alignItems: 'center', gap: 6, padding: '6px 12px',
+              borderRadius: 8, border: '1px solid var(--border-subtle)', cursor: 'pointer',
+              fontSize: '0.78rem', fontWeight: 700, fontFamily: 'Cairo, sans-serif',
+              background: 'var(--bg-muted)', color: 'var(--text-secondary)',
+            }}
+          >
+            <Clock size={13} />
+            الساعات
+            {expanded ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
+          </button>
+        )}
+      </div>
+
+      {isApproved && expanded && (
+        <VolunteerHoursPanel
+          campaignId={campaignId}
+          volunteerId={v.volunteer_id}
+          isFieldWorker={isFieldWorker}
+        />
+      )}
+    </div>
+  )
+}
+
+function VolunteerHoursPanel({ campaignId, volunteerId, isFieldWorker }) {
+  const qc = useQueryClient()
+  const [form, setForm] = useState({ date: '', hours: '', activity_description: '' })
+
+  const { data, isLoading } = useQuery({
+    queryKey: ['volunteer-hours', campaignId, volunteerId],
+    queryFn: () => volunteersService.getVolunteerHoursInCampaign(campaignId, volunteerId),
+  })
+
+  const addMut = useMutation({
+    mutationFn: (payload) => volunteersService.addVolunteerHours(campaignId, volunteerId, payload),
+    onSuccess: () => {
+      qc.invalidateQueries(['volunteer-hours', campaignId, volunteerId])
+      setForm({ date: '', hours: '', activity_description: '' })
+    },
+  })
+
+  const handleAdd = () => {
+    if (!form.date || !form.hours) return
+    addMut.mutate(form)
+  }
+
+  return (
+    <div style={{ padding: '12px 14px', borderTop: '1px solid var(--border-subtle)', background: 'var(--bg-muted)' }}>
+      {isLoading ? (
+        <SpinnerPage />
+      ) : (
+        <>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10 }}>
+            <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-primary)' }}>
+              سجل الساعات
+            </span>
+            <span style={{ fontSize: '0.8rem', fontWeight: 800, color: 'var(--color-primary-700)' }}>
+              الإجمالي: {data?.total_hours ?? 0} ساعة
+            </span>
+          </div>
+
+          {!data?.entries?.length ? (
+            <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', margin: '0 0 10px' }}>
+              لا توجد ساعات مسجلة بعد.
+            </p>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 10 }}>
+              {data.entries.map((e) => (
+                <div
+                  key={e.id}
+                  style={{
+                    display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                    padding: '8px 10px', borderRadius: 8, background: 'var(--surface)',
+                    border: '1px solid var(--border-subtle)', fontSize: '0.8rem',
+                  }}
+                >
+                  <span style={{ color: 'var(--text-muted)' }}>{e.date}</span>
+                  <span style={{ flex: 1, textAlign: 'center', color: 'var(--text-secondary)' }}>
+                    {e.activity_description || '—'}
+                  </span>
+                  <span style={{ fontWeight: 700, color: 'var(--color-primary-700)' }}>{e.hours} س</span>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* ✅ إضافة سجل ساعات جديد — محصور بدور field_worker فقط بالباك اند */}
+          {isFieldWorker ? (
+            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+              <input
+                type="date"
+                className="input"
+                value={form.date}
+                onChange={(e) => setForm((f) => ({ ...f, date: e.target.value }))}
+                style={{ flex: '1 1 130px' }}
+              />
+              <input
+                type="number"
+                min="0"
+                step="0.5"
+                placeholder="عدد الساعات"
+                className="input"
+                value={form.hours}
+                onChange={(e) => setForm((f) => ({ ...f, hours: e.target.value }))}
+                style={{ width: '110px' }}
+              />
+              <input
+                type="text"
+                placeholder="وصف النشاط (اختياري)"
+                className="input"
+                value={form.activity_description}
+                onChange={(e) => setForm((f) => ({ ...f, activity_description: e.target.value }))}
+                style={{ flex: '2 1 160px' }}
+              />
+              <PermissionButton
+              permission="volunteers.setHours"
+                onClick={handleAdd}
+                disabled={addMut.isLoading || !form.date || !form.hours}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: 4, padding: '8px 14px',
+                  borderRadius: 8, border: 'none', cursor: 'pointer', fontSize: '0.8rem',
+                  fontWeight: 700, fontFamily: 'Cairo, sans-serif',
+                  background: 'var(--color-secondary-500)', color: '#111',
+                }}
+              >
+                <Plus size={14} /> إضافة
+              </PermissionButton>
+            </div>
+          ) : (
+            <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', margin: 0 }}>
+              تسجيل الساعات متاح فقط لحساب "مسؤول ميداني" (field_worker).
+            </p>
+          )}
+        </>
+      )}
+    </div>
   )
 }

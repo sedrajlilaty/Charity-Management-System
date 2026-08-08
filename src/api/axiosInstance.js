@@ -1,7 +1,7 @@
 import axios from 'axios'
 
 const axiosInstance = axios.create({
-    baseURL: 'http://localhost:8000/api',
+    baseURL: 'https://ataa-laravel-api-b5hjgcc2e8bae8fb.polandcentral-01.azurewebsites.net/api',
     headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
@@ -23,6 +23,7 @@ axiosInstance.interceptors.response.use(
     (error) => {
         if (error.response?.status === 401) {
             localStorage.removeItem('token')
+            localStorage.removeItem('user')   // ✅ هاد يلي كان ناقص
             window.location.href = '/login'
         }
         return Promise.reject(error)

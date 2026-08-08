@@ -187,7 +187,7 @@ function CampaignCard({ c, onEdit, onDelete, onClose, onShowVolunteers }) {
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                 }}
               >
-                <XCircle size={15} />
+                <XCircle size={25} />
               </PermissionButton>
             )}
 
@@ -202,13 +202,14 @@ function CampaignCard({ c, onEdit, onDelete, onClose, onShowVolunteers }) {
                 transition: 'all 0.25s ease', boxShadow: '0 4px 12px rgba(220,38,38,0.08)',
               }}
             >
-              <Trash2 size={15} />
+              <Trash2 size={25} />
             </PermissionButton>
           </div>
         </div>
 
         {c.acceptsVolunteers && (
           <PermissionButton
+       permission='volunteers.setHours'
             onClick={() => onShowVolunteers(c)}
             style={{
               width: '100%', marginTop: '8px', height: 36,

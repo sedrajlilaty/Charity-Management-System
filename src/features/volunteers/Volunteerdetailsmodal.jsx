@@ -1,26 +1,14 @@
-// ── VolunteerDetailsModal.jsx ───────────────────────────────────────────────
-// مودال عرض تفاصيل المتطوع للقراءة فقط (بدون أي إمكانية تعديل/إضافة)
-// يحل محل VolunteerModal كزر بالهيدر
-
-import { useTranslation } from 'react-i18next'
-import { Smartphone, Clock, Award } from 'lucide-react'
 import Modal from '../../ui/Modal'
 import { Avatar } from '../../ui/Avatar'
 import { Badge } from '../../ui/Badge'
-import { getTotalHours } from '../certificates/mockVolunteers'
-
-const REQUIRED_HOURS = 50
+import { volunteersService, getSkillLabel, SKILLS_LABELS_AR } from '../../hooks/volunteersService'
 
 function InfoRow({ label, value }) {
   return (
     <div
       style={{
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        padding: '10px 0',
-        borderBottom: '1px solid var(--border-subtle)',
-        fontSize: '0.88rem',
+        display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+        padding: '10px 0', borderBottom: '1px solid var(--border-subtle)', fontSize: '0.88rem',
       }}
     >
       <span style={{ color: 'var(--text-muted)' }}>{label}</span>
@@ -29,18 +17,14 @@ function InfoRow({ label, value }) {
   )
 }
 
-export default function VolunteerDetailsModal({ open, onClose, volunteer }) {
-  const { t } = useTranslation()
+const GENDER_LABELS = { male: 'ذكر', female: 'أنثى' }
 
+export default function VolunteerDetailsModal({ open, onClose, volunteer }) {
   if (!volunteer) return null
 
-  const totalHours = getTotalHours(volunteer)
-  const isEligible = totalHours >= REQUIRED_HOURS
-
   return (
-    <Modal open={open} onClose={onClose} title="تفاصيل المتطوع">
+    <Modal open={open} onClose={onClose} title="تفاصيل طلب التطوع">
       <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-        {/* رأس البطاقة: الاسم والحالة */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           <Avatar name={volunteer.name} size="md" />
           <div style={{ flex: 1 }}>
@@ -52,79 +36,49 @@ export default function VolunteerDetailsModal({ open, onClose, volunteer }) {
           <Badge status={volunteer.status} />
         </div>
 
-        {/* معلومات أساسية */}
         <div>
-          <InfoRow label={t('volunteers.modal.email')} value={volunteer.email} />
-          <InfoRow label={t('volunteers.modal.skill')} value={volunteer.skill && t(`volunteers.modal.skills.${volunteer.skill}`)} />
-          <InfoRow label={t('volunteers.modal.availability')} value={volunteer.availability && t(`volunteers.modal.availability_options.${volunteer.availability}`)} />
-          <InfoRow label={t('volunteers.modal.experience')} value={volunteer.experience && t(`volunteers.modal.experience_options.${volunteer.experience}`)} />
-          {volunteer.notes && <InfoRow label={t('volunteers.modal.notes')} value={volunteer.notes} />}
+          <InfoRow label="البريد الإلكتروني" value={volunteer.email} />
+          <InfoRow label="الجنس" value={GENDER_LABELS[volunteer.gender]} />
+          <InfoRow label="المهنة" value={volunteer.occupation} />
+          <InfoRow label="المحافظة" value={volunteer.governorate} />
+          <InfoRow label="التوفر" value={volunteer.availability} />
         </div>
 
-        {/* ساعات التطوع حسب الحملة - عرض فقط */}
-        <div style={{ paddingTop: '8px', borderTop: '1px solid var(--border-subtle)' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <Clock size={16} style={{ color: 'var(--color-primary-600)' }} />
-              <span style={{ fontWeight: 800, fontSize: '0.92rem', color: 'var(--text-primary)' }}>
-                ساعات التطوع حسب الحملة
-              </span>
+        {!!(volunteer.skills || []).length && (
+          <div>
+            <div style={{ fontSize: '0.85rem', fontWeight: 700, marginBottom: 8, color: 'var(--text-primary)' }}>
+              المهارات
             </div>
-
-            <span
-              style={{
-                display: 'inline-flex', alignItems: 'center', gap: 4,
-                fontSize: '0.8rem', fontWeight: 700,
-                color: 'var(--color-primary-700)',
-                background: 'var(--color-primary-50)',
-                padding: '4px 12px', borderRadius: 99,
-              }}
-            >
-              {isEligible && <Award size={12} />}
-              الإجمالي: {totalHours} ساعة
-            </span>
-          </div>
-
-          {(!volunteer.campaignHours || volunteer.campaignHours.length === 0) ? (
-            <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', margin: 0 }}>
-              لا توجد ساعات مسجلة بعد.
-            </p>
-          ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              {/* رأس الجدول */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '0 4px', fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: 700 }}>
-                <div style={{ flex: 2 }}>الحملة</div>
-                <div style={{ width: '90px', textAlign: 'center' }}>
-                  <Smartphone size={11} style={{ verticalAlign: 'middle', marginInlineEnd: 4 }} />
-                  من التطبيق
-                </div>
-                <div style={{ width: '90px', textAlign: 'center' }}>المعتمدة</div>
-              </div>
-
-              {volunteer.campaignHours.map((c, i) => (
-                <div
-                  key={i}
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+              {volunteer.skills.map((s) => (
+                <span
+                  key={s}
                   style={{
-                    display: 'flex', alignItems: 'center', gap: '10px',
-                    padding: '10px 12px', borderRadius: '10px',
-                    background: 'var(--bg-muted)', border: '1px solid var(--border-subtle)',
-                    fontSize: '0.85rem',
+                    fontSize: '0.78rem', fontWeight: 700, color: 'var(--color-primary-700)',
+                    background: 'var(--color-primary-50)', padding: '4px 10px', borderRadius: 99,
                   }}
                 >
-                  <div style={{ flex: 2, fontWeight: 600, color: 'var(--text-primary)' }}>
-                    {c.campaignName}
-                  </div>
-                  <div style={{ width: '90px', textAlign: 'center', color: 'var(--text-muted)' }}>
-                    {c.appReportedHours ?? 0}
-                  </div>
-                  <div style={{ width: '90px', textAlign: 'center', fontWeight: 700, color: 'var(--color-primary-700)' }}>
-                    {c.hours ?? 0}
-                  </div>
-                </div>
+                  {getSkillLabel(s)}
+                </span>
               ))}
             </div>
-          )}
-        </div>
+          </div>
+        )}
+
+        {volunteer.description && (
+          <div>
+            <div style={{ fontSize: '0.85rem', fontWeight: 700, marginBottom: 6, color: 'var(--text-primary)' }}>
+              نبذة
+            </div>
+            <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', margin: 0, lineHeight: 1.6 }}>
+              {volunteer.description}
+            </p>
+          </div>
+        )}
+
+        {/* ملاحظة: ساعات التطوع الإجمالية غير متوفرة هون لأنو هاد طلب عام
+            وليس مرتبط بحملة. لعرض الساعات لازم صفحة "متطوعي الجمعية المعتمدين"
+            (approved-general-volunteers) أو تفاصيل حسب كل حملة على حدة. */}
       </div>
     </Modal>
   )

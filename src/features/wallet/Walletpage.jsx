@@ -1,8 +1,7 @@
 import { useState, useMemo } from 'react'
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import {
-  Wallet, ArrowDownCircle, ArrowUpCircle,
+  Wallet, ArrowUpCircle,
   Send, TrendingUp, TrendingDown, Search,
   CheckCircle, AlertCircle, X, ChevronDown,
 } from 'lucide-react'
@@ -13,41 +12,14 @@ import { EmptyState }  from '../../ui/EmptyState'
 import DataTable       from '../../ui/DataTable'
 import Pagination      from '../../ui/Pagination'
 import PermissionButton from '../../ui/PermissionButton'
-// import { walletService } from '../../service/ServiceLayer'
-
-// ─── Mock — احذفيه لما يكون الـ API جاهز ─────────────────────────────────────
-const MOCK_SUMMARY = {
-  balance: 87500, totalOut: 60500,
-  changeBalance: 12.4, changeOut: 5.2,
-}
-
-const MOCK_TX = [
-  { id: 1, target: 'حملة الملابس الشتوية', targetType: 'campaign', date: '2024-11-24', amount: 8000,  note: 'صرف لشراء الملابس'   },
-  { id: 2, target: 'أم أحمد الرشيدي',     targetType: 'case',     date: '2024-11-20', amount: 5000,  note: 'دعم شهري'            },
-  { id: 3, target: 'حملة السلة الغذائية', targetType: 'campaign', date: '2024-11-15', amount: 8000,  note: ''                    },
-  { id: 4, target: 'عائلة محمود العلي',   targetType: 'case',     date: '2024-11-10', amount: 3000,  note: 'مساعدة طبية'         },
-  { id: 5, target: 'كفالة الأيتام',        targetType: 'campaign', date: '2024-11-05', amount: 12000, note: ''                    },
-]
-
-const MOCK_CAMPAIGNS = [
-  { id: 'c1', name: 'حملة السلة الغذائية',   raised: 80000, target: 80000,  disbursed: 8000,  status: 'completed' },
-  { id: 'c2', name: 'حملة الملابس الشتوية', raised: 48500, target: 63000,  disbursed: 15000, status: 'active'    },
-  { id: 'c3', name: 'كفالة الأيتام',          raised: 90000, target: 120000, disbursed: 37500, status: 'active'    },
-  { id: 'c4', name: 'دعم الأرامل',            raised: 22000, target: 10000,  disbursed: 0,     status: 'completed' },
-]
-
-const MOCK_CASES = [
-  { id: 'b1', name: 'أم أحمد الرشيدي',   category: 'رعاية أيتام',    raised: 10000, disbursed: 5000  },
-  { id: 'b2', name: 'عائلة محمود العلي', category: 'مساعدة تعليمية', raised: 5000,  disbursed: 0     },
-  { id: 'b3', name: 'أسرة الزهراني',     category: 'مساعدة طبية',    raised: 12000, disbursed: 12000 },
-]
-// ─────────────────────────────────────────────────────────────────────────────
+import { useAuth } from '../../context/AuthContext'
+import { useCampaignsFilterQuery } from '../../hooks/Usecampaigns ' // ⚠️ تأكدي من المسار والمسافة بآخر الاسم متل باقي الصفحات
 
 const LIMIT = 8
 const fmt   = (n) => 'ر.س ' + Number(n).toLocaleString('ar-SA', { maximumFractionDigits: 0 })
 
-// ─── KPI Card — نفس نمط الداشبورد ────────────────────────────────────────────
-function KpiCard({ label, value, change, icon: Icon }) {
+// ─── KPI Card ─────────────────────────────────────────────────
+function KpiCard({ label, value, icon: Icon, change = null }) {
   const up = change >= 0
   return (
     <div
@@ -66,16 +38,18 @@ function KpiCard({ label, value, change, icon: Icon }) {
         <div style={{ width: 38, height: 38, borderRadius: 10, background: 'rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <Icon size={18} color="#eab308" />
         </div>
-        <span style={{
-          display: 'flex', alignItems: 'center', gap: 3,
-          fontSize: '0.68rem', fontWeight: 700,
-          color: up ? '#4ade80' : '#f87171',
-          background: up ? 'rgba(74,222,128,0.12)' : 'rgba(248,113,113,0.12)',
-          padding: '3px 9px', borderRadius: 99,
-        }}>
-          {up ? <TrendingUp size={11} /> : <TrendingDown size={11} />}
-          {Math.abs(change)}%
-        </span>
+        {change !== null && (
+          <span style={{
+            display: 'flex', alignItems: 'center', gap: 3,
+            fontSize: '0.68rem', fontWeight: 700,
+            color: up ? '#4ade80' : '#f87171',
+            background: up ? 'rgba(74,222,128,0.12)' : 'rgba(248,113,113,0.12)',
+            padding: '3px 9px', borderRadius: 99,
+          }}>
+            {up ? <TrendingUp size={11} /> : <TrendingDown size={11} />}
+            {Math.abs(change)}%
+          </span>
+        )}
       </div>
       <div>
         <p style={{ margin: '0 0 6px', fontSize: '0.68rem', fontWeight: 600, color: 'rgba(255,255,255,0.55)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
@@ -89,180 +63,30 @@ function KpiCard({ label, value, change, icon: Icon }) {
   )
 }
 
-// ─── Disburse Modal ───────────────────────────────────────────────────────────
-function DisburseModal({ walletBalance, campaigns, cases, onClose, onConfirm }) {
-  const { t } = useTranslation()
-  const [targetType, setTargetType] = useState('campaign')
-  const [selectedId, setSelectedId] = useState('')
-  const [amount, setAmount]         = useState('')
-  const [note, setNote]             = useState('')
-  const [error, setError]           = useState('')
-
-  const options   = targetType === 'campaign' ? campaigns : cases
-  const selected  = options.find(o => o.id === selectedId)
-  const remaining = selected ? (selected.raised ?? 0) - (selected.disbursed ?? 0) : 0
-
-  function handleConfirm() {
-    const num = parseFloat(amount)
-    if (!selectedId)         { setError(t('wallet.modal.errors.noTarget'));   return }
-    if (!num || num <= 0)    { setError(t('wallet.modal.errors.invalidAmt')); return }
-    if (num > walletBalance) { setError(t('wallet.modal.errors.noBalance'));  return }
-    if (num > remaining)     { setError(t('wallet.modal.errors.overRemain')); return }
-    setError('')
-    onConfirm({ targetType, targetId: selectedId, targetName: selected.name, amount: num, note })
-  }
-
-  const inputStyle = {
-    width: '100%', padding: '9px 12px', borderRadius: 10,
-    border: '1px solid var(--border-default)',
-    fontSize: '0.9rem', background: 'var(--bg-muted)',
-    color: 'var(--text-primary)', fontFamily: 'Cairo, sans-serif', outline: 'none',
-    boxSizing: 'border-box',
-  }
-
-  return (
-    <div
-      style={{ position: 'fixed', inset: 0, zIndex: 100, background: 'rgba(0,0,0,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(3px)' }}
-      onClick={e => e.target === e.currentTarget && onClose()}
-    >
-      <div style={{ background: 'var(--bg-surface)', borderRadius: 20, padding: '1.5rem', width: 440, border: '1px solid var(--border-subtle)', fontFamily: 'Cairo, sans-serif', maxHeight: '90vh', overflowY: 'auto' }}>
-
-        {/* Header */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
-          <div>
-            <p style={{ margin: 0, fontSize: '1.05rem', fontWeight: 800, color: 'var(--text-primary)' }}>{t('wallet.modal.title')}</p>
-            <p style={{ margin: '2px 0 0', fontSize: '0.8rem', color: 'var(--text-muted)' }}>{t('wallet.modal.subtitle')}</p>
-          </div>
-          <button onClick={onClose} style={{ width: 32, height: 32, borderRadius: 10, border: '1px solid var(--border-default)', background: 'var(--bg-muted)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)' }}>
-            <X size={16} />
-          </button>
-        </div>
-
-        {/* رصيد متاح */}
-        <div style={{ background: 'rgba(9,64,55,0.08)', borderRadius: 10, padding: '10px 14px', marginBottom: '1rem', display: 'flex', justifyContent: 'space-between', fontSize: '0.88rem', color: 'var(--color-primary-500)' }}>
-          <span>{t('wallet.modal.available')}</span>
-          <span style={{ fontWeight: 800 }}>{fmt(walletBalance)}</span>
-        </div>
-
-        {/* نوع الوجهة */}
-        <div style={{ marginBottom: 14 }}>
-          <label style={{ fontSize: '0.78rem', color: 'var(--text-muted)', display: 'block', marginBottom: 6, fontWeight: 600 }}>{t('wallet.modal.destination')}</label>
-          <div style={{ display: 'flex', gap: 8 }}>
-            {[['campaign', t('wallet.modal.campaign')], ['case', t('wallet.modal.case')]].map(([val, label]) => (
-              <button key={val} onClick={() => { setTargetType(val); setSelectedId(''); setError('') }}
-                style={{
-                  flex: 1, padding: '9px', borderRadius: 10, fontSize: '0.88rem',
-                  fontFamily: 'Cairo, sans-serif', cursor: 'pointer', fontWeight: 600,
-                  border: `1px solid ${targetType === val ? 'var(--color-primary-500)' : 'var(--border-default)'}`,
-                  background: targetType === val ? 'var(--color-primary-500)' : 'transparent',
-                  color: targetType === val ? '#fff' : 'var(--text-secondary)',
-                  transition: '0.15s',
-                }}
-              >{label}</button>
-            ))}
-          </div>
-        </div>
-
-        {/* اختيار الحملة / الحالة */}
-        <div style={{ marginBottom: 14 }}>
-          <label style={{ fontSize: '0.78rem', color: 'var(--text-muted)', display: 'block', marginBottom: 6, fontWeight: 600 }}>
-            {targetType === 'campaign' ? t('wallet.modal.selectCampaign') : t('wallet.modal.selectCase')}
-          </label>
-          <div style={{ position: 'relative' }}>
-            <select value={selectedId} onChange={e => { setSelectedId(e.target.value); setError('') }} style={{ ...inputStyle, appearance: 'none', paddingLeft: 32 }}>
-              <option value="">— {t('wallet.modal.choose')} —</option>
-              {options.map(o => {
-                const rem = (o.raised ?? 0) - (o.disbursed ?? 0)
-                return <option key={o.id} value={o.id} disabled={rem <= 0}>{o.name} — {t('wallet.modal.remaining')}: {fmt(rem)}</option>
-              })}
-            </select>
-            <ChevronDown size={14} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)', pointerEvents: 'none' }} />
-          </div>
-        </div>
-
-        {/* ملخص الوجهة */}
-        {selected && (
-          <div style={{ background: 'var(--bg-muted)', borderRadius: 10, padding: '10px 14px', marginBottom: 14 }}>
-            {[
-              { label: t('wallet.modal.totalRaised'), val: fmt(selected.raised ?? 0),    color: 'var(--text-primary)' },
-              { label: t('wallet.modal.disbursed'),   val: fmt(selected.disbursed ?? 0), color: '#BA7517'             },
-              { label: t('wallet.modal.remaining'),   val: fmt(remaining),               color: 'var(--color-primary-500)', bold: true  },
-            ].map(({ label, val, color, bold }) => (
-              <div key={label} style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', borderBottom: '0.5px solid var(--border-subtle)', fontSize: '0.82rem' }}>
-                <span style={{ color: 'var(--text-muted)' }}>{label}</span>
-                <span style={{ fontWeight: bold ? 800 : 600, color }}>{val}</span>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {/* المبلغ */}
-        <div style={{ marginBottom: 14 }}>
-          <label style={{ fontSize: '0.78rem', color: 'var(--text-muted)', display: 'block', marginBottom: 6, fontWeight: 600 }}>{t('wallet.modal.amount')}</label>
-          <input type="number" value={amount} placeholder={t('wallet.modal.amountPlaceholder')}
-            onChange={e => { setAmount(e.target.value); setError('') }}
-            style={{ ...inputStyle, border: `1px solid ${error ? '#E24B4A' : 'var(--border-default)'}` }}
-          />
-        </div>
-
-        {/* ملاحظة (اختياري) */}
-        <div style={{ marginBottom: error ? 8 : 16 }}>
-          <label style={{ fontSize: '0.78rem', color: 'var(--text-muted)', display: 'block', marginBottom: 6, fontWeight: 600 }}>{t('wallet.modal.note')} <span style={{ fontWeight: 400, opacity: 0.6 }}>({t('common.optional')})</span></label>
-          <input type="text" value={note} placeholder={t('wallet.modal.notePlaceholder')}
-            onChange={e => setNote(e.target.value)}
-            style={inputStyle}
-          />
-        </div>
-
-        {error && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#A32D2D', fontSize: '0.8rem', marginBottom: 12 }}>
-            <AlertCircle size={14} /> {error}
-          </div>
-        )}
-
-        <div style={{ display: 'flex', gap: 8 }}>
-          <button onClick={onClose} style={{ flex: 1, padding: 10, borderRadius: 10, border: '1px solid var(--border-default)', background: 'transparent', cursor: 'pointer', fontSize: '0.88rem', color: 'var(--text-secondary)', fontFamily: 'Cairo, sans-serif', fontWeight: 600 }}>
-            {t('common.cancel')}
-          </button>
-          <button onClick={handleConfirm} style={{ flex: 1, padding: 10, borderRadius: 10, border: 'none', background: 'var(--color-primary-500)', color: '#fff', cursor: 'pointer', fontSize: '0.88rem', fontWeight: 700, fontFamily: 'Cairo, sans-serif', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
-            <Send size={14} /> {t('wallet.modal.confirm')}
-          </button>
-        </div>
-      </div>
-    </div>
-  )
-}
-
-// ─── Disburse Item Card (حملة أو حالة) ───────────────────────────────────────
-function DisburseCard({ item, onDisburse }) {
+// ─── Disburse Item Card (حملة) ─────────────────────────────────
+function DisburseCard({ item }) {
   const { t }     = useTranslation()
   const raised    = item.raised    ?? 0
   const disbursed = item.disbursed ?? 0
   const target    = item.target    ?? raised
   const remaining = raised - disbursed
   const pct       = Math.min(100, Math.round((raised / (target || 1)) * 100))
-  const fullyDone = remaining <= 0
-  const isCompleted = item.status === 'completed'
+  const isCompleted = item.status === 'completed' || item.status === 'closed'
 
   return (
     <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)', borderRadius: 16, padding: '1.1rem' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 10 }}>
         <p style={{ margin: 0, fontSize: '0.92rem', fontWeight: 700, color: 'var(--text-primary)' }}>{item.name}</p>
         <span style={{
-          background: item.status
-            ? (isCompleted ? 'var(--color-primary-50)' : '#fef3c7')
-            : 'var(--bg-muted)',
-          color: item.status
-            ? (isCompleted ? 'var(--color-primary-500)' : '#92400e')
-            : 'var(--text-muted)',
+          background: isCompleted ? 'var(--color-primary-50)' : '#fef3c7',
+          color: isCompleted ? 'var(--color-primary-500)' : '#92400e',
           padding: '2px 10px', borderRadius: 99, fontSize: '0.72rem', fontWeight: 700,
         }}>
-          {item.category ?? (isCompleted ? t('wallet.status.completed') : t('wallet.status.active'))}
+          {isCompleted ? t('wallet.status.completed') : t('wallet.status.active')}
         </span>
       </div>
 
-      {/* progress bar للحملات فقط */}
-      {item.target && (
+      {target > 0 && (
         <div style={{ marginBottom: 10 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.72rem', color: 'var(--text-muted)', marginBottom: 4 }}>
             <span>{t('wallet.raised')}</span><span>{pct}%</span>
@@ -277,7 +101,7 @@ function DisburseCard({ item, onDisburse }) {
         {[
           { label: t('wallet.totalRaised'), val: fmt(raised),    color: 'var(--text-primary)' },
           { label: t('wallet.disbursed'),   val: fmt(disbursed), color: '#BA7517'             },
-          { label: t('wallet.remaining'),   val: fmt(remaining), color: 'var(--color-primary-500)'             },
+          { label: t('wallet.remaining'),   val: fmt(remaining), color: 'var(--color-primary-500)' },
         ].map(({ label, val, color }) => (
           <div key={label} style={{ background: 'var(--bg-muted)', borderRadius: 8, padding: '6px 8px' }}>
             <p style={{ margin: '0 0 2px', fontSize: '0.65rem', color: 'var(--text-muted)' }}>{label}</p>
@@ -286,75 +110,72 @@ function DisburseCard({ item, onDisburse }) {
         ))}
       </div>
 
-      <PermissionButton
-        onClick={() => !fullyDone && onDisburse()}
-        disabled={fullyDone}
+      {/* ⚠️ زر الصرف معطل مؤقتاً — الباك لسا ما جهز endpoint الصرف */}
+      <button
+        disabled
+        title="قريباً — بانتظار جاهزية الباك اند"
         style={{
           width: '100%', padding: '8px', borderRadius: 10, fontSize: '0.82rem',
-          border: 'none', cursor: fullyDone ? 'default' : 'pointer',
+          border: 'none', cursor: 'not-allowed',
           fontFamily: 'Cairo, sans-serif', fontWeight: 700,
-          background: fullyDone ? 'var(--bg-muted)' : 'var(--color-primary-500)',
-          color: fullyDone ? 'var(--text-muted)' : '#fff',
+          background: 'var(--bg-muted)', color: 'var(--text-muted)',
           display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-          transition: '0.15s', opacity: fullyDone ? 0.7 : 1,
+          opacity: 0.6,
         }}
       >
-        {fullyDone
-          ? <><CheckCircle size={14} /> {t('wallet.fullyDisbursed')}</>
-          : <><Send size={14} /> {t('wallet.disburse')}</>
-        }
-      </PermissionButton>
+        <Send size={14} /> {t('wallet.disburse')} (قريباً)
+      </button>
     </div>
   )
 }
 
-// ─── Main Page ────────────────────────────────────────────────────────────────
+// ─── Main Page ────────────────────────────────────────────────
 export default function WalletPage() {
-  const { t }  = useTranslation()
-  const qc     = useQueryClient()
+  const { t }    = useTranslation()
+  const { user } = useAuth()
 
-  const [txFilter,   setTxFilter]   = useState('all')   // all | campaign | case
-  const [search,     setSearch]     = useState('')
-  const [page,       setPage]       = useState(1)
-  const [showModal,  setShowModal]  = useState(false)
-  const [toast,      setToast]      = useState(null)
+  const [txFilter, setTxFilter] = useState('all')
+  const [search,   setSearch]   = useState('')
+  const [page,     setPage]     = useState(1)
 
-  // ── data (استبدليها بـ useQuery) ──
-  const [summary,   setSummary]   = useState(MOCK_SUMMARY)
-  const [allTx,     setAllTx]     = useState(MOCK_TX)
-  const [campaigns, setCampaigns] = useState(MOCK_CAMPAIGNS)
-  const [cases,     setCases]     = useState(MOCK_CASES)
+  // ✅ البالانس — من اليوزر المسجل دخول (الأدمن) مباشرة عبر AuthContext
+  const balance = Number(user?.balances?.USD || 0)
 
-  // فلترة المعاملات
+  // ✅ الحملات — نفس الـ hook المستخدم بصفحة Campaigns.jsx
+  const { data: campaignsData, isLoading: campaignsLoading } = useCampaignsFilterQuery({
+    per_page: 100,
+  })
+
+  const campaigns = useMemo(() => {
+    return (campaignsData?.items ?? []).map(c => ({
+      id:        c.id,
+      name:      c.title,
+      raised:    c.amountCollected ?? 0,
+      disbursed: 0, // ⚠️ الباك لسا ما عندو حقل disbursed بالحملة — مؤقتاً 0
+      target:    c.amountNeeded ?? 0,
+      status:    c.status,
+    }))
+  }, [campaignsData])
+
+  // ⚠️ لسا ما ربطنا المستفيدين (الحالات) بهاد القسم
+  const cases = []
+
+  // ⚠️ لسا ما في endpoint لسجل المعاملات
+  const allTx = []
+
   const filteredTx = useMemo(() => {
     return allTx.filter(tx => {
       const matchType = txFilter === 'all' || tx.targetType === txFilter
-      const matchSrch = !search.trim() || tx.target.includes(search) || (tx.note ?? '').includes(search)
+      const matchSrch = !search.trim() || tx.target?.includes(search) || (tx.note ?? '').includes(search)
       return matchType && matchSrch
     })
   }, [allTx, txFilter, search])
 
   const paged = filteredTx.slice((page - 1) * LIMIT, page * LIMIT)
 
-  function showToast(msg, error = false) {
-    setToast({ msg, error })
-    setTimeout(() => setToast(null), 3500)
-  }
-
-  function handleDisburse({ targetType, targetId, targetName, amount, note }) {
-    // disburseMut.mutate({ targetType, targetId, amount, note })
-    setSummary(s => ({ ...s, balance: s.balance - amount, totalOut: s.totalOut + amount }))
-    if (targetType === 'campaign') setCampaigns(prev => prev.map(c => c.id === targetId ? { ...c, disbursed: c.disbursed + amount } : c))
-    else                           setCases(prev =>     prev.map(c => c.id === targetId ? { ...c, disbursed: c.disbursed + amount } : c))
-    setAllTx(prev => [{ id: prev.length + 1, target: targetName, targetType, date: new Date().toISOString().slice(0, 10), amount, note }, ...prev])
-    setShowModal(false)
-    showToast(`${t('wallet.toast.success')} ${targetName}`)
-  }
-
-  // ── columns جدول المصروفات ──
   const TYPE_META = {
-    campaign: { bg: 'var(--color-primary-50)', text: 'var(--color-primary-500)',         label: t('wallet.type.campaign') },
-    case:     { bg: '#fef3c7',                 text: '#92400e',         label: t('wallet.type.case')     },
+    campaign: { bg: 'var(--color-primary-50)', text: 'var(--color-primary-500)', label: t('wallet.type.campaign') },
+    case:     { bg: '#fef3c7',                 text: '#92400e',                  label: t('wallet.type.case')     },
   }
 
   const columns = useMemo(() => [
@@ -387,7 +208,6 @@ export default function WalletPage() {
     },
   ], [t])
 
-  // ── tab style (نفس نمط Donations) ──
   const tabStyle = (active) => ({
     display: 'flex', alignItems: 'center', justifyContent: 'center',
     padding: '9px 18px', borderRadius: 14,
@@ -403,34 +223,34 @@ export default function WalletPage() {
 
       {/* Header */}
       <PageHeader title={t('wallet.title')} subtitle={t('wallet.subtitle')}>
-        <PermissionButton
-          onClick={() => setShowModal(true)}
+        {/* ⚠️ زر الصرف العام معطل مؤقتاً لحد ما يجهز الباك */}
+        <button
+          disabled
+          title="قريباً — بانتظار جاهزية الباك اند"
           style={{
             display: 'flex', alignItems: 'center', gap: 8,
             padding: '10px 20px', borderRadius: 14, border: 'none',
-            background: 'var(--color-secondary-500)', color: '#111',
-            cursor: 'pointer', fontSize: '0.9rem', fontWeight: 700,
-            fontFamily: 'Cairo, sans-serif',
+            background: 'var(--bg-muted)', color: 'var(--text-muted)',
+            cursor: 'not-allowed', fontSize: '0.9rem', fontWeight: 700,
+            fontFamily: 'Cairo, sans-serif', opacity: 0.6,
           }}
         >
-          <Send size={15} /> {t('wallet.disburseBtn')}
-        </PermissionButton>
+          <Send size={15} /> {t('wallet.disburseBtn')} (قريباً)
+        </button>
       </PageHeader>
 
-      {/* KPI Cards */}
+      {/* KPI Cards — بس البالانس حالياً، totalOut محذوف مؤقتاً */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 16 }}>
-        <KpiCard label={t('wallet.kpi.balance')}  value={fmt(summary.balance)}  change={summary.changeBalance}  icon={Wallet}          />
-        <KpiCard label={t('wallet.kpi.totalOut')} value={fmt(summary.totalOut)} change={-summary.changeOut}     icon={ArrowUpCircle}   />
+        <KpiCard label={t('wallet.kpi.balance')} value={fmt(balance)} icon={Wallet} />
       </div>
 
-      {/* Disbursements Table */}
+      {/* Disbursements Table — فاضي مؤقتاً لحد ما يجهز endpoint المعاملات */}
       <Card style={{ borderRadius: 24, overflow: 'hidden', padding: 0, background: 'var(--bg-base)' }}>
         <div style={{ padding: '22px 24px', borderBottom: '1px solid var(--border-subtle)' }}>
           <h3 style={{ margin: 0, fontSize: '1.05rem', fontWeight: 800, color: 'var(--text-primary)' }}>{t('wallet.txTitle')}</h3>
           <p style={{ margin: '6px 0 0', fontSize: '0.88rem', color: 'var(--text-muted)' }}>{t('wallet.txSubtitle')}</p>
         </div>
 
-        {/* Filter Row */}
         <Card style={{ margin: 16, borderRadius: 16, padding: 16 }}>
           <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
@@ -461,50 +281,33 @@ export default function WalletPage() {
         </div>
       </Card>
 
-      {/* Disbursement Cards */}
+      {/* Disbursement Cards — الحملات الحقيقية */}
       <div>
-        {/* الحملات */}
         <p style={{ margin: '0 0 10px', fontSize: '0.78rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
           {t('wallet.campaigns')}
         </p>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: 16, marginBottom: 24 }}>
-          {campaigns.map(c => <DisburseCard key={c.id} item={c} onDisburse={() => setShowModal(true)} />)}
-        </div>
+        {campaignsLoading ? (
+          <SpinnerPage />
+        ) : campaigns.length === 0 ? (
+          <EmptyState title={t('wallet.empty')} />
+        ) : (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: 16, marginBottom: 24 }}>
+            {campaigns.map(c => <DisburseCard key={c.id} item={c} />)}
+          </div>
+        )}
 
-        {/* الحالات */}
+        {/* الحالات — لسا ما ربطناها */}
         <p style={{ margin: '0 0 10px', fontSize: '0.78rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
           {t('wallet.cases')}
         </p>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: 16 }}>
-          {cases.map(c => <DisburseCard key={c.id} item={c} onDisburse={() => setShowModal(true)} />)}
-        </div>
+        {cases.length === 0 ? (
+          <EmptyState title={t('wallet.empty')} />
+        ) : (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: 16 }}>
+            {cases.map(c => <DisburseCard key={c.id} item={c} />)}
+          </div>
+        )}
       </div>
-
-      {/* Modal */}
-      {showModal && (
-        <DisburseModal
-          walletBalance={summary.balance}
-          campaigns={campaigns}
-          cases={cases}
-          onClose={() => setShowModal(false)}
-          onConfirm={handleDisburse}
-        />
-      )}
-
-      {/* Toast */}
-      {toast && (
-        <div style={{
-          position: 'fixed', bottom: '1.5rem', right: '1.5rem', zIndex: 200,
-          background: toast.error ? '#A32D2D' : 'var(--color-primary-500)',
-          color: '#fff', padding: '12px 20px', borderRadius: 12,
-          fontSize: '0.88rem', fontFamily: 'Cairo, sans-serif', fontWeight: 600,
-          display: 'flex', alignItems: 'center', gap: 8,
-          boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
-        }}>
-          {toast.error ? <AlertCircle size={16} /> : <CheckCircle size={16} />}
-          {toast.msg}
-        </div>
-      )}
     </div>
   )
 }
