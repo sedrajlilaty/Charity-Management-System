@@ -225,7 +225,7 @@ export default function Dashboard() {
         {dl ? <SpinnerPage /> : (
           <ModernTable
             title={t('dashboard.recentDonations')}
-            headers={[t('common.name'), t('common.SAR'), t('common.status'), t('common.date')]}
+            headers={[t('common.name'), t('common.SAR'), t('common.date')]}
             onViewAll={() => {}}
           >
             {recentDon?.map(d => (
@@ -233,7 +233,7 @@ export default function Dashboard() {
                 {/* الباك اند بيرجع donor.name مش donorName */}
                 <Td bold>{d.donor?.anonymous ? 'مجهول' : d.donor?.name ?? '—'}</Td>
                 <Td accent bold>{formatCurrency(d.amount_usd)}</Td>
-                <td style={{ padding: '11px 16px' }}><Badge status={d.target?.status ?? 'pending'} /></td>
+                {/* <td style={{ padding: '11px 16px' }}><Badge status={d.target?.status ?? 'pending'} /></td> */}
                 <Td muted>{formatDate(d.created_at)}</Td>
               </Tr>
             ))}

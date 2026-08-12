@@ -5,7 +5,7 @@ import {
   X, CheckCircle, XCircle, Archive, MapPin,
   Phone, AlertCircle, ChevronRight,
   FileText, Heart, User, BookOpen, GraduationCap,
-  Mail, DollarSign, ExternalLink,
+  Mail, DollarSign, ExternalLink, ImagePlus, Camera,
 } from 'lucide-react'
 import { Badge }          from '../../ui/Badge'
 import { formatCurrency } from '../../utlis/helper'
@@ -210,6 +210,26 @@ function PublishStep({ caseData, form, setForm, errors }) {
   const cat     = CAT_CFG[caseData.category]
   const CatIcon = cat?.icon
 
+  const [previewUrl, setPreviewUrl] = useState(null)
+
+  // إنشاء/تنظيف preview URL للصورة الجديدة المختارة
+  useEffect(() => {
+    if (form.personal_picture instanceof File) {
+      const url = URL.createObjectURL(form.personal_picture)
+      setPreviewUrl(url)
+      return () => URL.revokeObjectURL(url)
+    }
+    setPreviewUrl(null)
+  }, [form.personal_picture])
+
+  const displayedImage = previewUrl ?? fileUrl(caseData.personal_picture)
+
+  const handleImageChange = (e) => {
+    const file = e.target.files?.[0]
+    if (file) set('personal_picture', file)
+    e.target.value = '' // يسمح باختيار نفس الملف مرتين
+  }
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.125rem' }}>
 
@@ -233,6 +253,43 @@ function PublishStep({ caseData, form, setForm, errors }) {
         <p style={{ margin: 0, fontSize: '0.8rem', color: '#78350f', lineHeight: 1.5 }}>
           بعد القبول سيتم نشر الحالة وإتاحتها للتبرع. تأكد من صحة المعلومات.
         </p>
+      </div>
+
+      {/* صورة الحالة */}
+      <div>
+        <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-primary)', marginBottom: 6 }}>
+          {t('beneficiaries.publish.imageLabel', { defaultValue: 'صورة الحالة' })}
+        </label>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+          <div style={{
+            width: 84, height: 84, borderRadius: 14, flexShrink: 0, overflow: 'hidden',
+            background: 'var(--bg-muted)', border: '1px dashed var(--border-default)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}>
+            {displayedImage
+              ? <img src={displayedImage} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={e => { e.currentTarget.style.display = 'none' }} />
+              : <Camera size={22} style={{ color: 'var(--text-muted)' }} />
+            }
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            <label style={{
+              display: 'inline-flex', alignItems: 'center', gap: 6, cursor: 'pointer',
+              padding: '8px 14px', borderRadius: 10, fontSize: '0.8rem', fontWeight: 700,
+              background: 'var(--bg-muted)', color: 'var(--color-primary-500)',
+              border: '1px solid var(--border-default)', width: 'fit-content',
+            }}>
+              <ImagePlus size={14} />
+              {displayedImage
+                ? t('beneficiaries.publish.changeImage', { defaultValue: 'تغيير الصورة' })
+                : t('beneficiaries.publish.uploadImage', { defaultValue: 'رفع صورة' })
+              }
+              <input type="file" accept="image/*" onChange={handleImageChange} style={{ display: 'none' }} />
+            </label>
+            <p style={{ margin: 0, fontSize: '0.7rem', color: 'var(--text-muted)' }}>
+              {t('beneficiaries.publish.imageHint', { defaultValue: 'ستظهر هذه الصورة مع الحالة المنشورة (JPG, PNG)' })}
+            </p>
+          </div>
+        </div>
       </div>
 
       {/* العنوان */}
@@ -286,7 +343,7 @@ function PublishStep({ caseData, form, setForm, errors }) {
 export default function BeneficiaryCaseView({ isOpen, onClose, caseData, initialStep = 'view', onApprove, onReject, onArchive }) {
   const { t } = useTranslation()
   const [step,   setStep]   = useState(initialStep)
-  const [form,   setForm]   = useState({ title: '', description: '', required_amount: '' })
+  const [form,   setForm]   = useState({ title: '', description: '', required_amount: '', personal_picture: null })
   const [errors, setErrors] = useState({})
   const [saving, setSaving] = useState(false)
 
@@ -294,9 +351,10 @@ export default function BeneficiaryCaseView({ isOpen, onClose, caseData, initial
     if (isOpen) {
       setStep(initialStep)
       setForm({
-        title:           caseData?.title           ?? '',
-        description:     caseData?.description     ?? '',
-        required_amount: caseData?.required_amount ?? '',
+        title:            caseData?.title           ?? '',
+        description:      caseData?.description     ?? '',
+        required_amount:  caseData?.required_amount ?? '',
+        personal_picture: null,
       })
       setErrors({})
     }
@@ -318,10 +376,11 @@ export default function BeneficiaryCaseView({ isOpen, onClose, caseData, initial
     setSaving(true)
     try {
       await onApprove?.({
-        id:              caseData.id,
-        caseTitle:       form.title,
-        caseDescription: form.description,
-        required_amount: form.required_amount,
+        id:               caseData.id,
+        caseTitle:        form.title,
+        caseDescription:  form.description,
+        required_amount:  form.required_amount,
+        personal_picture: form.personal_picture, // File جديد أو null (يبقى القديم بدون تعديل)
       })
       onClose()
     } catch (err) {

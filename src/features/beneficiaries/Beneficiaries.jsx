@@ -18,6 +18,7 @@ import { ActionModal }         from '../../ui/ActionModal'
 import ExportPDFPermissionButton from '../../ui/Pdfexportbutton'
 import { usePDFReport }        from '../../hooks/Usepdfexport'
 import { formatCurrency }      from '../../utlis/helper'
+import PDFPreviewModal from '../../ui/PDFPreviewModal'
 import {
   usePendingRequests,
   useOpenAcceptedPatients,
@@ -59,8 +60,10 @@ function CatBadge({ category }) {
 export default function Beneficiaries() {
   const { t }  = useTranslation()
   const [params, setParams] = useSearchParams()
-  const { exportBeneficiaries, isExporting } = usePDFReport()
-
+const {
+  exportBeneficiaries, isExporting,
+  previewUrl, closePreview, confirmDownload,
+} = usePDFReport()
   const search   = params.get('search')   || ''
   const status   = params.get('status')   || ''
   const category = params.get('category') || ''
@@ -184,13 +187,15 @@ export default function Beneficiaries() {
   }
 
   // ── قبول الطلب ───────────────────────────────────────────
+ // ── قبول الطلب ───────────────────────────────────────────
   const handleApproveAndPublish = async (enrichedData) => {
     try {
       await acceptMut.mutateAsync({
-        id:              enrichedData.id,
-        title:           enrichedData.caseTitle       ?? enrichedData.title,
-        description:     enrichedData.caseDescription ?? enrichedData.description,
-        required_amount: enrichedData.required_amount,
+        id:               enrichedData.id,
+        title:            enrichedData.caseTitle       ?? enrichedData.title,
+        description:      enrichedData.caseDescription ?? enrichedData.description,
+        required_amount:  enrichedData.required_amount,
+        personal_picture: enrichedData.personal_picture instanceof File ? enrichedData.personal_picture : undefined,
       })
       toast.success(t('beneficiaries.toast.acceptSuccess', { defaultValue: 'تم قبول الطلب ونشره ✅' }))
     } catch (err) {
@@ -335,8 +340,11 @@ export default function Beneficiaries() {
             <button style={viewBtn(view === 'table')} onClick={() => setView('table')}><TableIcon size={15} /></button>
             <button style={viewBtn(view === 'map')}   onClick={() => setView('map')}><Map size={15} /></button>
           </div>
-          <ExportPDFPermissionButton onClick={() => exportBeneficiaries(pageData)} loading={isExporting} label={t('common.export')} />
-          <button
+<ExportPDFPermissionButton
+  onClick={() => exportBeneficiaries(pageData)}
+  loading={isExporting}
+  label={t('common.export')}
+/>        <button
             className="btn-primary"
             onClick={() => { setEditItem(null); setModalOpen(true) }}
             style={{ background: 'var(--color-secondary-500)', color: '#111', borderRadius: '14px', padding: '10px 18px', display: 'flex', alignItems: 'center', gap: 6, border: 'none', cursor: 'pointer', fontFamily: 'Cairo, sans-serif', fontWeight: 700, fontSize: '0.88rem' }}
@@ -457,6 +465,7 @@ export default function Beneficiaries() {
         onAction={handleAction}
         row={selectedRow}
       />
+      <PDFPreviewModal url={previewUrl} onClose={closePreview} onDownload={confirmDownload} />
     </div>
   )
 }

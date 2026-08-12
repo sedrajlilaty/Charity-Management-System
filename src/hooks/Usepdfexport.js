@@ -29,6 +29,7 @@ const C = {
   red: [254, 242, 242],
 }
 
+
 // ─── Loader — يدعم npm import و CDN على حد سواء ──────────────────────────────
 async function getJsPDF() {
   // أولاً — هل jsPDF محمّل من CDN؟
@@ -152,7 +153,38 @@ export function usePDFReport() {
   const { i18n } = useTranslation()
   const isAr = i18n.language?.startsWith('ar')
   const [isExporting, setIsExporting] = useState(false)
+  const [previewUrl, setPreviewUrl] = useState(null)
+  const [previewName, setPreviewName] = useState('report.pdf')
 
+  const CAT_LABELS = {
+    patient: isAr ? 'مريض' : 'Patient',
+    orphan: isAr ? 'يتيم' : 'Orphan',
+    school_student: isAr ? 'طالب مدرسة' : 'School Student',
+    university_student: isAr ? 'طالب جامعة' : 'University Student',
+  }
+  const previewDoc = useCallback((doc, name) => {
+    const blob = doc.output('blob')
+    const url = URL.createObjectURL(blob)
+    setPreviewUrl(url)
+    setPreviewName(name)
+  }, [])
+
+  // ← جديد: تأكيد التنزيل من جوا المودال
+  const confirmDownload = useCallback(() => {
+    if (!previewUrl) return
+    const a = document.createElement('a')
+    a.href = previewUrl
+    a.download = previewName
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+  }, [previewUrl, previewName])
+
+  // ← جديد: إغلاق المعاينة وتنظيف الذاكرة
+  const closePreview = useCallback(() => {
+    if (previewUrl) URL.revokeObjectURL(previewUrl)
+    setPreviewUrl(null)
+  }, [previewUrl])
   // ── التبرعات ────────────────────────────────────────────────────────────────
   const exportDonations = useCallback(async (rows = []) => {
     setIsExporting(true)
@@ -196,35 +228,35 @@ export function usePDFReport() {
         ]),
       })
 
-      footer(doc)
-      saveDoc(doc, `donations-${Date.now()}.pdf`)
+        + footer(doc)
+        + previewDoc(doc, `donations-${Date.now()}.pdf`)
     } finally {
       setIsExporting(false)
     }
   }, [isAr])
 
   // ── المستفيدون ──────────────────────────────────────────────────────────────
+  // ── المستفيدون ──────────────────────────────────────────────────────────────
   const exportBeneficiaries = useCallback(async (rows = []) => {
     setIsExporting(true)
+
     try {
+      console.log('🔍 rows sample:', rows[0])
       const JsPDF = await getJsPDF()
       const doc = new JsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' })
 
       const y0 = header(doc, isAr ? 'تقرير المستفيدين' : 'Beneficiaries Report')
 
-      const active = rows.filter(b => b.status === 'active').length
+      const accepted = rows.filter(b => b.status === 'accepted').length
       const pending = rows.filter(b => b.status === 'pending').length
-      const totalSup = rows.reduce((s, b) => s + (b.monthlySupport ?? 0), 0)
+      const totalSup = rows.reduce((s, b) => s + (b.required_amount ?? 0), 0)
 
       const y1 = statsRow(doc, [
         { label: isAr ? 'الإجمالي' : 'Total', value: rows.length, fill: C.light },
-        { label: isAr ? 'نشطة' : 'Active', value: active, fill: C.green },
+        { label: isAr ? 'نشطة' : 'Active', value: accepted, fill: C.green },
         { label: isAr ? 'انتظار' : 'Pending', value: pending, fill: C.yellow },
-        { label: isAr ? 'الدعم الشهري' : 'Monthly Total', value: `${totalSup.toLocaleString()} ${isAr ? 'ر.س' : 'SAR'}`, fill: C.blue },
+        { label: isAr ? 'إجمالي المبالغ' : 'Total Amount', value: `${totalSup.toLocaleString()} ${isAr ? 'ر.س' : 'SAR'}`, fill: C.blue },
       ], y0)
-
-      const CAT = { orphan: isAr ? 'يتيم' : 'Orphan', educational: isAr ? 'تعليم' : 'Education', medical: isAr ? 'طبي' : 'Medical', widow: isAr ? 'أرملة' : 'Widow', poor: isAr ? 'محدود' : 'Low-income' }
-      const PRI = { high: isAr ? 'عالية' : 'High', medium: isAr ? 'متوسطة' : 'Medium', low: isAr ? 'منخفضة' : 'Low' }
 
       table(doc, {
         startY: y1,
@@ -232,27 +264,23 @@ export function usePDFReport() {
           isAr ? 'الاسم' : 'Name',
           isAr ? 'الهاتف' : 'Phone',
           isAr ? 'الفئة' : 'Category',
-          isAr ? 'الأولوية' : 'Priority',
-          isAr ? 'الدعم الشهري' : 'Monthly Support',
-          isAr ? 'عدد الأفراد' : 'Members',
-          isAr ? 'العنوان' : 'Address',
+          isAr ? 'المحافظة' : 'Governorate',
+          isAr ? 'المبلغ المطلوب' : 'Required Amount',
           isAr ? 'الحالة' : 'Status',
         ]],
         body: rows.map((b, i) => [
           i + 1,
-          b.name ?? '—',
+          b.full_name ?? '—',
           b.phone ?? '—',
-          CAT[b.category] ?? b.category ?? '—',
-          PRI[b.priority] ?? b.priority ?? '—',
-          b.monthlySupport > 0 ? `${b.monthlySupport.toLocaleString()} ${isAr ? 'ر.س' : 'SAR'}` : '—',
-          b.membersCount ?? '—',
-          b.address ?? '—',
+          CAT_LABELS[b.category] ?? b.category ?? '—',// شوفي الملاحظة تحت
+          [b.governorate, b.region].filter(Boolean).join(' - ') || '—',
+          b.required_amount > 0 ? `${b.required_amount.toLocaleString()} ${isAr ? 'ر.س' : 'SAR'}` : '—',
           b.status ?? '—',
         ]),
       })
 
-      footer(doc)
-      saveDoc(doc, `beneficiaries-${Date.now()}.pdf`)
+        + footer(doc)
+        + previewDoc(doc, `beneficiaries-${Date.now()}.pdf`)
     } finally {
       setIsExporting(false)
     }
@@ -299,12 +327,17 @@ export function usePDFReport() {
         ]),
       })
 
-      footer(doc)
-      saveDoc(doc, `volunteers-${Date.now()}.pdf`)
+        + footer(doc)
+        + previewDoc(doc, `volunteers-${Date.now()}.pdf`)
     } finally {
       setIsExporting(false)
     }
   }, [isAr])
 
-  return { exportDonations, exportBeneficiaries, exportVolunteers, isExporting }
+  return {
+    exportDonations, exportBeneficiaries, exportVolunteers, isExporting, previewUrl,
+    closePreview,
+    confirmDownload,
+    previewDoc
+  }
 }
