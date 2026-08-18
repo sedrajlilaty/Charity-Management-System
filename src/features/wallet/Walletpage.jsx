@@ -1,26 +1,30 @@
-import { useState, useMemo } from 'react'
+import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
+import { toast } from 'react-hot-toast'
 import {
-  Wallet, ArrowUpCircle,
-  Send, TrendingUp, TrendingDown, Search,
-  CheckCircle, AlertCircle, X, ChevronDown,
+  Wallet,
+  Send,
+  Loader2,
 } from 'lucide-react'
 import { Card }        from '../../ui/Card'
 import { PageHeader }  from '../../ui/PageHeader'
 import { SpinnerPage } from '../../ui/Spinner'
 import { EmptyState }  from '../../ui/EmptyState'
-import DataTable       from '../../ui/DataTable'
-import Pagination      from '../../ui/Pagination'
 import PermissionButton from '../../ui/PermissionButton'
 import { useAuth } from '../../context/AuthContext'
-import { useCampaignsFilterQuery } from '../../hooks/Usecampaigns ' // ⚠️ تأكدي من المسار والمسافة بآخر الاسم متل باقي الصفحات
 
-const LIMIT = 8
-const fmt   = (n) => 'ر.س ' + Number(n).toLocaleString('ar-SA', { maximumFractionDigits: 0 })
+import {
+  usePendingCampaigns,
+  usePendingRequests,
+  useMonthlyDisbursementReport,
+  useDisburseCampaign,
+  useDisburseRequest,
+} from '../../hooks/useDisburse'
+
+const fmt = (n) => 'ر.س ' + Number(n).toLocaleString('ar-SA', { maximumFractionDigits: 0 })
 
 // ─── KPI Card ─────────────────────────────────────────────────
-function KpiCard({ label, value, icon: Icon, change = null }) {
-  const up = change >= 0
+function KpiCard({ label, value, icon: Icon }) {
   return (
     <div
       style={{
@@ -34,22 +38,8 @@ function KpiCard({ label, value, icon: Icon, change = null }) {
       onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 6px 20px rgba(9,64,55,0.3)' }}
       onMouseLeave={e => { e.currentTarget.style.transform = 'none';              e.currentTarget.style.boxShadow = '0 2px 12px rgba(9,64,55,0.2)' }}
     >
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <div style={{ width: 38, height: 38, borderRadius: 10, background: 'rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <Icon size={18} color="#eab308" />
-        </div>
-        {change !== null && (
-          <span style={{
-            display: 'flex', alignItems: 'center', gap: 3,
-            fontSize: '0.68rem', fontWeight: 700,
-            color: up ? '#4ade80' : '#f87171',
-            background: up ? 'rgba(74,222,128,0.12)' : 'rgba(248,113,113,0.12)',
-            padding: '3px 9px', borderRadius: 99,
-          }}>
-            {up ? <TrendingUp size={11} /> : <TrendingDown size={11} />}
-            {Math.abs(change)}%
-          </span>
-        )}
+      <div style={{ width: 38, height: 38, borderRadius: 10, background: 'rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <Icon size={18} color="#eab308" />
       </div>
       <div>
         <p style={{ margin: '0 0 6px', fontSize: '0.68rem', fontWeight: 600, color: 'rgba(255,255,255,0.55)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
@@ -63,26 +53,22 @@ function KpiCard({ label, value, icon: Icon, change = null }) {
   )
 }
 
-// ─── Disburse Item Card (حملة) ─────────────────────────────────
-function DisburseCard({ item }) {
-  const { t }     = useTranslation()
-  const raised    = item.raised    ?? 0
-  const disbursed = item.disbursed ?? 0
-  const target    = item.target    ?? raised
-  const remaining = raised - disbursed
-  const pct       = Math.min(100, Math.round((raised / (target || 1)) * 100))
-  const isCompleted = item.status === 'completed' || item.status === 'closed'
+// ─── Disburse Item Card (حملة / حالة) — فيها زر صرف فردي ───
+function DisburseCard({ item, onDisburse, isDisbursing }) {
+  const { t }  = useTranslation()
+  const raised = item.raised ?? 0
+  const target = item.target ?? raised
+  const pct    = Math.min(100, Math.round((raised / (target || 1)) * 100))
 
   return (
     <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)', borderRadius: 16, padding: '1.1rem' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 10 }}>
         <p style={{ margin: 0, fontSize: '0.92rem', fontWeight: 700, color: 'var(--text-primary)' }}>{item.name}</p>
         <span style={{
-          background: isCompleted ? 'var(--color-primary-50)' : '#fef3c7',
-          color: isCompleted ? 'var(--color-primary-500)' : '#92400e',
+          background: '#fef3c7', color: '#92400e',
           padding: '2px 10px', borderRadius: 99, fontSize: '0.72rem', fontWeight: 700,
         }}>
-          {isCompleted ? t('wallet.status.completed') : t('wallet.status.active')}
+          {t('wallet.status.pendingDisburse', { defaultValue: 'بانتظار الصرف' })}
         </span>
       </div>
 
@@ -92,39 +78,38 @@ function DisburseCard({ item }) {
             <span>{t('wallet.raised')}</span><span>{pct}%</span>
           </div>
           <div style={{ height: 6, background: 'var(--bg-muted)', borderRadius: 10, overflow: 'hidden' }}>
-            <div style={{ height: '100%', width: `${pct}%`, background: isCompleted ? '#eab308' : 'var(--color-primary-500)', borderRadius: 10, transition: 'width 0.3s' }} />
+            <div style={{ height: '100%', width: `${pct}%`, background: 'var(--color-primary-500)', borderRadius: 10, transition: 'width 0.3s' }} />
           </div>
         </div>
       )}
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 6, marginBottom: 12 }}>
-        {[
-          { label: t('wallet.totalRaised'), val: fmt(raised),    color: 'var(--text-primary)' },
-          { label: t('wallet.disbursed'),   val: fmt(disbursed), color: '#BA7517'             },
-          { label: t('wallet.remaining'),   val: fmt(remaining), color: 'var(--color-primary-500)' },
-        ].map(({ label, val, color }) => (
-          <div key={label} style={{ background: 'var(--bg-muted)', borderRadius: 8, padding: '6px 8px' }}>
-            <p style={{ margin: '0 0 2px', fontSize: '0.65rem', color: 'var(--text-muted)' }}>{label}</p>
-            <p style={{ margin: 0, fontSize: '0.78rem', fontWeight: 700, color }}>{val}</p>
-          </div>
-        ))}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6, marginBottom: 12 }}>
+        <div style={{ background: 'var(--bg-muted)', borderRadius: 8, padding: '6px 8px' }}>
+          <p style={{ margin: '0 0 2px', fontSize: '0.65rem', color: 'var(--text-muted)' }}>{t('wallet.totalRaised')}</p>
+          <p style={{ margin: 0, fontSize: '0.78rem', fontWeight: 700, color: 'var(--text-primary)' }}>{fmt(raised)}</p>
+        </div>
+        <div style={{ background: 'var(--bg-muted)', borderRadius: 8, padding: '6px 8px' }}>
+          <p style={{ margin: '0 0 2px', fontSize: '0.65rem', color: 'var(--text-muted)' }}>{t('wallet.remaining', { defaultValue: 'الهدف' })}</p>
+          <p style={{ margin: 0, fontSize: '0.78rem', fontWeight: 700, color: 'var(--color-primary-500)' }}>{fmt(target)}</p>
+        </div>
       </div>
 
-      {/* ⚠️ زر الصرف معطل مؤقتاً — الباك لسا ما جهز endpoint الصرف */}
-      <button
-        disabled
-        title="قريباً — بانتظار جاهزية الباك اند"
+      {/* ✅ زر صرف فردي لكل كرت */}
+      <PermissionButton
+        permission="wallet.disburse"
+        disabled={isDisbursing}
+        onClick={() => onDisburse(item.id)}
         style={{
-          width: '100%', padding: '8px', borderRadius: 10, fontSize: '0.82rem',
-          border: 'none', cursor: 'not-allowed',
-          fontFamily: 'Cairo, sans-serif', fontWeight: 700,
-          background: 'var(--bg-muted)', color: 'var(--text-muted)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-          opacity: 0.6,
+          width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+          padding: '9px 14px', borderRadius: 12, border: 'none',
+          background: 'var(--color-secondary-500)', color: '#111',
+          cursor: isDisbursing ? 'not-allowed' : 'pointer', fontSize: '0.85rem', fontWeight: 700,
+          fontFamily: 'Cairo, sans-serif', opacity: isDisbursing ? 0.6 : 1,
         }}
       >
-        <Send size={14} /> {t('wallet.disburse')} (قريباً)
-      </button>
+        {isDisbursing ? <Loader2 size={14} className="spin" /> : <Send size={14} />}
+        {t('wallet.disburseBtn', { defaultValue: 'صرف' })}
+      </PermissionButton>
     </div>
   )
 }
@@ -134,154 +119,114 @@ export default function WalletPage() {
   const { t }    = useTranslation()
   const { user } = useAuth()
 
-  const [txFilter, setTxFilter] = useState('all')
-  const [search,   setSearch]   = useState('')
-  const [page,     setPage]     = useState(1)
+  const now   = new Date()
+  const year  = now.getFullYear()
+  const month = now.getMonth() + 1
 
   // ✅ البالانس — من اليوزر المسجل دخول (الأدمن) مباشرة عبر AuthContext
   const balance = Number(user?.balances?.USD || 0)
 
-  // ✅ الحملات — نفس الـ hook المستخدم بصفحة Campaigns.jsx
-  const { data: campaignsData, isLoading: campaignsLoading } = useCampaignsFilterQuery({
-    per_page: 100,
-  })
+  // ✅ الحملات والطلبات المعلقة الصرف — الفلترة صارت بالباك مباشرة
+  const { data: pendingCampaignsRes, isLoading: campaignsLoading } = usePendingCampaigns()
+  const { data: pendingRequestsRes,  isLoading: requestsLoading  } = usePendingRequests()
+
+  // ✅ تقرير الشهر الحالي — لعرض إجمالي المصروف وسجل هالشهر
+  const { data: reportRes, isLoading: reportLoading } = useMonthlyDisbursementReport(year, month)
+
+  // ✅ mutations الصرف الفردي
+  const disburseCampaignMut = useDisburseCampaign()
+  const disburseRequestMut  = useDisburseRequest()
 
   const campaigns = useMemo(() => {
-    return (campaignsData?.items ?? []).map(c => ({
-      id:        c.id,
-      name:      c.title,
-      raised:    c.amountCollected ?? 0,
-      disbursed: 0, // ⚠️ الباك لسا ما عندو حقل disbursed بالحملة — مؤقتاً 0
-      target:    c.amountNeeded ?? 0,
-      status:    c.status,
+    return (pendingCampaignsRes?.data ?? []).map(c => ({
+      id:     c.campaign_id,
+      name:   c.title,
+      raised: c.amount_collected ?? 0,
+      target: c.amount_needed ?? 0,
     }))
-  }, [campaignsData])
+  }, [pendingCampaignsRes])
 
-  // ⚠️ لسا ما ربطنا المستفيدين (الحالات) بهاد القسم
-  const cases = []
+  const cases = useMemo(() => {
+    return (pendingRequestsRes?.data ?? []).map(r => ({
+      id:     r.request_id,
+      name:   r.title,
+      raised: r.amount_collected ?? 0,
+      target: r.required_amount ?? 0,
+    }))
+  }, [pendingRequestsRes])
 
-  // ⚠️ لسا ما في endpoint لسجل المعاملات
-  const allTx = []
+  const report = reportRes?.report
 
-  const filteredTx = useMemo(() => {
-    return allTx.filter(tx => {
-      const matchType = txFilter === 'all' || tx.targetType === txFilter
-      const matchSrch = !search.trim() || tx.target?.includes(search) || (tx.note ?? '').includes(search)
-      return matchType && matchSrch
+  // ── معالجة الصرف الفردي ────────────────────────────────────
+  const handleDisburseCampaign = (campaignId) => {
+    disburseCampaignMut.mutate(campaignId, {
+      onSuccess: (res) => {
+        toast.success(res?.message ?? t('wallet.toast.disburseSuccess', { defaultValue: 'تم الصرف ✅' }))
+      },
+      onError: (err) => {
+        toast.error(err?.response?.data?.message ?? t('wallet.toast.disburseError', { defaultValue: 'فشلت عملية الصرف' }))
+      },
     })
-  }, [allTx, txFilter, search])
-
-  const paged = filteredTx.slice((page - 1) * LIMIT, page * LIMIT)
-
-  const TYPE_META = {
-    campaign: { bg: 'var(--color-primary-50)', text: 'var(--color-primary-500)', label: t('wallet.type.campaign') },
-    case:     { bg: '#fef3c7',                 text: '#92400e',                  label: t('wallet.type.case')     },
   }
 
-  const columns = useMemo(() => [
-    {
-      title: t('wallet.table.id'), key: 'id', align: 'center',
-      render: v => <span style={{ color: 'var(--text-muted)', fontSize: '0.82rem' }}>#{v}</span>,
-    },
-    {
-      title: t('wallet.table.target'), key: 'target', align: 'center',
-      render: v => <span style={{ fontWeight: 700 }}>{v}</span>,
-    },
-    {
-      title: t('wallet.table.type'), key: 'targetType', align: 'center',
-      render: v => {
-        const m = TYPE_META[v] ?? TYPE_META.campaign
-        return <span style={{ background: m.bg, color: m.text, padding: '2px 10px', borderRadius: 99, fontSize: '0.72rem', fontWeight: 700 }}>{m.label}</span>
+  const handleDisburseRequest = (requestId) => {
+    disburseRequestMut.mutate(requestId, {
+      onSuccess: (res) => {
+        toast.success(res?.message ?? t('wallet.toast.disburseSuccess', { defaultValue: 'تم الصرف ✅' }))
       },
-    },
-    {
-      title: t('wallet.table.amount'), key: 'amount', align: 'center',
-      render: v => <span style={{ fontWeight: 800, color: '#BA7517' }}>−{fmt(v)}</span>,
-    },
-    {
-      title: t('wallet.table.note'), key: 'note', align: 'center',
-      render: v => <span style={{ color: 'var(--text-muted)', fontSize: '0.82rem' }}>{v || '—'}</span>,
-    },
-    {
-      title: t('wallet.table.date'), key: 'date', align: 'center',
-      render: v => <span style={{ color: 'var(--text-muted)', fontSize: '0.82rem' }}>{v}</span>,
-    },
-  ], [t])
-
-  const tabStyle = (active) => ({
-    display: 'flex', alignItems: 'center', justifyContent: 'center',
-    padding: '9px 18px', borderRadius: 14,
-    border: active ? '1px solid var(--color-primary-100)' : '1px solid var(--border-subtle)',
-    background: active ? 'var(--color-primary-50)' : 'transparent',
-    color: active ? 'var(--color-primary-700)' : 'var(--text-secondary)',
-    fontWeight: active ? 700 : 500, fontSize: '0.88rem',
-    cursor: 'pointer', transition: '0.2s', fontFamily: 'Cairo, sans-serif',
-  })
+      onError: (err) => {
+        toast.error(err?.response?.data?.message ?? t('wallet.toast.disburseError', { defaultValue: 'فشلت عملية الصرف' }))
+      },
+    })
+  }
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 24, background: 'var(--bg-base)' }}>
 
       {/* Header */}
-      <PageHeader title={t('wallet.title')} subtitle={t('wallet.subtitle')}>
-        {/* ⚠️ زر الصرف العام معطل مؤقتاً لحد ما يجهز الباك */}
-        <button
-          disabled
-          title="قريباً — بانتظار جاهزية الباك اند"
-          style={{
-            display: 'flex', alignItems: 'center', gap: 8,
-            padding: '10px 20px', borderRadius: 14, border: 'none',
-            background: 'var(--bg-muted)', color: 'var(--text-muted)',
-            cursor: 'not-allowed', fontSize: '0.9rem', fontWeight: 700,
-            fontFamily: 'Cairo, sans-serif', opacity: 0.6,
-          }}
-        >
-          <Send size={15} /> {t('wallet.disburseBtn')} (قريباً)
-        </button>
-      </PageHeader>
+      <PageHeader title={t('wallet.title')} subtitle={t('wallet.subtitle')} />
 
-      {/* KPI Cards — بس البالانس حالياً، totalOut محذوف مؤقتاً */}
+      {/* KPI Cards */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 16 }}>
         <KpiCard label={t('wallet.kpi.balance')} value={fmt(balance)} icon={Wallet} />
+        <KpiCard
+          label={t('wallet.kpi.totalDisbursed', { defaultValue: 'المصروف هالشهر' })}
+          value={reportLoading ? '...' : fmt(report?.summary?.total?.total_amount ?? 0)}
+          icon={Send}
+        />
       </div>
 
-      {/* Disbursements Table — فاضي مؤقتاً لحد ما يجهز endpoint المعاملات */}
+      {/* سجل عمليات الصرف — من تقرير الشهر الحالي */}
       <Card style={{ borderRadius: 24, overflow: 'hidden', padding: 0, background: 'var(--bg-base)' }}>
         <div style={{ padding: '22px 24px', borderBottom: '1px solid var(--border-subtle)' }}>
-          <h3 style={{ margin: 0, fontSize: '1.05rem', fontWeight: 800, color: 'var(--text-primary)' }}>{t('wallet.txTitle')}</h3>
-          <p style={{ margin: '6px 0 0', fontSize: '0.88rem', color: 'var(--text-muted)' }}>{t('wallet.txSubtitle')}</p>
+          <h3 style={{ margin: 0, fontSize: '1.05rem', fontWeight: 800, color: 'var(--text-primary)' }}>
+            {t('wallet.logsTitle', { defaultValue: 'سجل عمليات الصرف هالشهر' })}
+          </h3>
         </div>
 
-        <Card style={{ margin: 16, borderRadius: 16, padding: 16 }}>
-          <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
-            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-              {[['all', t('common.all')], ['campaign', t('wallet.type.campaign')], ['case', t('wallet.type.case')]].map(([v, l]) => (
-                <button key={v} style={tabStyle(txFilter === v)} onClick={() => { setTxFilter(v); setPage(1) }}>{l}</button>
-              ))}
-            </div>
-            <div style={{ position: 'relative' }}>
-              <Search size={15} style={{ position: 'absolute', top: '50%', right: 12, transform: 'translateY(-50%)', color: 'var(--text-muted)', pointerEvents: 'none' }} />
-              <input
-                type="text" placeholder={t('wallet.searchPlaceholder')} value={search}
-                onChange={e => { setSearch(e.target.value); setPage(1) }}
-                style={{ padding: '9px 36px 9px 14px', borderRadius: 12, border: '1px solid var(--border-subtle)', background: 'var(--bg-surface)', color: 'var(--text-primary)', fontSize: '0.85rem', fontFamily: 'Cairo, sans-serif', outline: 'none', width: 260 }}
-              />
-            </div>
+        {reportLoading ? (
+          <SpinnerPage />
+        ) : (!report?.campaigns_details?.length && !report?.requests_details?.length) ? (
+          <EmptyState title={t('wallet.empty')} />
+        ) : (
+          <div style={{ padding: 16, display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {[...(report?.campaigns_details ?? []), ...(report?.requests_details ?? [])].map((log) => (
+              <div
+                key={log.id}
+                style={{
+                  display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                  padding: '10px 14px', borderRadius: 12, background: 'var(--bg-muted)',
+                }}
+              >
+                <span style={{ fontSize: '0.85rem', color: 'var(--text-primary)' }}>{log.title}</span>
+                <span style={{ fontWeight: 800, color: '#BA7517' }}>{fmt(log.amount)}</span>
+              </div>
+            ))}
           </div>
-        </Card>
-
-        <DataTable
-          columns={columns}
-          data={paged}
-          isLoading={false}
-          EmptyComponent={<EmptyState title={t('wallet.empty')} />}
-        />
-
-        <div style={{ padding: '20px 24px', borderTop: '1px solid var(--border-subtle)' }}>
-          <Pagination page={page} total={filteredTx.length} limit={LIMIT} onPageChange={setPage} />
-        </div>
+        )}
       </Card>
 
-      {/* Disbursement Cards — الحملات الحقيقية */}
+      {/* الحملات المعلقة الصرف */}
       <div>
         <p style={{ margin: '0 0 10px', fontSize: '0.78rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
           {t('wallet.campaigns')}
@@ -292,19 +237,35 @@ export default function WalletPage() {
           <EmptyState title={t('wallet.empty')} />
         ) : (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: 16, marginBottom: 24 }}>
-            {campaigns.map(c => <DisburseCard key={c.id} item={c} />)}
+            {campaigns.map(c => (
+              <DisburseCard
+                key={c.id}
+                item={c}
+                onDisburse={handleDisburseCampaign}
+                isDisbursing={disburseCampaignMut.isPending && disburseCampaignMut.variables === c.id}
+              />
+            ))}
           </div>
         )}
 
-        {/* الحالات — لسا ما ربطناها */}
+        {/* الحالات المعلقة الصرف */}
         <p style={{ margin: '0 0 10px', fontSize: '0.78rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
           {t('wallet.cases')}
         </p>
-        {cases.length === 0 ? (
+        {requestsLoading ? (
+          <SpinnerPage />
+        ) : cases.length === 0 ? (
           <EmptyState title={t('wallet.empty')} />
         ) : (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: 16 }}>
-            {cases.map(c => <DisburseCard key={c.id} item={c} />)}
+            {cases.map(c => (
+              <DisburseCard
+                key={c.id}
+                item={c}
+                onDisburse={handleDisburseRequest}
+                isDisbursing={disburseRequestMut.isPending && disburseRequestMut.variables === c.id}
+              />
+            ))}
           </div>
         )}
       </div>

@@ -6,7 +6,7 @@ import {
     getPendingSchools, getPendingUniversities,
     getOpenAcceptedRequests, getOpenAcceptedPatients,
     getOpenAcceptedOrphans, getOpenAcceptedSchools, getOpenAcceptedUniversities,
-    closeRequest, acceptRequest,
+    closeRequest, acceptRequest, rejectRequest,
     storePatient, storeOrphan, storeSchool, storeUniversity,
 } from '../api/requests.api'
 
@@ -124,10 +124,12 @@ export const useOpenAcceptedSchools = () =>
 export const useOpenAcceptedUniversities = () =>
     useQuery({ queryKey: requestKeys.openAcceptedUnis, queryFn: getOpenAcceptedUniversities, select: normalizeRaw })
 
-// ── Mutations ─────────────────────────────────────────────
-const invalidateAll = (qc) =>
-    Object.values(requestKeys).forEach(k => qc.invalidateQueries({ queryKey: k }))
 
+// ── Mutations ─────────────────────────────────────────────
+const invalidateAll = (qc) => {
+    Object.values(requestKeys).forEach(k => qc.invalidateQueries({ queryKey: k }))
+    qc.invalidateQueries({ queryKey: ['dashboard'] })
+}
 export const useCloseRequest = () => {
     const qc = useQueryClient()
     return useMutation({
@@ -135,6 +137,7 @@ export const useCloseRequest = () => {
         onSuccess: () => invalidateAll(qc),
     })
 }
+
 
 export const useAcceptRequest = () => {
     const qc = useQueryClient()
@@ -144,6 +147,17 @@ export const useAcceptRequest = () => {
     })
 }
 
+export const useRejectRequest = () => {
+    const qc = useQueryClient()
+
+    return useMutation({
+        mutationFn: ({ id, reason }) => rejectRequest(id, reason),
+
+        onSuccess: () => {
+            invalidateAll(qc)
+        },
+    })
+}
 export const useStorePatient = () => {
     const qc = useQueryClient()
     return useMutation({

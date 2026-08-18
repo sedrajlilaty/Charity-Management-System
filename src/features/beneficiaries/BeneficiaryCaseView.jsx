@@ -390,7 +390,9 @@ export default function BeneficiaryCaseView({ isOpen, onClose, caseData, initial
     }
   }
 
-  const isPending = caseData.status === 'pending'
+  const isPending      = caseData.status === 'pending'
+  // ✅ الحالة قابلة للإغلاق عالسيرفر طالما لسا مو مغلقة (يطابق شرط الباك اند: status_request !== 'closed')
+  const canCloseRequest = caseData.status_request !== 'closed'
 
   return (
     <div style={{ position: 'fixed', inset: 0, zIndex: 9999, background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem', fontFamily: 'Cairo, sans-serif', direction: 'rtl' }}>
@@ -433,19 +435,23 @@ export default function BeneficiaryCaseView({ isOpen, onClose, caseData, initial
         <div style={{ padding: '1rem 1.5rem', flexShrink: 0, borderTop: '1px solid var(--border-default)', display: 'flex', gap: 8, justifyContent: 'flex-end', background: 'var(--bg-surface)' }}>
           {step === 'view' ? (
             <>
-              <button onClick={onClose} style={btnGhost}>إغلاق</button>
+           
               {isPending && (
                 <>
                   <button onClick={() => { onReject?.(caseData); onClose() }} style={btnDanger}>
                     <XCircle size={15} /> رفض
                   </button>
-                  <button onClick={() => { onArchive?.(caseData); onClose() }} style={btnMuted}>
-                    <Archive size={15} /> أرشفة
-                  </button>
                   <button onClick={() => setStep('publish')} style={btnPrimary}>
                     <CheckCircle size={15} /> قبول ونشر
                   </button>
                 </>
+              )}
+
+              {/* ✅ إغلاق الحالة عالسيرفر — متاح لأي حالة (pending أو accepted) طالما لسا مو مغلقة */}
+              {canCloseRequest && (
+                <button onClick={() => { onArchive?.(caseData); onClose() }} style={btnMuted}>
+                  <Archive size={15} /> إغلاق الحالة
+                </button>
               )}
             </>
           ) : (

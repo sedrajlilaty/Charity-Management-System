@@ -15,6 +15,14 @@ import { Card } from '../../ui/Card'
 import { Badge } from '../../ui/Badge'
 import { DollarSign, Users, Megaphone, UserCheck, TrendingUp, TrendingDown, ExternalLink } from 'lucide-react'
 import PermissionButton from '../../ui/PermissionButton'
+import {
+  usePendingRequests,
+  useOpenAcceptedPatients,
+  useOpenAcceptedOrphans,
+  useOpenAcceptedSchools,
+  useOpenAcceptedUniversities,
+} from '../../hooks/useRequests'
+
 
 /* ── KPI Card ─────────────────────────────────────── */
 function KpiCard({ label, value, icon: Icon, accent }) {
@@ -140,7 +148,21 @@ export default function Dashboard() {
   const { data: byStatus = []          } = useCasesByStatus()
   const { data: recentDon, isLoading: dl } = useRecentDonations()
   const { data: campaigns, isLoading: cl } = useTopCampaigns()
+const { data: pendingData     = [] } = usePendingRequests()
+const { data: accPatients     = [] } = useOpenAcceptedPatients()
+const { data: accOrphans      = [] } = useOpenAcceptedOrphans()
+const { data: accSchools      = [] } = useOpenAcceptedSchools()
+const { data: accUniversities = [] } = useOpenAcceptedUniversities()
 
+// الحالات النشطة = المقبولة والمفتوحة فقط (بدون المعلقة)
+const activeCasesMerged = [...accPatients, ...accOrphans, ...accSchools, ...accUniversities]
+  .filter((item, index, self) => index === self.findIndex(t => t.id === item.id))
+const activeCasesCount = activeCasesMerged.length
+
+// عدد المستفيدين الكلي = معلق + مقبول ومفتوح (نفس منطق صفحة المستفيدين بالضبط)
+const beneficiariesMerged = [...pendingData, ...activeCasesMerged]
+  .filter((item, index, self) => index === self.findIndex(t => t.id === item.id))
+const beneficiariesCount = beneficiariesMerged.length
   if (kl) return <SpinnerPage />
 
   return (
@@ -150,9 +172,10 @@ export default function Dashboard() {
       {/* ── KPIs ── */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))', gap: '1rem' }}>
         <KpiCard label={t('dashboard.totalDonations')}  value={formatCurrency(kpis?.total_donated_usd ?? 0)}  icon={DollarSign} accent="#eab308" />
-        <KpiCard label={t('dashboard.activeCases')}     value={kpis?.pending_requests ?? 0}                   icon={UserCheck}  accent="#6ee7b7" />
+        <KpiCard label={t('dashboard.activeCases')}     value={activeCasesCount}     icon={UserCheck} accent="#6ee7b7" />
+<KpiCard label={t('dashboard.activeCampaigns')} value={kpis?.total_campaigns ?? 0} icon={Megaphone} accent="#eab308" />
+<KpiCard label={t('dashboard.beneficiaries')}   value={beneficiariesCount}   icon={Users}     accent="#93c5fd" />
         <KpiCard label={t('dashboard.activeCampaigns')} value={kpis?.total_campaigns ?? 0}                    icon={Megaphone}  accent="#eab308" />
-        <KpiCard label={t('dashboard.beneficiaries')}   value={kpis?.total_users ?? 0}                        icon={Users}      accent="#93c5fd" />
       </div>
 
       {/* ── Charts ── */}

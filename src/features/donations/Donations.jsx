@@ -1,26 +1,23 @@
-import { useState, useMemo } from 'react'
-import { useQuery } from '@tanstack/react-query'
+import { useState, useMemo   , useEffect  } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useSearchParams } from 'react-router-dom'
-import { Heart, Plus, Search, DollarSign, Hash, TrendingUp, Award } from 'lucide-react'
-import { donationsService } from '../../service/ServiceLayer'
+import { Heart, Search, DollarSign, Hash, TrendingUp, Award } from 'lucide-react'
 import { formatCurrency, formatDate } from '../../utlis/helper'
 import { EmptyState } from '../../ui/EmptyState'
 import { SpinnerPage } from '../../ui/Spinner'
 import { PageHeader } from '../../ui/PageHeader'
 import { Card } from '../../ui/Card'
-import { Badge } from '../../ui/Badge'
 import DataTable from '../../ui/DataTable'
 import Pagination from '../../ui/Pagination'
-import DonationModal from './DonationModal'
 import ExportPDFPermissionButton from '../../ui/Pdfexportbutton'
 import { usePDFReport } from '../../hooks/Usepdfexport'
 import PermissionButton from '../../ui/PermissionButton'
-
+import { useDonations } from '../../hooks/useDonations'
+import PDFPreviewModal from '../../ui/PDFPreviewModal'
 const LIMIT = 10
 
-/* ── Type tabs — الكل / نقدي / تحويل / عيني ── */
-const TYPE_TABS = ['all', 'cash', 'transfer', 'inkind']
+/* ── Target-type tabs — الكل / حملة / طلب ── */
+const TYPE_TABS = ['all', 'campaign', 'request']
 
 /* ───────── Summary Card ───────── */
 function SummaryCard({ label, value, icon: Icon, accent }) {
@@ -72,38 +69,56 @@ export default function Donations() {
   const { t } = useTranslation()
   const [searchParams, setSearchParams] = useSearchParams()
 
-  const page     = Number(searchParams.get('page') || 1)
-  const typeTab  = searchParams.get('type') || 'all'
+  const page    = Number(searchParams.get('page') || 1)
+  const typeTab = searchParams.get('type') || 'all'
 
-  const [openModal, setOpenModal] = useState(false)
-  const [search, setSearch]       = useState('')
+  const [search, setSearch] = useState('')
 
-  const { exportDonations, isExporting } = usePDFReport()
+  const {
+  exportDonations, isExporting,
+  previewUrl, closePreview, confirmDownload,
+} = usePDFReport()
 
-  /* ── Fetch ── */
-  const { data, isLoading } = useQuery({
-    queryKey: ['donations', page],
-    queryFn: () => donationsService.getList({ page, limit: LIMIT }),
-    keepPreviousData: true,
-  })
-
-  /* ── Client-side filter: type tab + search ── */
+  /* ── Fetch — الباك بيرجع كل التبرعات دفعة وحدة، مفلترة حسب target_type ── */
+  const { data, isLoading } = useDonations({ donationableType: typeTab })
+console.log('Filtered fields:', data?.donations?.map(d => ({
+  id: d.id,
+  target_type: d.target_type,
+  target_name: d.target_name
+})))
+  /* ── فلترة محلية إضافية: البحث باسم المتبرع ── */
   const filtered = useMemo(() => {
-    if (!data?.data) return []
-    return data.data.filter(d => {
-      const matchType   = typeTab === 'all' || d.type === typeTab
-      const matchSearch = !search.trim() || d.donorName?.toLowerCase().includes(search.toLowerCase())
-      return matchType && matchSearch
-    })
-  }, [data?.data, typeTab, search])
+    if (!data?.donations) return []
+    if (!search.trim()) return data.donations
+    return data.donations.filter(d =>
+      d.donor_name?.toLowerCase().includes(search.toLowerCase())
+    )
+  }, [data?.donations, search])
+const totalPages = Math.max(1, Math.ceil(filtered.length / LIMIT))
 
-  /* ── Summary cards — reactive to current filter ── */
-  const totalAmount = filtered.reduce((s, d) => s + (d.amount ?? 0), 0)
+  // 👇 هاد الجزء الجديد: يصحح الصفحة إذا صارت خارج النطاق
+  useEffect(() => {
+    if (page > totalPages) {
+      setSearchParams(prev => {
+        const next = new URLSearchParams(prev)
+        next.set('page', String(totalPages))
+        return next
+      })
+    }
+  }, [filtered.length, page, totalPages])
+  /* ── Pagination محلي، لأنو الباك بيرجع كل الداتا مرة وحدة ── */
+  const paginated = useMemo(() => {
+    const start = (page - 1) * LIMIT
+    return filtered.slice(start, start + LIMIT)
+  }, [filtered, page])
+
+  /* ── Summary cards — محسوبة من نتيجة الفلترة الحالية ── */
+  const totalAmount = filtered.reduce((s, d) => s + (Number(d.amount_usd) || 0), 0)
   const count       = filtered.length
   const avg         = count > 0 ? Math.round(totalAmount / count) : 0
-  const maxAmount   = count > 0 ? Math.max(...filtered.map(d => d.amount ?? 0)) : 0
+  const maxAmount   = count > 0 ? Math.max(...filtered.map(d => Number(d.amount_usd) || 0)) : 0
 
-  /* ── Set type tab ── */
+  /* ── تبديل التبويب ── */
   const setTypeParam = (value) => {
     setSearch('')
     setSearchParams(prev => {
@@ -126,27 +141,40 @@ export default function Donations() {
     },
     {
       title: t('donations.table.donor'),
-      key: 'donorName',
+      key: 'donor_name',
       textAlign: 'center',
       align: 'center',
-      render: (val) => (
-        <span style={{ fontWeight: 700, color: 'var(--text-primary)' }}>{val}</span>
-      ),
-    },
-    {
-      title: t('donations.table.amount'),
-      key: 'amount',
-      textAlign: 'center',
-      align: 'center',
-      render: (val) => (
-        <span style={{ fontWeight: 800, color: 'var(--color-primary-700)' }}>
-          {formatCurrency(val)}
+      render: (val, row) => (
+        <span style={{
+          fontWeight: 700,
+          color: row.donor_anonymous ? 'var(--text-muted)' : 'var(--text-primary)',
+          fontStyle: row.donor_anonymous ? 'italic' : 'normal',
+        }}>
+          {row.donor_anonymous ? t('donations.anonymous', { defaultValue: 'مجهول' }) : val}
         </span>
       ),
     },
     {
+      title: t('donations.table.amount'),
+      key: 'amount_usd',
+      textAlign: 'center',
+      align: 'center',
+      render: (val, row) => (
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+          <span style={{ fontWeight: 800, color: 'var(--color-primary-700)' }}>
+            {formatCurrency(val)}
+          </span>
+          {row.original_currency && row.original_currency !== 'USD' && (
+            <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
+              ({row.original_amount} {row.original_currency})
+            </span>
+          )}
+        </div>
+      ),
+    },
+    {
       title: t('donations.table.type'),
-      key: 'type',
+      key: 'target_type',
       textAlign: 'center',
       align: 'center',
       render: (val) => (
@@ -154,27 +182,22 @@ export default function Donations() {
           fontSize: '0.82rem', padding: '5px 10px', borderRadius: '99px',
           background: 'var(--bg-muted)', color: 'var(--text-secondary)', fontWeight: 600,
         }}>
-          {t(`donations.types.${val}`, { defaultValue: val })}
+          {val === 'campaign'
+            ? t('donations.types.campaign', { defaultValue: 'حملة' })
+            : t('donations.types.request', { defaultValue: 'طلب' })}
         </span>
       ),
     },
     {
       title: t('donations.table.campaign'),
-      key: 'campaignName',
+      key: 'target_name',
       textAlign: 'center',
       align: 'center',
       render: (val) => val || '—',
     },
     {
-      title: t('donations.table.recurring'),
-      key: 'recurring',
-      textAlign: 'center',
-      align: 'center',
-      render: (val) => val ? t('donations.table.yes') : t('donations.table.no'),
-    },
-    {
       title: t('donations.table.date'),
-      key: 'date',
+      key: 'donated_at',
       textAlign: 'center',
       align: 'center',
       render: (val) => (
@@ -183,7 +206,6 @@ export default function Donations() {
         </span>
       ),
     },
-   
   ], [t])
 
   /* ── Shared input style ── */
@@ -199,6 +221,7 @@ export default function Donations() {
     width: '260px',
     transition: 'border-color 0.2s',
   }
+console.log('RAW donations data:', data)
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', background: 'var(--bg-base)' }}>
@@ -206,29 +229,14 @@ export default function Donations() {
       {/* ── Header ── */}
       <PageHeader
         title={t('donations.title')}
-        subtitle={t('donations.subtitle', { count: data?.total ?? 0 })}
+        subtitle={t('donations.subtitle', { count: data?.donationsCount ?? 0 })}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <ExportPDFPermissionButton
-            onClick={() => exportDonations(filtered)}
-            loading={isExporting}
-            label={t('common.export')}
-          />
-          <PermissionButton
-            className="btn-primary"
-            onClick={() => setOpenModal(true)}
-            style={{
-              background: 'var(--color-secondary-500)',
-              color: '#111', borderRadius: '14px', padding: '10px 18px',
-              border: 'none', cursor: 'pointer', display: 'flex',
-              alignItems: 'center', gap: '6px', fontWeight: 700,
-              fontSize: '0.88rem', fontFamily: 'Cairo,sans-serif',
-            }}
-          >
-            <Plus size={15} />
-            {t('donations.addBtn')}
-          </PermissionButton>
-        </div>
+        <ExportPDFPermissionButton
+          onClick={() => exportDonations(paginated)}
+          loading={isExporting}
+          label={t('common.export')}
+        />
+        
       </PageHeader>
 
       {/* ── Summary Cards ── */}
@@ -311,7 +319,14 @@ export default function Donations() {
               type="text"
               placeholder={t('donations.filter.search')}
               value={search}
-              onChange={e => setSearch(e.target.value)}
+              onChange={e => {
+                setSearch(e.target.value)
+                setSearchParams(prev => {
+                  const next = new URLSearchParams(prev)
+                  next.set('page', '1')
+                  return next
+                })
+              }}
               style={inputStyle}
             />
           </div>
@@ -333,7 +348,7 @@ export default function Donations() {
 
         <DataTable
           columns={columns}
-          data={filtered}
+          data={paginated}
           isLoading={isLoading}
           loadingComponent={<SpinnerPage />}
           EmptyComponent={
@@ -348,7 +363,7 @@ export default function Donations() {
         <div style={{ padding: '20px 24px', borderTop: '1px solid var(--border-subtle)' }}>
           <Pagination
             page={page}
-            total={data?.total ?? 0}
+            total={filtered.length}
             limit={LIMIT}
             onPageChange={(next) => {
               setSearchParams(prev => {
@@ -360,15 +375,8 @@ export default function Donations() {
           />
         </div>
       </Card>
-
-      {/* Modal */}
-      <DonationModal
-        open={openModal}
-        onClose={() => setOpenModal(false)}
-        onSave={(payload) => {
-          donationsService.create(payload).then(() => setOpenModal(false))
-        }}
-      />
+      <PDFPreviewModal url={previewUrl} onClose={closePreview} onDownload={confirmDownload} />
     </div>
+    
   )
 }

@@ -1,62 +1,49 @@
 // features/services/Services.jsx
-import { useState } from 'react'
-import { useQuery } from '@tanstack/react-query'
+import { useState, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Baby, HeartPulse, BookOpen, GraduationCap, Edit2, Users, Clock, CheckCircle2 } from 'lucide-react'
-import { beneficiariesService } from '../../service/ServiceLayer'
+import {
+  usePendingRequests,
+  useOpenAcceptedPatients,
+  useOpenAcceptedOrphans,
+  useOpenAcceptedSchools,
+  useOpenAcceptedUniversities,
+} from '../../hooks/useRequests'
 import { PageHeader }   from '../../ui/PageHeader'
 import { Card }         from '../../ui/Card'
 import PermissionButton from '../../ui/PermissionButton'
 import ServiceModal     from './ServiceModal'
 import { formatCurrency } from '../../utlis/helper'
 
-// ✏️ عدّلي أسماء/مسارات الملفات حسب شو حاطة الصور عندك بمجلد assets
 import orphanImg      from '../../assets/services/orphan.jpg'
 import medicalImg     from '../../assets/services/medical.jpg'
 import schoolImg      from '../../assets/services/school.jpg'
 import universityImg  from '../../assets/services/university.jpg'
 
 // ── تعريف الخدمات الأربع الثابتة ──────────────────────────
-// ⚠️ category هون لازم تطابق بالضبط القيمة يلي راجعة من الباك اند لحقل فئة المستفيد
-// (تأكدي من beneficiariesService.getList response — عدّلي القيم تحت إذا لزم)
+// ✅ القيم هلق مطابقة تماماً لـ categoryMap بملف useRequests.js
 const SERVICE_TYPES = [
-  {
-    key: 'orphan',
-    category: 'orphan',            // ⚠️ تأكدي من القيمة الفعلية بالباك
-    icon: Baby,
-    image: orphanImg,
-  },
-  {
-    key: 'medical',
-    category: 'medical',           // ⚠️ تأكدي (يمكن 'patient')
-    icon: HeartPulse,
-    image: medicalImg,
-  },
-  {
-    key: 'schoolStudent',
-    category: 'school_student',    // ⚠️ تأكدي من القيمة الفعلية
-    icon: BookOpen,
-    image: schoolImg,
-  },
-  {
-    key: 'universityStudent',
-    category: 'university_student',// ⚠️ تأكدي من القيمة الفعلية
-    icon: GraduationCap,
-    image: universityImg,
-  },
+  { key: 'orphan',             category: 'orphan',              icon: Baby,          image: orphanImg },
+  { key: 'medical',            category: 'patient',             icon: HeartPulse,    image: medicalImg },
+  { key: 'schoolStudent',      category: 'school_student',      icon: BookOpen,      image: schoolImg },
+  { key: 'universityStudent',  category: 'university_student',  icon: GraduationCap, image: universityImg },
 ]
 
-// ── كارد خدمة واحدة (نفس شكل CampaignCard) ──────────────────
-function ServiceCard({ type, beneficiaries, isLoading, onEdit }) {
+// ── كارد خدمة واحدة ──────────────────────────────────────
+function ServiceCard({ type, pendingData, acceptedOpenData, isLoading, onEdit }) {
   const { t } = useTranslation()
   const Icon = type.icon
 
-  const related      = beneficiaries.filter(b => b.category === type.category)
-  const activeCount  = related.filter(b => b.status === 'active').length
-  const pendingCount = related.filter(b => b.status === 'pending').length
-  const totalSupport = related
-    .filter(b => b.status === 'active')
-    .reduce((sum, b) => sum + (b.monthlySupport || 0), 0)
+  // ✅ "نشط" = مقبول ومفتوح فعلياً (نفس تعريف activeCases بالداشبورد)
+  const activeRelated  = acceptedOpenData.filter(b => b.category === type.category)
+  // ✅ "معلق" = من قائمة pending فقط
+  const pendingRelated = pendingData.filter(b => b.category === type.category)
+
+  const activeCount  = activeRelated.length
+  const pendingCount = pendingRelated.length
+
+  // ✅ إجمالي الدعم = مجموع المبالغ المتبرع فيها فعلياً للحالات النشطة (المقبولة والمفتوحة)
+  const totalSupport = activeRelated.reduce((sum, b) => sum + (Number(b.donated_amount) || 0), 0)
 
   return (
     <Card style={{
@@ -84,7 +71,6 @@ function ServiceCard({ type, beneficiaries, isLoading, onEdit }) {
           </div>
         )}
 
-        {/* عدد المستفيدين الفعليين — بادج أعلى يسار */}
         <div style={{
           position: 'absolute', top: 10, left: 10,
           background: 'var(--color-secondary-500)', color: '#111',
@@ -96,7 +82,6 @@ function ServiceCard({ type, beneficiaries, isLoading, onEdit }) {
           {isLoading ? '...' : activeCount}
         </div>
 
-        {/* أيقونة الخدمة — أعلى يمين */}
         <div style={{
           position: 'absolute', top: 10, right: 10,
           width: 36, height: 36, borderRadius: 10,
@@ -119,7 +104,6 @@ function ServiceCard({ type, beneficiaries, isLoading, onEdit }) {
           {t(`services.types.${type.key}.description`)}
         </p>
 
-        {/* إجمالي الدعم الحالي */}
         <div style={{
           padding: '8px 12px', borderRadius: 10, background: 'var(--bg-muted)',
           marginBottom: '0.875rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center',
@@ -132,7 +116,6 @@ function ServiceCard({ type, beneficiaries, isLoading, onEdit }) {
           </span>
         </div>
 
-        {/* حالات مستفيدة / قيد الانتظار */}
         <div style={{ display: 'flex', gap: 8, marginTop: 'auto' }}>
           <div style={{
             flex: 1, padding: '8px 10px', borderRadius: 10,
@@ -163,7 +146,6 @@ function ServiceCard({ type, beneficiaries, isLoading, onEdit }) {
           </div>
         </div>
 
-        {/* تعديل */}
         <PermissionButton
           permission="services.edit"
           onClick={() => onEdit(type)}
@@ -189,14 +171,21 @@ export default function Services() {
   const [modalOpen, setModalOpen] = useState(false)
   const [editType,  setEditType]  = useState(null)
 
-  const { data: beneficiariesData, isLoading } = useQuery({
-    queryKey: ['beneficiaries-all-statuses'],
-    queryFn:  () => beneficiariesService.getList({ limit: 1000 }),
-    staleTime: 1000 * 60 * 2,
-  })
-  const allBeneficiaries = beneficiariesData?.data ?? []
+  // ✅ نفس الـ hooks الحقيقية المستخدمة بصفحة Beneficiaries والداشبورد
+  const { data: pendingData     = [], isLoading: pl  } = usePendingRequests()
+  const { data: accPatients     = [], isLoading: al1 } = useOpenAcceptedPatients()
+  const { data: accOrphans      = [], isLoading: al2 } = useOpenAcceptedOrphans()
+  const { data: accSchools      = [], isLoading: al3 } = useOpenAcceptedSchools()
+  const { data: accUniversities = [], isLoading: al4 } = useOpenAcceptedUniversities()
 
-  const totalActive = allBeneficiaries.filter(b => b.status === 'active').length
+  const isLoading = pl || al1 || al2 || al3 || al4
+
+  const acceptedOpenData = useMemo(() => {
+    const merged = [...accPatients, ...accOrphans, ...accSchools, ...accUniversities]
+    return merged.filter((item, index, self) => index === self.findIndex(x => x.id === item.id))
+  }, [accPatients, accOrphans, accSchools, accUniversities])
+
+  const totalActive = acceptedOpenData.length
 
   const handleSave = (form) => {
     // ✏️ اربطيها بالـ mutation الفعلي لتعديل بيانات الخدمة (وصف/مبلغ) بالباك اند
@@ -212,7 +201,6 @@ export default function Services() {
         subtitle={t('services.subtitle', { count: totalActive })}
       />
 
-      {/* Hero بلون البراند */}
       <Card style={{
         padding: '1.5rem', borderRadius: 24,
         background: 'linear-gradient(135deg, var(--color-primary-500) 0%, var(--color-primary-600) 100%)',
@@ -234,13 +222,13 @@ export default function Services() {
         </div>
       </Card>
 
-      {/* كاردات الأربع خدمات */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1.25rem' }}>
         {SERVICE_TYPES.map(type => (
           <ServiceCard
             key={type.key}
             type={type}
-            beneficiaries={allBeneficiaries}
+            pendingData={pendingData}
+            acceptedOpenData={acceptedOpenData}
             isLoading={isLoading}
             onEdit={(t) => { setEditType(t); setModalOpen(true) }}
           />
@@ -248,13 +236,13 @@ export default function Services() {
       </div>
 
       <ServiceModal
-  key={editType?.key || 'none'}
-  open={modalOpen}
-  onClose={() => setModalOpen(false)}
-  onSave={handleSave}
-  editItem={editType}
-  categories={SERVICE_TYPES.map(t => ({ key: t.key, label: t.key }))}
-/>
+        key={editType?.key || 'none'}
+        open={modalOpen}
+        onClose={() => setModalOpen(false)}
+        onSave={handleSave}
+        editItem={editType}
+        categories={SERVICE_TYPES.map(t => ({ key: t.key, label: t.key }))}
+      />
     </div>
   )
 }

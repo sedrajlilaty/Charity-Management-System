@@ -49,6 +49,11 @@ export const acceptRequest = (id, data = {}) => {
     return axiosInstance.put(`/acceptRequest/${id}`, data).then(r => r.data)
 }
 
+
+export const rejectRequest = (id, reason = null) =>
+    axiosInstance.patch(`/rejectRequest/${id}`, {
+        reason,
+    }).then(r => r.data)
 // ════════════════════════════════════════════════
 //  إنشاء الطلبات
 // ════════════════════════════════════════════════

@@ -194,15 +194,15 @@ export function usePDFReport() {
 
       const y0 = header(doc, isAr ? 'تقرير التبرعات' : 'Donations Report')
 
-      const total = rows.reduce((s, d) => s + (d.amount ?? 0), 0)
-      const approved = rows.filter(d => d.status === 'approved').length
-      const pending = rows.filter(d => d.status === 'pending').length
+      const total = rows.reduce((s, d) => s + (Number(d.amount_usd) || 0), 0)
+      const campaign = rows.filter(d => d.target_type === 'campaign').length
+      const request = rows.filter(d => d.target_type === 'request').length
 
       const y1 = statsRow(doc, [
-        { label: isAr ? 'إجمالي' : 'Total', value: rows.length, fill: C.light },
-        { label: isAr ? 'مقبولة' : 'Approved', value: approved, fill: C.green },
-        { label: isAr ? 'انتظار' : 'Pending', value: pending, fill: C.yellow },
-        { label: isAr ? 'المبلغ الكلي' : 'Total Amount', value: `${total.toLocaleString()} ${isAr ? 'ر.س' : 'SAR'}`, fill: C.light },
+        { label: isAr ? 'إجمالي التبرعات' : 'Total', value: rows.length, fill: C.light },
+        { label: isAr ? 'حملات' : 'Campaigns', value: campaign, fill: C.green },
+        { label: isAr ? 'طلبات' : 'Requests', value: request, fill: C.yellow },
+        { label: isAr ? 'المبلغ الكلي (USD)' : 'Total Amount (USD)', value: `$${total.toLocaleString()}`, fill: C.light },
       ], y0)
 
       table(doc, {
@@ -211,30 +211,31 @@ export function usePDFReport() {
           isAr ? 'المتبرع' : 'Donor',
           isAr ? 'المبلغ' : 'Amount',
           isAr ? 'النوع' : 'Type',
-          isAr ? 'الحملة' : 'Campaign',
-          isAr ? 'متكرر' : 'Recurring',
+          isAr ? 'الجهة' : 'Target',
           isAr ? 'التاريخ' : 'Date',
-          isAr ? 'الحالة' : 'Status',
         ]],
-        body: rows.map((d, i) => [
-          i + 1,
-          d.donorName ?? '—',
-          `${(d.amount ?? 0).toLocaleString()} ${isAr ? 'ر.س' : 'SAR'}`,
-          d.type ?? '—',
-          d.campaignName ?? '—',
-          d.recurring ? (isAr ? 'نعم' : 'Yes') : (isAr ? 'لا' : 'No'),
-          d.date ?? '—',
-          d.status ?? '—',
-        ]),
-      })
+        body: rows.map((d, i) => {
+          const hasOriginal = d.original_currency && d.original_currency !== 'USD'
+          const amountStr = hasOriginal
+            ? `${Number(d.original_amount).toLocaleString()} ${d.original_currency}`
+            : `$${(Number(d.amount_usd) || 0).toLocaleString()}`
 
-        + footer(doc)
-        + previewDoc(doc, `donations-${Date.now()}.pdf`)
+          return [
+            i + 1,
+            d.donor_anonymous ? (isAr ? 'مجهول' : 'Anonymous') : (d.donor_name ?? '—'),
+            amountStr,
+            d.target_type === 'campaign' ? (isAr ? 'حملة' : 'Campaign') : (isAr ? 'طلب' : 'Request'),
+            d.target_name ?? '—',
+            d.donated_at ? new Date(d.donated_at).toLocaleDateString(isAr ? 'ar-EG' : 'en-US') : '—',
+          ]
+        }),
+      })
+      footer(doc)
+      previewDoc(doc, `donations-${Date.now()}.pdf`)   // ← هيك بيحفظ الـ blob بالـ state ويفتح المودال
     } finally {
       setIsExporting(false)
     }
   }, [isAr])
-
   // ── المستفيدون ──────────────────────────────────────────────────────────────
   // ── المستفيدون ──────────────────────────────────────────────────────────────
   const exportBeneficiaries = useCallback(async (rows = []) => {

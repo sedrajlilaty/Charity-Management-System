@@ -1,13 +1,8 @@
-// ── volunteersService.js ─────────────────────────────────────────────────
-// خدمة التطوع: تغطي مسارين منفصلين
-//  (أ) طلبات التطوع العامة بالجمعية  → /volunteer-applications/*  + /volunteer/*
-//  (ب) متطوعين حملة معينة           → /campaigns/{id}/volunteers/*
-
-import api from '../api/axiosInstance' // ✅ عدّلي المسار حسب مكان instance الـ axios عندك
+import api from '../api/axiosInstance'
 
 export const volunteersService = {
     // ============================================================
-    // طلب تطوع عام (المستخدم نفسه)
+    // 1) طلب تطوع عام (المستخدم نفسه)
     // ============================================================
     submitApplication: (payload) =>
         api.post('/volunteer/apply', payload).then((r) => r.data),
@@ -16,19 +11,22 @@ export const volunteersService = {
         api.get('/volunteer/me').then((r) => r.data),
 
     getSkillsList: () =>
-        api.get('/volunteer/skills').then((r) => r.data), // { success, skills: [ 'design', ... ] }
+        api.get('/volunteer/skills').then((r) => r.data),
 
     // ============================================================
-    // مراجعة طلبات التطوع العامة (أدمن) — صفحة Volunteers.jsx
+    // 2) مراجعة طلبات التطوع العامة (أدمن)
     // ============================================================
+    getAllVolunteers: () =>
+        api.get('/all-volunteers').then((r) => r.data),
+
     getApplicationsByStatus: (status) => {
-        // status: '' (الكل عبر filter) | 'pending' | 'approved' | 'rejected' | 'suspended'
-        if (!status) return api.get('/volunteer-applications/filter').then((r) => r.data)
+        if (!status || status === 'all') {
+            return api.get('/all-volunteers').then((r) => r.data)
+        }
         return api.get(`/volunteer-applications/${status}`).then((r) => r.data)
     },
 
     filterApplications: (params) =>
-        // params: { status, gender, governorate_id, skill }
         api.get('/volunteer-applications/filter', { params }).then((r) => r.data),
 
     reviewApplication: (volunteerId, status) =>
@@ -38,7 +36,7 @@ export const volunteersService = {
         api.get('/approved-general-volunteers').then((r) => r.data),
 
     // ============================================================
-    // التطوع لحملة (المستخدم نفسه)
+    // 3) التطوع لحملة (المستخدم نفسه)
     // ============================================================
     volunteerForCampaign: (campaignId, notes) =>
         api.post(`/campaigns/volunteer/${campaignId}`, { notes }).then((r) => r.data),
@@ -53,20 +51,19 @@ export const volunteersService = {
         api.get('/my-volunteer-hours').then((r) => r.data),
 
     // ============================================================
-    // متطوعين حملة معينة (أدمن) — CampaignVolunteersModal
+    // 4) متطوعين حملة معينة (أدمن)
     // ============================================================
     getCampaignVolunteers: (campaignId) =>
-        api.get(`/campaigns/${campaignId}/volunteers`).then((r) => r.data), // { success, volunteers: [...] }
+        api.get(`/campaigns/${campaignId}/volunteers`).then((r) => r.data),
 
     getCampaignVolunteersByStatus: (campaignId, status) =>
-        // status: 'pending' | 'approved' | 'rejected'
         api.get(`/campaigns/${campaignId}/volunteers/${status}`).then((r) => r.data),
 
     updateCampaignVolunteerStatus: (campaignId, volunteerId, status) =>
         api.patch(`/campaigns/${campaignId}/volunteers/${volunteerId}`, { status }).then((r) => r.data),
 
     // ============================================================
-    // ساعات التطوع ضمن حملة (field_worker فقط للإضافة)
+    // 5) ساعات التطوع
     // ============================================================
     addVolunteerHours: (campaignId, volunteerId, { date, hours, activity_description }) =>
         api
@@ -75,18 +72,14 @@ export const volunteersService = {
                 hours,
                 activity_description,
             })
-            .then((r) => r.data), // { success, entry, total_hours_in_campaign, total_hours_overall }
+            .then((r) => r.data),
 
     getVolunteerHoursInCampaign: (campaignId, volunteerId) =>
         api
             .get(`/campaigns/${campaignId}/volunteers/${volunteerId}/hours`)
-            .then((r) => r.data), // { success, entries: [...], total_hours }
+            .then((r) => r.data),
 }
 
-// ============================================================
-// خريطة تسمية المهارات — الباك اند بيرجع مفاتيح إنجليزية بس بدون ترجمة
-// لازم نترجمها محلياً بالفرونت (ولا داعي لأي endpoint إضافي)
-// ============================================================
 export const SKILLS_LABELS_AR = {
     design: 'تصميم',
     translation: 'ترجمة',
@@ -111,3 +104,88 @@ export const SKILLS_LABELS_AR = {
 }
 
 export const getSkillLabel = (key) => SKILLS_LABELS_AR[key] || key
+
+// تطبيع المهارات (نص مفصول بفواصل / مصفوفة نصوص / مصفوفة objects)
+export const parseSkills = (skills) => {
+    if (!skills) return []
+    if (Array.isArray(skills)) {
+        return skills
+            .map((s) => {
+                if (typeof s === 'string') return s.trim()
+                if (s && typeof s === 'object') return s.skill || s.name || s.key || ''
+                return ''
+            })
+            .filter(Boolean)
+    }
+    if (typeof skills === 'string') {
+        return skills.split(',').map((s) => s.trim()).filter(Boolean)
+    }
+    return []
+}
+
+// ⚠️ استخرج معلومات الحملة من الـ row — عدّل أسماء الحقول هون
+// حسب الشكل الفعلي يلي بيرجعه الـ API (اعمل console.log(row) للتأكد)
+// ⚠️ الحقل الحقيقي القادم من الباك: general_application (boolean)
+// true  → متطوع عام (للجمعية)
+// false → متطوع لحملة معينة
+export const getVolunteerCampaignInfo = (row) => {
+    const isGeneral = row.general_application === true
+
+    const campaignId = isGeneral
+        ? null
+        : row.campaign_id ?? row.campaignId ?? row.campaign?.id ?? null
+
+    const campaignName = isGeneral
+        ? null
+        : row.campaign_title ?? row.campaign_name ?? row.campaign?.title ?? row.campaign?.name ?? null
+
+    return { campaignId, campaignName, isGeneral }
+}
+
+// ... (كل الكود السابق يبقى متل ما هو، فقط أضف هاد بالآخر)
+
+// تجميع صفوف المتطوعين: عام (سطر لحاله) VS حملات (مجمّعة بشخص واحد)
+export const groupVolunteersByPerson = (rows = []) => {
+    const general = []
+    const campaignMap = new Map()
+
+    for (const row of rows) {
+        const isGeneral = row.general_application === true
+
+        if (isGeneral) {
+            general.push({ ...row, __rowType: 'general' })
+            continue
+        }
+
+        // ⚠️ معرّف التجميع — بدّله لـ user_id إذا موجود بالـ response
+        const key = (row.email || row.phone || row.name || '').toLowerCase().trim()
+
+        if (!campaignMap.has(key)) {
+            campaignMap.set(key, {
+                key,
+                name: row.name,
+                phone: row.phone,
+                email: row.email,
+                gender: row.gender,
+                occupation: row.occupation,
+                governorate: row.governorate,
+                availability: row.availability,
+                skills: row.skills,
+                description: row.description,
+                applications: [],
+                __rowType: 'campaign-group',
+            })
+        }
+        campaignMap.get(key).applications.push(row)
+    }
+
+    const campaignGroups = Array.from(campaignMap.values()).map((g) => {
+        const statusCounts = { pending: 0, approved: 0, rejected: 0, suspended: 0 }
+        g.applications.forEach((a) => {
+            if (statusCounts[a.status] !== undefined) statusCounts[a.status]++
+        })
+        return { ...g, campaignsCount: g.applications.length, statusCounts }
+    })
+
+    return { general, campaignGroups }
+}

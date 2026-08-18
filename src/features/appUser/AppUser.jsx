@@ -106,22 +106,39 @@ export default function AppUsers() {
         </div>
       ),
     },
-    {
+   {
   title: t('appUsers.table.balance'),
   key: 'balances',
   align: 'center',
-  render: (_, user) => (
-  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-    <Wallet size={14} style={{ color: 'var(--color-primary-500)' }} />
-    <span style={{
-      fontSize: '0.9rem',
-      fontWeight: 700,
-      color: user.balances?.USD > 0 ? 'var(--color-primary-500)' : 'var(--text-muted)',
-    }}>
-      {Number(user.balances?.USD || 0).toLocaleString('en-US')} USD
-    </span>
-  </div>
-),
+  render: (_, user) => {
+    const balances = user.balances || {}
+    const entries = Object.entries(balances)
+
+    if (entries.length === 0) {
+      return (
+        <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>—</span>
+      )
+    }
+
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', alignItems: 'center' }}>
+        {entries.map(([currency, amount]) => (
+          <div key={currency} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <Wallet size={13} style={{ color: 'var(--color-primary-500)' }} />
+            <span
+              style={{
+                fontSize: '0.85rem',
+                fontWeight: 700,
+                color: Number(amount) > 0 ? 'var(--color-primary-500)' : 'var(--text-muted)',
+              }}
+            >
+              {Number(amount || 0).toLocaleString('en-US')} {currency}
+            </span>
+          </div>
+        ))}
+      </div>
+    )
+  },
 },
     {
       title: t('appUsers.table.status'),
