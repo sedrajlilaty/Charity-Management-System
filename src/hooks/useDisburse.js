@@ -47,3 +47,13 @@ export const useDisburseRequest = () => {
         },
     })
 }
+
+// import { disburseApi } from '../api/disburseApi' // عدّلي المسار حسب مكان الملف عندك
+
+export function useAdminWallet() {
+    return useQuery({
+        queryKey: ['adminWallet'],
+        queryFn: disburseApi.getAdminWallet,
+        staleTime: 1000 * 30, // نصف دقيقة كفاية، مش داعي نطلبها كل ثانية
+    })
+}

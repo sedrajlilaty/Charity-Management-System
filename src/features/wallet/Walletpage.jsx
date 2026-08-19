@@ -11,7 +11,7 @@ import { PageHeader }  from '../../ui/PageHeader'
 import { SpinnerPage } from '../../ui/Spinner'
 import { EmptyState }  from '../../ui/EmptyState'
 import PermissionButton from '../../ui/PermissionButton'
-import { useAuth } from '../../context/AuthContext'
+// import { useAuth } from '../../context/AuthContext'
 
 import {
   usePendingCampaigns,
@@ -19,8 +19,8 @@ import {
   useMonthlyDisbursementReport,
   useDisburseCampaign,
   useDisburseRequest,
+  useAdminWallet,
 } from '../../hooks/useDisburse'
-
 const fmt = (n) => 'ر.س ' + Number(n).toLocaleString('ar-SA', { maximumFractionDigits: 0 })
 
 // ─── KPI Card ─────────────────────────────────────────────────
@@ -117,14 +117,16 @@ function DisburseCard({ item, onDisburse, isDisbursing }) {
 // ─── Main Page ────────────────────────────────────────────────
 export default function WalletPage() {
   const { t }    = useTranslation()
-  const { user } = useAuth()
+  // const { user } = useAuth()
 
   const now   = new Date()
   const year  = now.getFullYear()
   const month = now.getMonth() + 1
 
   // ✅ البالانس — من اليوزر المسجل دخول (الأدمن) مباشرة عبر AuthContext
-  const balance = Number(user?.balances?.USD || 0)
+ // ✅ البالانس — من الـ endpoint المخصص getAdminWallet مباشرة
+const { data: walletRes, isLoading: walletLoading } = useAdminWallet()
+const balance = walletRes?.total_in_usd ?? 0
 
   // ✅ الحملات والطلبات المعلقة الصرف — الفلترة صارت بالباك مباشرة
   const { data: pendingCampaignsRes, isLoading: campaignsLoading } = usePendingCampaigns()
@@ -188,8 +190,11 @@ export default function WalletPage() {
 
       {/* KPI Cards */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 16 }}>
-        <KpiCard label={t('wallet.kpi.balance')} value={fmt(balance)} icon={Wallet} />
-        <KpiCard
+<KpiCard
+  label={t('wallet.kpi.balance')}
+  value={walletLoading ? '...' : fmt(balance)}
+  icon={Wallet}
+/>        <KpiCard
           label={t('wallet.kpi.totalDisbursed', { defaultValue: 'المصروف هالشهر' })}
           value={reportLoading ? '...' : fmt(report?.summary?.total?.total_amount ?? 0)}
           icon={Send}

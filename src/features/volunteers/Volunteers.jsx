@@ -2,8 +2,8 @@ import { useState, useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import { useSearchParams } from 'react-router-dom'
-import { Search, Eye, Users, Megaphone } from 'lucide-react'
-import { volunteersService, parseSkills, getSkillLabel, groupVolunteersByPerson } from '../../hooks/volunteersService'
+import { Search, Eye, Users, Megaphone, Clock } from 'lucide-react'
+import { volunteersService, parseSkills, getSkillLabel } from '../../hooks/volunteersService'
 import { Badge } from '../../ui/Badge'
 import { Card } from '../../ui/Card'
 import { PageHeader } from '../../ui/PageHeader'
@@ -18,7 +18,7 @@ export default function Volunteers() {
 
   const status = params.get('status') || 'all'
   const search = params.get('search') || ''
-  const type   = params.get('type') || 'all'
+  const type   = params.get('type') || 'general' // تبويب افتراضي: تطوع عام
 
   const [selected, setSelected] = useState(null)
   const [detailsOpen, setDetailsOpen] = useState(false)
@@ -32,39 +32,46 @@ export default function Volunteers() {
   ]
 
   const TYPE_TABS = [
-    { key: 'all',      label: t('volunteers.type.all', { defaultValue: 'الكل' }),         icon: null },
     { key: 'general',  label: t('volunteers.type.general', { defaultValue: 'تطوع عام' }),   icon: Users },
     { key: 'campaign', label: t('volunteers.type.campaign', { defaultValue: 'تطوع لحملات' }), icon: Megaphone },
   ]
 
+  const isGeneralType = type === 'general'
+
   const { data, isLoading } = useQuery({
-    queryKey: ['volunteer-applications', status],
-    queryFn: () => volunteersService.getApplicationsByStatus(status),
+    queryKey: ['volunteer-applications', type, status],
+    queryFn: () =>
+      isGeneralType
+        ? volunteersService.getGeneralApplicationsByStatus(status)
+        : volunteersService.getCampaignVolunteersSummary(),
   })
 
-  const { general, campaignGroups } = useMemo(
-    () => groupVolunteersByPerson(data?.data ?? []),
-    [data]
-  )
-
   const rows = useMemo(() => {
-    let list = []
-    if (type === 'all') list = [...general, ...campaignGroups]
-    else if (type === 'general') list = general
-    else list = campaignGroups
+    let list = data?.data ?? []
+
+    if (isGeneralType) {
+      // احتياط: لو الـ endpoint (مثلاً filter بدون باراميترات) رجّع صفوف مش عامة بالغلط
+      list = list.filter((r) => r.general_application === true)
+    } else {
+      // قسم الحملات: بس المتطوعين اللي إلهم حملة وحدة عالأقل
+      list = list.filter((r) => (r.campaigns_count ?? 0) > 0)
+      if (status !== 'all') {
+        list = list.filter((r) => r.status === status)
+      }
+    }
 
     if (search) {
       const q = search.trim().toLowerCase()
       list = list.filter(
         (v) =>
           v.name?.toLowerCase().includes(q) ||
-          v.phone?.includes(q) ||
+          v.phone?.toLowerCase?.().includes(q) ||
           v.email?.toLowerCase().includes(q) ||
           v.governorate?.toLowerCase().includes(q)
       )
     }
     return list
-  }, [general, campaignGroups, search, type])
+  }, [data, search, status, isGeneralType])
 
   const handleShowDetails = (row) => {
     setSelected(row)
@@ -88,24 +95,9 @@ export default function Volunteers() {
         render: (_, row) => (
           <div style={{ textAlign: 'right' }}>
             <div style={{ fontWeight: 600 }}>{row.name}</div>
-            <div style={{ fontSize: 12, color: 'gray' }}>{row.phone}</div>
+            <div style={{ fontSize: 12, color: 'gray' }}>{row.phone || '-'}</div>
           </div>
         ),
-      },
-      {
-        title: t('volunteers.table.type', { defaultValue: 'النوع' }),
-        key: 'type',
-        align: 'center',
-        render: (_, row) =>
-          row.__rowType === 'general' ? (
-            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: '0.72rem', fontWeight: 700, padding: '3px 9px', borderRadius: 99, background: 'var(--bg-muted)', color: 'var(--text-secondary)' }}>
-              <Users size={11} /> {t('volunteers.type.general', { defaultValue: 'عام' })}
-            </span>
-          ) : (
-            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: '0.72rem', fontWeight: 700, padding: '3px 9px', borderRadius: 99, background: '#e0f2fe', color: '#0369a1' }}>
-              <Megaphone size={11} /> {row.campaignsCount} {t('volunteers.type.campaignsSuffix', { defaultValue: 'حملة' })}
-            </span>
-          ),
       },
       {
         title: t('volunteers.table.governorate', { defaultValue: 'المحافظة' }),
@@ -134,25 +126,37 @@ export default function Volunteers() {
           )
         },
       },
-      {
-        title: t('volunteers.table.status', { defaultValue: 'الحالة' }),
-        key: 'status',
-        align: 'center',
-        render: (_, row) => {
-          if (row.__rowType === 'general') return <Badge status={row.status} />
-
-          // ملخص حالات لكل الحملات (شخص واحد بكذا حملة)
-          const { approved, pending, rejected, suspended } = row.statusCounts
-          return (
-            <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', justifyContent: 'center', fontSize: '0.68rem', fontWeight: 700 }}>
-              {approved > 0  && <span style={{ padding: '2px 7px', borderRadius: 99, background: '#dcfce7', color: '#16a34a' }}>✓ {approved}</span>}
-              {pending > 0   && <span style={{ padding: '2px 7px', borderRadius: 99, background: '#fef9c3', color: '#a16207' }}>⏳ {pending}</span>}
-              {rejected > 0  && <span style={{ padding: '2px 7px', borderRadius: 99, background: '#fee2e2', color: '#dc2626' }}>✕ {rejected}</span>}
-              {suspended > 0 && <span style={{ padding: '2px 7px', borderRadius: 99, background: '#f1f5f9', color: '#64748b' }}>⏸ {suspended}</span>}
-            </div>
-          )
-        },
-      },
+      // عمود "الحالة" — بس لقسم العام
+      ...(isGeneralType
+        ? [
+            {
+              title: t('volunteers.table.status', { defaultValue: 'الحالة' }),
+              key: 'status',
+              align: 'center',
+              render: (_, row) => <Badge status={row.status} />,
+            },
+          ]
+        : []),
+      // عمود "الحملات / الساعات" — بس لقسم الحملات
+      ...(!isGeneralType
+        ? [
+            {
+              title: t('volunteers.table.stats', { defaultValue: 'الحملات / الساعات' }),
+              key: 'stats',
+              align: 'center',
+              render: (_, row) => (
+                <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', justifyContent: 'center' }}>
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: '0.72rem', fontWeight: 700, padding: '3px 9px', borderRadius: 99, background: '#F2C055', color: '#FAF8D8' }}>
+                    <Megaphone size={11} /> {row.campaigns_count ?? 0} {t('volunteers.table.campaignsShort', { defaultValue: 'حملة' })}
+                  </span>
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: '0.72rem', fontWeight: 700, padding: '3px 9px', borderRadius: 99, background: ' var(--color-primary-500)', color: '#FBFDFC' }}>
+                    <Clock size={11} /> {row.total_hours ?? 0} {t('volunteers.table.hoursShort', { defaultValue: 'ساعة' })}
+                  </span>
+                </div>
+              ),
+            },
+          ]
+        : []),
       {
         title: t('volunteers.table.actions', { defaultValue: 'الإجراءات' }),
         key: 'actions',
@@ -168,7 +172,7 @@ export default function Volunteers() {
         ),
       },
     ],
-    [t]
+    [t, isGeneralType]
   )
 
   return (
@@ -177,6 +181,22 @@ export default function Volunteers() {
 
       <Card style={{ padding: '16px', borderRadius: '24px', background: 'var(--surface)' }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+          <div style={{ display: 'flex', gap: '8px' }}>
+            {TYPE_TABS.map((tab) => (
+              <button key={tab.key} onClick={() => setParam('type', tab.key)}
+                style={{
+                  display: 'inline-flex', alignItems: 'center', gap: 5,
+                  padding: '9px 16px', borderRadius: '12px',
+                  border: type === tab.key ? '1px solid var(--color-primary-300)' : '1px solid var(--border-subtle)',
+                  background: type === tab.key ? 'var(--color-primary-500)' : 'transparent',
+                  color: type === tab.key ? '#fff' : 'var(--text-secondary)',
+                  fontWeight: 700, fontSize: '0.85rem', cursor: 'pointer', fontFamily: 'Cairo,sans-serif',
+                }}>
+                {tab.icon && <tab.icon size={13} />} {tab.label}
+              </button>
+            ))}
+          </div>
+
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
             {STATUS_TABS.map((tab) => (
               <button key={tab.key} onClick={() => setParam('status', tab.key)}
@@ -192,32 +212,14 @@ export default function Volunteers() {
             ))}
           </div>
 
-          <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: '16px' }}>
-            <div style={{ display: 'flex', gap: '8px' }}>
-              {TYPE_TABS.map((tab) => (
-                <button key={tab.key} onClick={() => setParam('type', tab.key)}
-                  style={{
-                    display: 'inline-flex', alignItems: 'center', gap: 5,
-                    padding: '7px 14px', borderRadius: '10px',
-                    border: type === tab.key ? '1px solid var(--color-primary-300)' : '1px solid var(--border-subtle)',
-                    background: type === tab.key ? 'var(--color-primary-500)' : 'transparent',
-                    color: type === tab.key ? '#fff' : 'var(--text-secondary)',
-                    fontWeight: 600, fontSize: '0.78rem', cursor: 'pointer', fontFamily: 'Cairo,sans-serif',
-                  }}>
-                  {tab.icon && <tab.icon size={12} />} {tab.label}
-                </button>
-              ))}
-            </div>
-
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: '260px', height: '46px', borderRadius: '14px', border: '1px solid var(--border-default)', background: 'var(--bg-muted)', paddingInline: '14px' }}>
-              <Search size={16} style={{ color: 'var(--text-muted)' }} />
-              <input
-                placeholder={t('volunteers.searchPlaceholder', { defaultValue: 'بحث بالاسم، رقم الهاتف، أو المحافظة...' })}
-                value={search}
-                onChange={(e) => setParam('search', e.target.value)}
-                style={{ background: 'transparent', border: 'none', outline: 'none', width: '100%', fontFamily: 'Cairo,sans-serif' }}
-              />
-            </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: '260px', height: '46px', borderRadius: '14px', border: '1px solid var(--border-default)', background: 'var(--bg-muted)', paddingInline: '14px' }}>
+            <Search size={16} style={{ color: 'var(--text-muted)' }} />
+            <input
+              placeholder={t('volunteers.searchPlaceholder', { defaultValue: 'بحث بالاسم، رقم الهاتف، أو المحافظة...' })}
+              value={search}
+              onChange={(e) => setParam('search', e.target.value)}
+              style={{ background: 'transparent', border: 'none', outline: 'none', width: '100%', fontFamily: 'Cairo,sans-serif' }}
+            />
           </div>
         </div>
       </Card>

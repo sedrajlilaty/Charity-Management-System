@@ -235,63 +235,7 @@ const ar = {
                 fees: 'رسوم دراسية',
             },
 
-            caseView: {
-                title: 'تفاصيل الحالة',
-                publishTitle: 'قبول ونشر الحالة',
-                caseNumber: 'رقم الحالة #{{id}}',
-                publishSubtitle: 'أضف البيانات التي ستظهر للمتبرعين',
-                close: 'إغلاق',
-                reject: 'رفض',
-                archive: 'أرشفة',
-                approveAndPublish: 'قبول ونشر',
-                confirmPublish: 'تأكيد القبول والنشر',
-                back: 'رجوع',
 
-                fields: {
-                    phone: 'الهاتف',
-                    email: 'البريد',
-                    governorate: 'المحافظة',
-                    region: 'المنطقة',
-                    address: 'العنوان التفصيلي',
-                    description: 'وصف الحالة',
-                    amount: 'المبلغ المطلوب',
-                    priority: 'أولوية',
-                    publishedTitle: 'تفاصيل النشر',
-                    grade: 'المرحلة الدراسية',
-                    school: 'اسم المدرسة',
-                    year: 'السنة الدراسية',
-                    supportType: 'نوع الدعم',
-                },
-
-                files: {
-                    picture: 'الصورة الشخصية',
-                    medicalReport: 'التقرير الطبي',
-                    nationalId: 'الهوية الوطنية',
-                    familyBooklet: 'دفتر العائلة',
-                    deathCert: 'وثيقة وفاة الوالد',
-                    familyBook: 'صورة دفتر العائلة',
-                    universityId: 'بطاقة الجامعة',
-                    uploaded: 'تم رفع الملف',
-                },
-
-                publish: {
-                    warning: 'هذه المعلومات ستظهر للمتبرعين — اختر عنواناً ووصفاً احترافياً دون الكشف عن بيانات حساسة',
-                    caseTitle: 'عنوان الحالة',
-                    caseTitleRequired: 'عنوان الحالة مطلوب',
-                    caseDesc: 'وصف الحالة للعرض العام',
-                    caseDescRequired: 'وصف الحالة مطلوب',
-                    caseDescPlaceholder: 'وصف مختصر يوضح احتياج الحالة دون الكشف عن بيانات شخصية...',
-                    caseImage: 'صورة الحالة',
-                    imageOptional: '(اختياري)',
-                    imageLabel: 'اضغط أو اسحب صورة الحالة',
-                    placeholders: {
-                        patient: 'مثال: مريض يحتاج دعماً طبياً عاجلاً',
-                        orphan: 'مثال: كفالة أيتام — أسرة بحاجة للدعم',
-                        school_student: 'مثال: دعم طالب متفوق في مدرسته',
-                        university_student: 'مثال: طالب جامعي يحتاج لابتوب للدراسة',
-                    },
-                },
-            },
 
             map: {
                 allGov: 'كل المحافظات',
@@ -381,6 +325,76 @@ const ar = {
                 validation: {
                     required: '{{field}} مطلوب',
                     phoneOrEmail: 'الهاتف أو البريد الإلكتروني مطلوب',
+                },
+            },
+            caseView: {
+                title: 'تفاصيل الحالة',
+                publishTitle: 'قبول ونشر الحالة',
+                caseNumber: 'حالة #{{id}} · {{name}}',
+                publishSubtitle: 'أدخل معلومات النشر',
+                close: 'إغلاق النافذة',
+                closeRequest: 'إغلاق الحالة',        // 🆕 زر إغلاق الحالة عالسيرفر
+                reject: 'رفض',
+                archive: 'أرشفة',
+                approveAndPublish: 'قبول ونشر',
+                confirmPublish: 'تأكيد النشر',
+                back: 'رجوع',
+
+                statusOpen: 'مفتوح',                 // 🆕
+                statusClosed: 'مغلق',                // 🆕
+                donationProgress: 'تقدم التبرعات',   // 🆕
+                collected: 'تم جمع',                 // 🆕
+                requiredLabel: 'المطلوب',            // 🆕
+                publishWarning: 'بعد القبول سيتم نشر الحالة وإتاحتها للتبرع. تأكد من صحة المعلومات.', // 🆕
+
+                fields: {
+                    phone: 'الهاتف',
+                    email: 'البريد',
+                    governorate: 'المحافظة',
+                    region: 'المنطقة',
+                    address: 'العنوان التفصيلي',
+                    description: 'وصف الحالة',
+                    amount: 'المبلغ المطلوب',
+                    priority: 'أولوية',
+                    publishedTitle: 'تفاصيل النشر',
+                    grade: 'المرحلة الدراسية',
+                    school: 'اسم المدرسة',
+                    year: 'السنة الدراسية',
+                    supportType: 'نوع الدعم',
+                },
+
+                files: {
+                    picture: 'الصورة الشخصية',
+                    medicalReport: 'التقرير الطبي',
+                    nationalId: 'وثيقة الهوية',       // (عدلتها تطابق النص الفعلي بالكود)
+                    familyBooklet: 'دفتر العائلة',
+                    deathCert: 'وثيقة وفاة الوالد',
+                    familyBook: 'صورة دفتر العائلة',
+                    universityId: 'بطاقة الجامعة',
+                    uploaded: 'تم رفع الملف',
+                    view: 'عرض',                      // 🆕
+                },
+
+                publish: {
+                    warning: 'هذه المعلومات ستظهر للمتبرعين — اختر عنواناً ووصفاً احترافياً دون الكشف عن بيانات حساسة',
+                    caseTitle: 'عنوان الحالة',
+                    caseTitleRequired: 'العنوان مطلوب',
+                    caseDesc: 'وصف الحالة',
+                    caseDescRequired: 'الوصف مطلوب',
+                    caseDescPlaceholder: 'وصف تفصيلي للحالة والاحتياج...',
+                    caseImage: 'صورة الحالة',
+                    imageLabel: 'اضغط أو اسحب صورة الحالة',
+                    imageChange: 'تغيير الصورة',       // 🆕
+                    imageUpload: 'رفع صورة',           // 🆕
+                    imageHint: 'ستظهر هذه الصورة مع الحالة المنشورة (JPG, PNG)', // 🆕
+                    amountLabel: 'المبلغ المطلوب ($)', // 🆕
+                    amountRequired: 'المبلغ مطلوب',    // 🆕
+                    placeholders: {
+                        patient: 'مثال: مريض سرطان يحتاج تمويل علاج عاجل',
+                        orphan: 'مثال: كفالة أيتام — أسرة بحاجة للدعم',
+                        school_student: 'مثال: دعم طالب متفوق في مدرسته',
+                        university_student: 'مثال: طالب جامعي يحتاج لابتوب للدراسة',
+                    },
                 },
             },
         },
@@ -943,14 +957,22 @@ const en = {
             caseView: {
                 title: 'Case Details',
                 publishTitle: 'Approve & Publish Case',
-                caseNumber: 'Case #{{id}}',
-                publishSubtitle: 'Add details that will be shown to donors',
-                close: 'Close',
+                caseNumber: 'Case #{{id}} · {{name}}',
+                publishSubtitle: 'Enter publishing information',
+                close: 'Close Window',
+                closeRequest: 'Close Case',
                 reject: 'Reject',
                 archive: 'Archive',
                 approveAndPublish: 'Approve & Publish',
-                confirmPublish: 'Confirm Approval & Publishing',
+                confirmPublish: 'Confirm Publish',
                 back: 'Back',
+
+                statusOpen: 'Open',
+                statusClosed: 'Closed',
+                donationProgress: 'Donation Progress',
+                collected: 'Collected',
+                requiredLabel: 'Required',
+                publishWarning: 'Once approved, this case will be published and open for donations. Make sure the information is accurate.',
 
                 fields: {
                     phone: 'Phone',
@@ -969,31 +991,36 @@ const en = {
                 },
 
                 files: {
-                    picture: 'Personal Photo',
+                    picture: 'Personal Picture',
                     medicalReport: 'Medical Report',
-                    nationalId: 'National ID',
+                    nationalId: 'ID Document',
                     familyBooklet: 'Family Booklet',
-                    deathCert: 'Father Death Certificate',
-                    familyBook: 'Family Book Photo',
-                    universityId: 'University ID',
+                    deathCert: "Father's Death Certificate",
+                    familyBook: 'Family Booklet Photo',
+                    universityId: 'University ID Card',
                     uploaded: 'File uploaded',
+                    view: 'View',
                 },
 
                 publish: {
-                    warning: 'This information will be visible to donors — choose a professional title and description without revealing sensitive personal data',
+                    warning: 'This information will be visible to donors — choose a professional title and description without disclosing sensitive personal data',
                     caseTitle: 'Case Title',
-                    caseTitleRequired: 'Case title is required',
-                    caseDesc: 'Public Case Description',
-                    caseDescRequired: 'Case description is required',
-                    caseDescPlaceholder: 'Brief description of the case need without revealing personal data...',
+                    caseTitleRequired: 'Title is required',
+                    caseDesc: 'Case Description',
+                    caseDescRequired: 'Description is required',
+                    caseDescPlaceholder: 'A detailed description of the case and its needs...',
                     caseImage: 'Case Image',
-                    imageOptional: '(optional)',
-                    imageLabel: 'Click or drag a case image',
+                    imageLabel: 'Click or drag to upload case image',
+                    imageChange: 'Change Image',
+                    imageUpload: 'Upload Image',
+                    imageHint: 'This image will appear with the published case (JPG, PNG)',
+                    amountLabel: 'Required Amount ($)',
+                    amountRequired: 'Amount is required',
                     placeholders: {
-                        patient: 'e.g. Patient in urgent need of medical support',
-                        orphan: 'e.g. Orphan sponsorship — family in need',
-                        school_student: 'e.g. Supporting a high-achieving school student',
-                        university_student: 'e.g. University student needs a laptop for studies',
+                        patient: 'e.g. A cancer patient in need of urgent treatment funding',
+                        orphan: 'e.g. Orphan sponsorship — a family in need of support',
+                        school_student: 'e.g. Support for a distinguished school student',
+                        university_student: 'e.g. A university student in need of a laptop for their studies',
                     },
                 },
             },

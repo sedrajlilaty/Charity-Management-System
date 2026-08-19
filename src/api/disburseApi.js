@@ -20,4 +20,7 @@ export const disburseApi = {
     // ── تقرير شامل لشهر معين — منستخدمه لعرض إجمالي المصروف + سجل الشهر الحالي ──
     getCompleteDisbursementReport: (year, month) =>
         axiosInstance.get(`/reports/complete-disbursement/${year}/${month}`).then((r) => r.data),
+    getAdminWallet: () =>
+        axiosInstance.get('/getAdminWallet').then((r) => r.data),
 }
+// ✅ جلب بالانس الأدمن مباشرة (رقم موحّد USD جاهز من الباك)

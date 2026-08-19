@@ -1,6 +1,31 @@
 import api from '../api/axiosInstance'
 
 export const volunteersService = {
+
+
+
+
+    // أضيفي هاد جوا volunteersService object، بعد getApplicationsByStatus
+
+    // ============================================================
+    // النسخة الجديدة: فصل واضح بين "عام" و "حملات"
+    // ============================================================
+
+    // متطوع عام فقط — عن طريق الـ endpoints المخصصة
+    getGeneralApplicationsByStatus: (status) => {
+        if (!status || status === 'all') {
+            return api.get('/volunteer-applications/filter').then((r) => r.data)
+        }
+        return api.get(`/volunteer-applications/${status}`).then((r) => r.data)
+    },
+
+    // كل المتطوعين (عام + حملات) بشكل مسطّح مع campaigns_count و total_hours
+    getCampaignVolunteersSummary: () =>
+        api.get('/volunteers/summary').then((r) => r.data),
+
+    // حملات متطوع معين (لو حبيتي تستخدميه بالتفاصيل لاحقًا)
+    getVolunteerCampaigns: (volunteerId) =>
+        api.get(`/volunteerscampaigns/${volunteerId}`).then((r) => r.data),
     // ============================================================
     // 1) طلب تطوع عام (المستخدم نفسه)
     // ============================================================
@@ -17,11 +42,11 @@ export const volunteersService = {
     // 2) مراجعة طلبات التطوع العامة (أدمن)
     // ============================================================
     getAllVolunteers: () =>
-        api.get('/all-volunteers').then((r) => r.data),
+        api.get('/volunteers/summary').then((r) => r.data),
 
     getApplicationsByStatus: (status) => {
         if (!status || status === 'all') {
-            return api.get('/all-volunteers').then((r) => r.data)
+            return api.get('/volunteers/summary').then((r) => r.data)
         }
         return api.get(`/volunteer-applications/${status}`).then((r) => r.data)
     },
