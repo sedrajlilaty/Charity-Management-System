@@ -25,7 +25,8 @@ const ar = {
             volunteers: 'المتطوعون',
             ai: 'المساعد الذكي',
             wallet: 'المحفظة ',
-            appUsers: "مستخدمو التطبيق"
+            appUsers: "مستخدمو التطبيق",
+            sponsorship: "كفالة اليتيم"
         },
 
         // ── Common ────────────────────────────────────────────────────────────
@@ -508,7 +509,38 @@ const ar = {
             },
             toast: { success: 'تم الصرف بنجاح إلى' },
         },
-
+        sponsorship: {
+            title: 'كفالة اليتيم',
+            subtitle: 'إجمالي عدد اليتامى: {{count}}',
+            tableTitle: 'قائمة اليتامى والكفلاء',
+            tableSubtitle: 'تفاصيل الكفالة وحالة كل يتيم',
+            cancelButton: 'إلغاء الكفالة',
+            cancelConfirm: 'متأكدة إنك بدك تلغي كفالة "{{name}}"\؟',
+            tabs: {
+                sponsored: 'مكفول',
+                needs_follow_up: 'بحاجة متابعة',
+            },
+            status: {
+                sponsored: 'مكفول',
+                needs_follow_up: 'بحاجة متابعة',
+                unsponsored: 'غير مكفول',
+            },
+            filter: {
+                search: 'بحث باسم اليتيم أو الكفيل...',
+            },
+            table: {
+                id: 'الرقم',
+                orphanName: 'اسم اليتيم',
+                sponsorName: 'الكفيل',
+                startDate: 'تاريخ بداية الكفالة',
+                status: 'الحالة',
+                actions: 'إجراء',
+            },
+            empty: {
+                title: 'لا يوجد يتامى مسجلين',
+                description: 'لسا ما تم إضافة أي حالة كفالة',
+            },
+        },
         // ── Notifications ─────────────────────────────────────────────────────
         notifications: {
             title: 'الإشعارات',
@@ -770,7 +802,9 @@ const en = {
             volunteers: 'Volunteers',
             ai: 'AI Assistant',
             wallet: 'Wallet',
-            appUsers: "App Users"
+            appUsers: "App Users",
+
+            sponsorship: "Orphan Sponsorship"
         },
 
         // ── Common ────────────────────────────────────────────────────────────
@@ -1116,7 +1150,38 @@ const en = {
                 },
             },
         },
-
+        sponsorship: {
+            title: 'Orphan Sponsorship',
+            subtitle: 'Total orphans: {{count}}',
+            tableTitle: 'Orphans & Sponsors',
+            tableSubtitle: 'Sponsorship details and status for each orphan',
+            cancelButton: 'Cancel Sponsorship',
+            cancelConfirm: 'Are you sure you want to cancel the sponsorship for "{{name}}"\?',
+            tabs: {
+                sponsored: 'Sponsored',
+                needs_follow_up: 'Needs Follow-up',
+            },
+            status: {
+                sponsored: 'Sponsored',
+                needs_follow_up: 'Needs Follow-up',
+                unsponsored: 'Unsponsored',
+            },
+            filter: {
+                search: 'Search by orphan or sponsor name...',
+            },
+            table: {
+                id: 'ID',
+                orphanName: 'Orphan Name',
+                sponsorName: 'Sponsor',
+                startDate: 'Sponsorship Start',
+                status: 'Status',
+                actions: 'Action',
+            },
+            empty: {
+                title: 'No orphans registered',
+                description: 'No sponsorship cases have been added yet',
+            },
+        },
         // ── Campaigns ─────────────────────────────────────────────────────────
         campaigns: {
             title: 'Campaigns', subtitle: '{{count}} campaigns', addBtn: 'New campaign', total: 'Total',

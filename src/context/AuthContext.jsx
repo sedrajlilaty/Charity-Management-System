@@ -18,15 +18,15 @@ const mapRole = (backendRole) => {
 // ── جدول الصلاحيات ──────────────────────────────────
 export const PERMISSIONS = {
   admin: ['*'],
-
-  supervisor: [
-    'donations.view', 'donations.edit', 'donations.approve', 'donations.reject',
-    'beneficiaries.view', 'beneficiaries.add', 'beneficiaries.edit',
-    'beneficiaries.approve', 'beneficiaries.reject',
-    'campaigns.view',
-    'volunteers.view', 'volunteers.approve', 'volunteers.reject',
-    'dashboard.view', 'services.view', 'notifications.view', 'ai.use',
-  ],
+supervisor: [
+  'donations.view', 'donations.edit', 'donations.approve', 'donations.reject',
+  'beneficiaries.view', 'beneficiaries.add', 'beneficiaries.edit',
+  'beneficiaries.approve', 'beneficiaries.reject',
+  'sponsorship.view', 'sponsorship.cancel',
+  'campaigns.view',
+  'volunteers.view', 'volunteers.approve', 'volunteers.reject',
+  'dashboard.view', 'services.view', 'notifications.view', 'ai.use',
+],
 
   fieldWorker: [
     'campaigns.view', 'campaigns.viewVolunteers',
@@ -40,6 +40,7 @@ export const ROUTE_PERMISSIONS = {
   donations:      ['admin', 'supervisor'],
   beneficiaries:  ['admin', 'supervisor'],
   campaigns:      ['admin', 'supervisor', 'fieldWorker'],
+   sponsorship:    ['admin', 'supervisor'],
   services:       ['admin'],
   users:          ['admin'],
   volunteers:     ['admin', 'supervisor', 'fieldWorker'],

@@ -103,6 +103,12 @@ export const volunteersService = {
         api
             .get(`/campaigns/${campaignId}/volunteers/${volunteerId}/hours`)
             .then((r) => r.data),
+
+    // ============================================================
+    // 6) إيقاف متطوع عام
+    // ============================================================
+    suspendGeneralVolunteer: (volunteerId) =>
+        api.post(`/volunteersuspend/${volunteerId}`).then((r) => r.data),
 }
 
 export const SKILLS_LABELS_AR = {

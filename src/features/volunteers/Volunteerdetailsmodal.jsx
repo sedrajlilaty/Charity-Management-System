@@ -43,12 +43,24 @@ export default function VolunteerDetailsModal({ open, onClose, volunteer }) {
     },
   })
 
+  // إيقاف متطوع عام
+  const suspendMut = useMutation({
+    mutationFn: (id) => volunteersService.suspendGeneralVolunteer(id),
+    onSuccess: () => {
+      qc.invalidateQueries(['volunteer-applications'])
+      qc.invalidateQueries(['volunteers'])
+      setConfirmAction(null)
+      onClose()
+    },
+  })
+
   if (!open || !volunteer) return null
+
+  const isSubmitting = reviewMut.isLoading || suspendMut.isLoading
 
   const handleConfirm = () => {
     if (confirmAction === 'suspended') {
-      alert('سيتم ربطه بـ API إيقاف التطوع عند اكتمال الـ Backend')
-      setConfirmAction(null)
+      suspendMut.mutate(targetId)
       return
     }
     if (confirmAction) {
@@ -88,7 +100,7 @@ export default function VolunteerDetailsModal({ open, onClose, volunteer }) {
               </h3>
               <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
                 <Badge status={volunteer.status} />
-                <span style={{ fontSize: '0.7rem', fontWeight: 700, padding: '2px 8px', borderRadius: 99, background: isGeneral ? 'var(--bg-surface)' : '#e0f2fe', color: isGeneral ? 'var(--text-secondary)' : '#0369a1', border: '1px solid var(--border-subtle)' }}>
+                <span style={{ fontSize: '0.7rem', fontWeight: 700, padding: '2px 8px', borderRadius: 99, background: isGeneral ? 'var(--bg-surface)' : '#e0f2fe', color: isGeneral ? 'var(--text-secondary)' : 'var(--color-primary-500)69a1', border: '1px solid var(--border-subtle)' }}>
                   {isGeneral
                     ? t('volunteers.type.general', { defaultValue: 'تطوع عام' })
                     : `${t('volunteers.modal.campaign', { defaultValue: 'الحملة' })}${campaignName ? `: ${campaignName}` : ''}`}
@@ -137,18 +149,26 @@ export default function VolunteerDetailsModal({ open, onClose, volunteer }) {
 
           {/* تنويه لمتطوع الحملة — بدون إجراءات هون */}
           {!isGeneral && (
-            <div style={{ display: 'flex', gap: 8, padding: '0.75rem 1rem', background: '#eff6ff', borderRadius: 10, border: '1px solid #bfdbfe' }}>
-              <Info size={15} style={{ color: '#1d4ed8', flexShrink: 0, marginTop: 1 }} />
-              <p style={{ margin: 0, fontSize: '0.8rem', color: '#1e3a8a', lineHeight: 1.5 }}>
+            <div style={{ display: 'flex', gap: 8, padding: '0.75rem 1rem', background: 'var(--bg-surface)', borderRadius: 10, border: '1px solid var(--border-subtle)' }}>
+              <Info size={15} style={{ color: 'var(--color-primary-500)', flexShrink: 0, marginTop: 1 }} />
+              <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--color-primary-500)', lineHeight: 1.5 }}>
                 هذا متطوع ضمن حملة — القبول والرفض بيتم من داخل صفحة الحملة نفسها.
               </p>
             </div>
           )}
 
+          {suspendMut.isError && (
+            <div style={{ padding: '0.75rem 1rem', background: '#fef2f2', borderRadius: 10, border: '1px solid var(--color-error)' }}>
+              <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--color-error)', fontWeight: 600 }}>
+                حصل خطأ أثناء إيقاف المتطوع، حاول مرة تانية.
+              </p>
+            </div>
+          )}
+
           {confirmAction && (
-            <div style={{ padding: '1rem', background: '#fefce8', borderRadius: 12, border: '1px solid #fde68a', display: 'flex', flexDirection: 'column', gap: 10, alignItems: 'center', textAlign: 'center' }}>
-              <AlertTriangle size={24} style={{ color: confirmAction === 'approved' ? '#16a34a' : '#dc2626' }} />
-              <p style={{ margin: 0, fontSize: '0.88rem', fontWeight: 700, color: '#78350f' }}>
+            <div style={{ padding: '1rem', background: 'var(--bg-surface)', borderRadius: 12, border: '1px solid var(--border-subtle)', display: 'flex', flexDirection: 'column', gap: 10, alignItems: 'center', textAlign: 'center' }}>
+              <AlertTriangle size={24} style={{ color: confirmAction === 'approved' ? 'var(--color-success)' : 'var(--color-error)' }} />
+              <p style={{ margin: 0, fontSize: '0.88rem', fontWeight: 700, color: 'var(--text-primary)' }}>
                 {confirmAction === 'approved' &&
                   t('volunteers.modal.confirm.approveMessage', { name: volunteerName, defaultValue: `هل أنت متأكد من رغبتك في قبول طلب التطوع الخاص بـ ${volunteerName}؟` })}
                 {confirmAction === 'rejected' &&
@@ -162,10 +182,10 @@ export default function VolunteerDetailsModal({ open, onClose, volunteer }) {
                 </button>
                 <button
                   onClick={handleConfirm}
-                  disabled={reviewMut.isLoading}
-                  style={{ ...base, background: confirmAction === 'approved' ? '#16a34a' : confirmAction === 'suspended' ? '#d97706' : '#dc2626', color: '#fff' }}
+                  disabled={isSubmitting}
+                  style={{ ...base, background: confirmAction === 'approved' ? 'var(--color-primary-500)' : confirmAction === 'suspended' ? 'var(--color-warning)' : 'var(--color-error)', color: '#fff', opacity: isSubmitting ? 0.7 : 1 }}
                 >
-                  {reviewMut.isLoading
+                  {isSubmitting
                     ? t('volunteers.modal.confirm.loading', { defaultValue: 'جاري التنفيذ...' })
                     : t('volunteers.modal.confirm.confirmBtn', { defaultValue: 'تأكيد الإجراء' })}
                 </button>
@@ -192,7 +212,7 @@ export default function VolunteerDetailsModal({ open, onClose, volunteer }) {
           )}
 
           {isGeneral && isApproved && (
-            <PermissionButton onClick={() => setConfirmAction('suspended')} permission="volunteers.suspend" style={{ ...btnMuted, color: '#d97706', borderColor: '#fde68a', background: '#fffbeb' }}>
+            <PermissionButton onClick={() => setConfirmAction('suspended')} permission="volunteers.suspend" style={{ ...btnMuted, color: 'var(--color-warning)', borderColor: 'var(--color-warning)', background: 'var(--bg-surface)' }}>
               <PauseCircle size={15} /> إيقاف التطوع
             </PermissionButton>
           )}
@@ -204,7 +224,7 @@ export default function VolunteerDetailsModal({ open, onClose, volunteer }) {
 }
 
 const base       = { display: 'inline-flex', alignItems: 'center', gap: 6, padding: '9px 18px', borderRadius: 10, fontSize: '0.85rem', fontWeight: 700, fontFamily: 'Cairo, sans-serif', cursor: 'pointer', border: 'none', transition: 'opacity 0.15s' }
-const btnSuccess = { ...base, background: '#16a34a', color: '#fff' }
-const btnDanger  = { ...base, background: '#fee2e2', color: '#dc2626', border: '1px solid #fecaca' }
+const btnSuccess = { ...base, background: 'var(--color-primary-500)', color: '#fff' }
+const btnDanger  = { ...base, background: 'var(--color-error)', color: '#fff', border: '1px solid var(--color-error)' }
 const btnMuted   = { ...base, background: 'var(--bg-muted)', color: 'var(--text-secondary)', border: '1px solid var(--border-default)' }
 const btnGhost   = { ...base, background: 'transparent', color: 'var(--text-secondary)', border: '1px solid var(--border-default)' }

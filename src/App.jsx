@@ -21,6 +21,7 @@ const Volunteers      = lazy(() => import('./features/volunteers/Volunteers'))
 const Certificates = lazy(() => import('./features/certificates/Certificates'))
 const WalletPage = lazy(() => import('./features/wallet/WalletPage'))
 const AppUser = lazy(() => import('./features/appUser/AppUser'))
+import Sponsorship from './features/Sponsorship/Sponsorship'
 function ProtectedRoute({ children }) {
   const { user } = useAuth()
   if (!user) return <Navigate to="/login" replace />
@@ -75,6 +76,7 @@ export default function App() {
            <Route path="certificates" element={<Certificates />} />
            <Route path="/wallet" element={<WalletPage />} />
            <Route path="/app-users" element={<AppUser />} />
+           <Route path="sponsorships" element={<Sponsorship />} />
           </Route>
 
         

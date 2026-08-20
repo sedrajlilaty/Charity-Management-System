@@ -4,11 +4,10 @@ import { useTranslation } from 'react-i18next'
 import {
   LayoutDashboard, Users, Heart, UserCheck,
   Megaphone, Handshake, Settings, Bell, LogOut,
-  Sparkles, HandHeart, X, Wallet, Smartphone
+  Sparkles, HandHeart, X, Wallet, Smartphone, Award
 } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { ROLE_LABEL } from '../utlis/helper'
-import { Award } from 'lucide-react'
 import logoGreen from '../assets/logo-green.png'
 import logoYallo from '../assets/logo-yallo.png'
 
@@ -18,6 +17,7 @@ const NAV_ITEMS = [
   { key: 'dashboard',     path: '/',              icon: LayoutDashboard, routeKey: 'dashboard'     },
   { key: 'donations',     path: '/donations',     icon: Heart,           routeKey: 'donations'     },
   { key: 'beneficiaries', path: '/beneficiaries', icon: UserCheck,       routeKey: 'beneficiaries' },
+  { key: 'sponsorship',   path: '/sponsorships',  icon: Award,           routeKey: 'sponsorship'   },
   { key: 'campaigns',     path: '/campaigns',     icon: Megaphone,       routeKey: 'campaigns'     },
   { key: 'services',      path: '/services',      icon: Handshake,       routeKey: 'services'      },
   { key: 'users',         path: '/users',         icon: Users,           routeKey: 'users'         },
