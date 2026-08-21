@@ -52,7 +52,7 @@ const ar = {
             completed: 'مكتمل',
             active: 'نشط',
             inactive: 'غير نشط',
-            SAR: 'ر.س',
+            SAR: 'USD',
             actions: 'الإجراءات',
             status: 'الحالة',
             date: 'التاريخ',
@@ -495,7 +495,7 @@ const ar = {
                 totalRaised: 'إجمالي التبرعات',
                 disbursed: 'تم صرفه مسبقاً',
                 remaining: 'المتبقي للصرف',
-                amount: 'المبلغ (ر.س)',
+                amount: 'المبلغ (USD)',
                 amountPlaceholder: 'أدخل المبلغ...',
                 note: 'ملاحظة',
                 notePlaceholder: 'ملاحظة اختيارية...',
@@ -535,11 +535,17 @@ const ar = {
                 startDate: 'تاريخ بداية الكفالة',
                 status: 'الحالة',
                 actions: 'إجراء',
+                "progress": "نسبة التبرعات"
             },
             empty: {
                 title: 'لا يوجد يتامى مسجلين',
                 description: 'لسا ما تم إضافة أي حالة كفالة',
             },
+            "summary": {
+                "count": "عدد الكفالات",
+                "donated": "إجمالي المتبرَّع",
+                "remaining": "إجمالي المتبقي"
+            }
         },
         // ── Notifications ─────────────────────────────────────────────────────
         notifications: {
@@ -775,7 +781,18 @@ const ar = {
             byPriority: 'حسب الأولوية',
             noLocation: 'لا توجد بيانات موقع',
         },
+        "reports": {
+            "monthlyReport": "تقرير شهري",
+            "month": "الشهر",
+            "year": "السنة",
+            "generate": "عرض التقرير",
+            "generating": "جاري التجهيز...",
+            "beneficiariesTitle": "تقرير المستفيدين الشهري",
+            "donationsTitle": "تقرير التبرعات الشهري",
+            "error": "فشل جلب التقرير"
+        }
     },
+
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -1176,11 +1193,18 @@ const en = {
                 startDate: 'Sponsorship Start',
                 status: 'Status',
                 actions: 'Action',
+                "progress": "Progress"
             },
             empty: {
                 title: 'No orphans registered',
                 description: 'No sponsorship cases have been added yet',
             },
+            "remaining": "remaining",
+            "summary": {
+                "count": "Sponsorships",
+                "donated": "Total Donated",
+                "remaining": "Total Remaining"
+            }
         },
         // ── Campaigns ─────────────────────────────────────────────────────────
         campaigns: {
@@ -1488,7 +1512,18 @@ const en = {
             byPriority: 'By Priority',
             noLocation: 'No location data',
         },
+        "reports": {
+            "monthlyReport": "Monthly Report",
+            "month": "Month",
+            "year": "Year",
+            "generate": "Generate Report",
+            "generating": "Generating...",
+            "beneficiariesTitle": "Monthly Beneficiaries Report",
+            "donationsTitle": "Monthly Donations Report",
+            "error": "Failed to fetch report"
+        }
     },
+
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════

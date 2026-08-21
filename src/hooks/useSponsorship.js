@@ -1,12 +1,11 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { sponsorshipApi } from '../api/sponsorshipApi'
-// ⚠️ إذا عندك مكتبة توست مختلفة (مثلاً react-hot-toast أو مكون خاص فيكي) بدّليها هون
-import toast from 'react-hot-toast'
+import toast from 'react-hot-toast' // ⚠️ بدّليها إذا عندك مكتبة توست مختلفة
 
-export function useSponsorships(filters = {}) {
+export function useSponsoredOrphans() {
     return useQuery({
-        queryKey: ['sponsorships', filters],
-        queryFn: () => sponsorshipApi.getOrphansWithSponsors(filters),
+        queryKey: ['sponsorships', 'sponsored'],
+        queryFn: () => sponsorshipApi.getSponsoredOrphans(),
     })
 }
 
@@ -14,14 +13,15 @@ export function useCancelSponsorship() {
     const queryClient = useQueryClient()
 
     return useMutation({
-        mutationFn: (sponsorshipId) => sponsorshipApi.cancelSponsorship(sponsorshipId),
+        mutationFn: (orphanId) => sponsorshipApi.cancelSponsorship(orphanId),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['sponsorships'] })
-            queryClient.invalidateQueries({ queryKey: ['dashboard'] }) // متل ما بتعملي بباقي الأماكن
+            queryClient.invalidateQueries({ queryKey: ['dashboard'] })
             toast.success('تم إلغاء الكفالة بنجاح')
         },
-        onError: () => {
-            toast.error('صار خطأ بإلغاء الكفالة، حاولي كمان مرة')
+        onError: (err) => {
+            const msg = err?.response?.data?.message || 'صار خطأ بإلغاء الكفالة'
+            toast.error(msg)
         },
     })
 }

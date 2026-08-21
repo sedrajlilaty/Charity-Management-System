@@ -17,6 +17,7 @@ import {
   User,
   BookOpen,
   GraduationCap,
+  FileText,
 } from 'lucide-react'
 
 import { PageHeader } from '../../ui/PageHeader'
@@ -33,9 +34,12 @@ import BeneficiaryCaseView from './BeneficiaryCaseView'
 
 import { ActionModal } from '../../ui/ActionModal'
 import ExportPDFPermissionButton from '../../ui/Pdfexportbutton'
+import PermissionButton from '../../ui/PermissionButton'
 import { usePDFReport } from '../../hooks/Usepdfexport'
+import { useMonthlyBeneficiariesReport } from '../../hooks/useMonthlyReports'
 import { formatCurrency } from '../../utlis/helper'
 import PDFPreviewModal from '../../ui/PDFPreviewModal'
+import MonthYearPickerModal from '../../ui/MonthYearPickerModal'
 
 import {
   usePendingRequests,
@@ -131,10 +135,15 @@ export default function Beneficiaries() {
   const {
     exportBeneficiaries,
     isExporting,
+    exportMonthlyBeneficiariesReport,
     previewUrl,
     closePreview,
     confirmDownload,
   } = usePDFReport()
+
+  const { mutateAsync: fetchMonthlyBeneficiaries, isPending: isFetchingReport } = useMonthlyBeneficiariesReport()
+
+  const [reportModalOpen, setReportModalOpen] = useState(false)
 
   const search = params.get('search') || ''
   const status = params.get('status') || ''
@@ -261,7 +270,7 @@ export default function Beneficiaries() {
   const acceptMut = useAcceptRequest()
 
   const closeMut = useCloseRequest()
-  
+
 
 
   const rejectMut = useRejectRequest()
@@ -414,7 +423,6 @@ export default function Beneficiaries() {
 
 
   // ── إغلاق الطلب ──────────────────────────────────────────
-  // الإغلاق منفصل تمامًا عن الرفض
 
   const handleClose = (row) => {
     closeMut.mutate(row.id, {
@@ -443,7 +451,6 @@ export default function Beneficiaries() {
 
 
   // ── رفض الطلب ────────────────────────────────────────────
-  // الرفض لا يستدعي closeRequest
 
   const handleReject = (row, reason = null) => {
     rejectMut.mutate(
@@ -504,6 +511,22 @@ export default function Beneficiaries() {
     }
 
     setActionModalOpen(false)
+  }
+
+
+  // ── تقرير شهري ────────────────────────────────────────────
+
+  const handleGenerateMonthlyReport = async ({ year, month }) => {
+    try {
+      const reportData = await fetchMonthlyBeneficiaries({ year, month })
+      await exportMonthlyBeneficiariesReport(reportData)
+      setReportModalOpen(false)
+    } catch (err) {
+      toast.error(
+        err?.response?.data?.message ??
+        t('reports.error', { defaultValue: 'فشل جلب التقرير' })
+      )
+    }
   }
 
 
@@ -721,14 +744,12 @@ export default function Beneficiaries() {
 
       render: (_, row) => {
 
-        // الرفض له الأولوية
         if (row.status === 'rejected') {
           return (
             <Badge status="rejected" />
           )
         }
 
-        // الطلب مغلق بدون أن يكون مرفوضًا
         if (
           row.status_request === 'closed'
         ) {
@@ -737,7 +758,6 @@ export default function Beneficiaries() {
           )
         }
 
-        // الحالات العادية
         return (
           <Badge status={row.status} />
         )
@@ -903,6 +923,21 @@ export default function Beneficiaries() {
             </button>
           </div>
 
+          <PermissionButton
+            onClick={() => setReportModalOpen(true)}
+            style={{
+              display: 'flex', alignItems: 'center', gap: '6px',
+              padding: '10px 16px', borderRadius: '12px',
+              border: '1px solid var(--border-subtle)',
+              background: 'var(--bg-surface)',
+              color: 'var(--color-primary-700)',
+              fontWeight: 700, fontSize: '0.85rem',
+              cursor: 'pointer', fontFamily: 'Cairo,sans-serif',
+            }}
+          >
+            <FileText size={15} />
+            {t('reports.monthlyReport', { defaultValue: 'تقرير شهري' })}
+          </PermissionButton>
 
           <ExportPDFPermissionButton
             onClick={() =>
@@ -979,7 +1014,6 @@ export default function Beneficiaries() {
                 }}
               >
 
-                {/* Tabs */}
                 <div
                   style={{
                     display: 'flex',
@@ -1037,7 +1071,6 @@ export default function Beneficiaries() {
                 </div>
 
 
-                {/* Search */}
                 <div
                   style={{
                     display: 'flex',
@@ -1087,7 +1120,6 @@ export default function Beneficiaries() {
               </div>
 
 
-              {/* Category filter */}
               <div
                 style={{
                   display: 'flex',
@@ -1355,13 +1387,11 @@ export default function Beneficiaries() {
           handleApproveAndPublish
         }
 
-        // الرفض منفصل عن الإغلاق
         onReject={
           (row, reason) =>
             handleReject(row, reason)
         }
 
-        // الإغلاق منفصل عن الرفض
         onArchive={
           row =>
             handleClose(row)
@@ -1390,6 +1420,16 @@ export default function Beneficiaries() {
         url={previewUrl}
         onClose={closePreview}
         onDownload={confirmDownload}
+      />
+
+      {/* ── تقرير شهري ────────────────────────────────────── */}
+
+      <MonthYearPickerModal
+        open={reportModalOpen}
+        onClose={() => setReportModalOpen(false)}
+        onConfirm={handleGenerateMonthlyReport}
+        isLoading={isFetchingReport || isExporting}
+        title={t('reports.beneficiariesTitle', { defaultValue: 'تقرير المستفيدين الشهري' })}
       />
 
     </div>

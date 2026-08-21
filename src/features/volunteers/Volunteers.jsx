@@ -2,7 +2,7 @@ import { useState, useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import { useSearchParams } from 'react-router-dom'
-import { Search, Eye, Users, Megaphone, Clock } from 'lucide-react'
+import { Search, Eye, Users, Megaphone, Clock, ShieldCheck } from 'lucide-react'
 import { volunteersService, parseSkills, getSkillLabel } from '../../hooks/volunteersService'
 import { Badge } from '../../ui/Badge'
 import { Card } from '../../ui/Card'
@@ -11,6 +11,7 @@ import { SpinnerPage } from '../../ui/Spinner'
 import { EmptyState } from '../../ui/EmptyState'
 import DataTable from '../../ui/DataTable'
 import VolunteerDetailsModal from './VolunteerDetailsModal'
+import CertificateVerifyModal from './CertificateVerifyModal'
 
 export default function Volunteers() {
   const { t } = useTranslation()
@@ -22,6 +23,7 @@ export default function Volunteers() {
 
   const [selected, setSelected] = useState(null)
   const [detailsOpen, setDetailsOpen] = useState(false)
+  const [certifyOpen, setCertifyOpen] = useState(false)
 
   const STATUS_TABS = [
     { key: 'all',       label: t('volunteers.tabs.all', { defaultValue: 'الكل' }) },
@@ -177,7 +179,22 @@ export default function Volunteers() {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-      <PageHeader title={t('volunteers.title', { defaultValue: 'إدارة المتطوعين' })} subtitle={`${rows.length} ${t('volunteers.subtitle', { defaultValue: 'متطوع' })}`} />
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
+        <PageHeader title={t('volunteers.title', { defaultValue: 'إدارة المتطوعين' })} subtitle={`${rows.length} ${t('volunteers.subtitle', { defaultValue: 'متطوع' })}`} />
+
+        <button
+          onClick={() => setCertifyOpen(true)}
+          style={{
+            display: 'inline-flex', alignItems: 'center', gap: 8,
+            padding: '10px 18px', borderRadius: '12px', border: '1px solid var(--color-primary-300)',
+            background: 'var(--color-primary-50)', color: 'var(--color-primary-700)',
+            fontWeight: 700, fontSize: '0.85rem', cursor: 'pointer', fontFamily: 'Cairo,sans-serif',
+          }}
+        >
+          <ShieldCheck size={16} />
+          {t('volunteers.certificate.button', { defaultValue: 'التحقق من شهادة' })}
+        </button>
+      </div>
 
       <Card style={{ padding: '16px', borderRadius: '24px', background: 'var(--surface)' }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
@@ -235,6 +252,7 @@ export default function Volunteers() {
       </Card>
 
       <VolunteerDetailsModal open={detailsOpen} onClose={() => setDetailsOpen(false)} volunteer={selected} />
+      <CertificateVerifyModal open={certifyOpen} onClose={() => setCertifyOpen(false)} />
     </div>
   )
 }

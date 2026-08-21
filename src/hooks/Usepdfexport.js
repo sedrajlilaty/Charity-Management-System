@@ -1,15 +1,5 @@
 /**
  * usePDFReport — hook لتوليد تقارير PDF قابلة للتنزيل
- *
- * يستخدم jsPDF + jspdf-autotable مباشرة من CDN عبر script tag
- * لتفادي مشاكل dynamic import في Vite/ESM.
- *
- * التثبيت:
- *   npm install jspdf jspdf-autotable
- *
- * OR أضف في index.html قبل </body>:
- *   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
- *   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
  */
 
 import { useState, useCallback } from 'react'
@@ -29,13 +19,9 @@ const C = {
   red: [254, 242, 242],
 }
 
-
 // ─── Loader — يدعم npm import و CDN على حد سواء ──────────────────────────────
 async function getJsPDF() {
-  // أولاً — هل jsPDF محمّل من CDN؟
   if (window.jspdf?.jsPDF) return window.jspdf.jsPDF
-
-  // ثانياً — npm import
   try {
     const [{ default: JsPDF }] = await Promise.all([
       import('jspdf'),
@@ -50,34 +36,23 @@ async function getJsPDF() {
 // ─── رسم الترويسة ────────────────────────────────────────────────────────────
 function header(doc, title) {
   const W = doc.internal.pageSize.getWidth()
-
-  // شريط أخضر
   doc.setFillColor(...C.primary)
   doc.rect(0, 0, W, 20, 'F')
-
-  // شريط ذهبي
   doc.setFillColor(...C.gold)
   doc.rect(0, 20, W, 2.5, 'F')
-
-  // عنوان النظام
   doc.setFont('helvetica', 'bold')
   doc.setFontSize(11)
   doc.setTextColor(...C.white)
   doc.text('Charity Management System', W / 2, 12, { align: 'center' })
-
-  // عنوان التقرير
   doc.setFillColor(...C.light)
   doc.rect(0, 22.5, W, 12, 'F')
   doc.setTextColor(...C.primary)
   doc.setFontSize(10)
   doc.text(title, W / 2, 30.5, { align: 'center' })
-
-  // تاريخ الطباعة
   doc.setFontSize(7)
   doc.setTextColor(...C.muted)
   doc.text(new Date().toLocaleDateString('en-US'), 10, 30.5)
-
-  return 38  // Y بعد الترويسة
+  return 38
 }
 
 // ─── بطاقات الإحصائيات ────────────────────────────────────────────────────────
@@ -85,7 +60,6 @@ function statsRow(doc, cards, startY) {
   const W = doc.internal.pageSize.getWidth()
   const cW = (W - 20) / cards.length
   let x = 10
-
   cards.forEach(({ label, value, fill }) => {
     doc.setFillColor(...(fill ?? C.light))
     doc.roundedRect(x, startY, cW - 3, 13, 2, 2, 'F')
@@ -99,7 +73,6 @@ function statsRow(doc, cards, startY) {
     doc.text(String(value), x + (cW - 3) / 2, startY + 11, { align: 'center' })
     x += cW
   })
-
   return startY + 18
 }
 
@@ -108,7 +81,6 @@ function footer(doc) {
   const pages = doc.internal.getNumberOfPages()
   const W = doc.internal.pageSize.getWidth()
   const H = doc.internal.pageSize.getHeight()
-
   for (let i = 1; i <= pages; i++) {
     doc.setPage(i)
     doc.setFillColor(...C.light)
@@ -134,20 +106,6 @@ function table(doc, { head, body, startY }) {
   })
 }
 
-// ─── تحميل الملف ──────────────────────────────────────────────────────────────
-function saveDoc(doc, name) {
-  // الطريقة الأموثق أمانًا للتنزيل
-  const blob = doc.output('blob')
-  const url = URL.createObjectURL(blob)
-  const a = document.createElement('a')
-  a.href = url
-  a.download = name
-  document.body.appendChild(a)
-  a.click()
-  document.body.removeChild(a)
-  setTimeout(() => URL.revokeObjectURL(url), 1000)
-}
-
 // ─── Hook ─────────────────────────────────────────────────────────────────────
 export function usePDFReport() {
   const { i18n } = useTranslation()
@@ -162,6 +120,7 @@ export function usePDFReport() {
     school_student: isAr ? 'طالب مدرسة' : 'School Student',
     university_student: isAr ? 'طالب جامعة' : 'University Student',
   }
+
   const previewDoc = useCallback((doc, name) => {
     const blob = doc.output('blob')
     const url = URL.createObjectURL(blob)
@@ -169,7 +128,6 @@ export function usePDFReport() {
     setPreviewName(name)
   }, [])
 
-  // ← جديد: تأكيد التنزيل من جوا المودال
   const confirmDownload = useCallback(() => {
     if (!previewUrl) return
     const a = document.createElement('a')
@@ -180,20 +138,18 @@ export function usePDFReport() {
     document.body.removeChild(a)
   }, [previewUrl, previewName])
 
-  // ← جديد: إغلاق المعاينة وتنظيف الذاكرة
   const closePreview = useCallback(() => {
     if (previewUrl) URL.revokeObjectURL(previewUrl)
     setPreviewUrl(null)
   }, [previewUrl])
-  // ── التبرعات ────────────────────────────────────────────────────────────────
+
+  // ── التبرعات (تصدير الجدول المعروض حالياً) ────────────────────────────────
   const exportDonations = useCallback(async (rows = []) => {
     setIsExporting(true)
     try {
       const JsPDF = await getJsPDF()
       const doc = new JsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' })
-
       const y0 = header(doc, isAr ? 'تقرير التبرعات' : 'Donations Report')
-
       const total = rows.reduce((s, d) => s + (Number(d.amount_usd) || 0), 0)
       const campaign = rows.filter(d => d.target_type === 'campaign').length
       const request = rows.filter(d => d.target_type === 'request').length
@@ -219,7 +175,6 @@ export function usePDFReport() {
           const amountStr = hasOriginal
             ? `${Number(d.original_amount).toLocaleString()} ${d.original_currency}`
             : `$${(Number(d.amount_usd) || 0).toLocaleString()}`
-
           return [
             i + 1,
             d.donor_anonymous ? (isAr ? 'مجهول' : 'Anonymous') : (d.donor_name ?? '—'),
@@ -231,21 +186,18 @@ export function usePDFReport() {
         }),
       })
       footer(doc)
-      previewDoc(doc, `donations-${Date.now()}.pdf`)   // ← هيك بيحفظ الـ blob بالـ state ويفتح المودال
+      previewDoc(doc, `donations-${Date.now()}.pdf`)
     } finally {
       setIsExporting(false)
     }
   }, [isAr])
-  // ── المستفيدون ──────────────────────────────────────────────────────────────
-  // ── المستفيدون ──────────────────────────────────────────────────────────────
+
+  // ── المستفيدون (تصدير الجدول المعروض حالياً) ──────────────────────────────
   const exportBeneficiaries = useCallback(async (rows = []) => {
     setIsExporting(true)
-
     try {
-      console.log('🔍 rows sample:', rows[0])
       const JsPDF = await getJsPDF()
       const doc = new JsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' })
-
       const y0 = header(doc, isAr ? 'تقرير المستفيدين' : 'Beneficiaries Report')
 
       const accepted = rows.filter(b => b.status === 'accepted').length
@@ -256,7 +208,7 @@ export function usePDFReport() {
         { label: isAr ? 'الإجمالي' : 'Total', value: rows.length, fill: C.light },
         { label: isAr ? 'نشطة' : 'Active', value: accepted, fill: C.green },
         { label: isAr ? 'انتظار' : 'Pending', value: pending, fill: C.yellow },
-        { label: isAr ? 'إجمالي المبالغ' : 'Total Amount', value: `${totalSup.toLocaleString()} ${isAr ? 'ر.س' : 'SAR'}`, fill: C.blue },
+        { label: isAr ? 'إجمالي المبالغ' : 'Total Amount', value: `${totalSup.toLocaleString()} ${isAr ? 'USD' : 'SAR'}`, fill: C.blue },
       ], y0)
 
       table(doc, {
@@ -273,15 +225,14 @@ export function usePDFReport() {
           i + 1,
           b.full_name ?? '—',
           b.phone ?? '—',
-          CAT_LABELS[b.category] ?? b.category ?? '—',// شوفي الملاحظة تحت
+          CAT_LABELS[b.category] ?? b.category ?? '—',
           [b.governorate, b.region].filter(Boolean).join(' - ') || '—',
-          b.required_amount > 0 ? `${b.required_amount.toLocaleString()} ${isAr ? 'ر.س' : 'SAR'}` : '—',
+          b.required_amount > 0 ? `${b.required_amount.toLocaleString()} ${isAr ? 'USD' : 'SAR'}` : '—',
           b.status ?? '—',
         ]),
       })
-
-        + footer(doc)
-        + previewDoc(doc, `beneficiaries-${Date.now()}.pdf`)
+      footer(doc)
+      previewDoc(doc, `beneficiaries-${Date.now()}.pdf`)
     } finally {
       setIsExporting(false)
     }
@@ -293,7 +244,6 @@ export function usePDFReport() {
     try {
       const JsPDF = await getJsPDF()
       const doc = new JsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' })
-
       const y0 = header(doc, isAr ? 'تقرير طلبات التطوع' : 'Volunteers Report')
 
       const y1 = statsRow(doc, [
@@ -327,18 +277,125 @@ export function usePDFReport() {
           v.status ?? '—',
         ]),
       })
+      footer(doc)
+      previewDoc(doc, `volunteers-${Date.now()}.pdf`)
+    } finally {
+      setIsExporting(false)
+    }
+  }, [isAr])
 
-        + footer(doc)
-        + previewDoc(doc, `volunteers-${Date.now()}.pdf`)
+  // ── تقرير المستفيدين الشهري (من endpoint التقارير) ────────────────────────
+  const exportMonthlyBeneficiariesReport = useCallback(async (reportData) => {
+    setIsExporting(true)
+    try {
+      const JsPDF = await getJsPDF()
+      const doc = new JsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' })
+
+      const y0 = header(doc, isAr
+        ? `تقرير المستفيدين الشهري — ${reportData.period}`
+        : `Monthly Beneficiaries Report — ${reportData.period}`)
+
+      const y1 = statsRow(doc, [
+        { label: isAr ? 'عدد المستفيدين' : 'Beneficiaries', value: reportData.beneficiaries_count, fill: C.light },
+        { label: isAr ? 'إجمالي المبلغ (USD)' : 'Total Amount (USD)', value: `$${Number(reportData.total_amount_usd).toLocaleString()}`, fill: C.green },
+      ], y0)
+
+      table(doc, {
+        startY: y1,
+        head: [['#',
+          isAr ? 'المستفيد' : 'Beneficiary',
+          isAr ? 'الفئة' : 'Category',
+          isAr ? 'عدد الطلبات' : 'Requests',
+          isAr ? 'عدد التبرعات' : 'Donations',
+          isAr ? 'إجمالي المبلغ' : 'Total Amount',
+        ]],
+        body: reportData.data.map((row, i) => [
+          i + 1,
+          row.beneficiary?.full_name ?? row.beneficiary?.name ?? '—',
+          CAT_LABELS[row.beneficiary?.category] ?? row.beneficiary?.category ?? '—',
+          row.requests_count,
+          row.donations_count,
+          `$${Number(row.total_amount_usd).toLocaleString()}`,
+        ]),
+      })
+
+      footer(doc)
+      previewDoc(doc, `beneficiaries-report-${reportData.period.replace('/', '-')}.pdf`)
+    } finally {
+      setIsExporting(false)
+    }
+  }, [isAr])
+
+  // ── تقرير التبرعات الشهري (من endpoint التقارير) ──────────────────────────
+  const exportMonthlyDonationsReport = useCallback(async (reportData) => {
+    setIsExporting(true)
+    try {
+      const JsPDF = await getJsPDF()
+      const doc = new JsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' })
+
+      const y0 = header(doc, isAr
+        ? `تقرير التبرعات الشهري — ${reportData.period}`
+        : `Monthly Donations Report — ${reportData.period}`)
+
+      const y1 = statsRow(doc, [
+        { label: isAr ? 'عدد التبرعات' : 'Donations', value: reportData.donations_count, fill: C.light },
+        { label: isAr ? 'إجمالي المبلغ (USD)' : 'Total Amount (USD)', value: `$${Number(reportData.total_amount_usd).toLocaleString()}`, fill: C.green },
+      ], y0)
+
+      table(doc, {
+        startY: y1,
+        head: [['#',
+          isAr ? 'المتبرع' : 'Donor',
+          isAr ? 'المبلغ' : 'Amount',
+          isAr ? 'الجهة' : 'Target',
+          isAr ? 'المستفيد' : 'Beneficiary',
+          isAr ? 'التاريخ' : 'Date',
+        ]],
+        body: reportData.data.map((d, i) => {
+          const hasOriginal = d.original_currency && d.original_currency !== 'USD'
+          const amountStr = hasOriginal
+            ? `${Number(d.original_amount).toLocaleString()} ${d.original_currency}`
+            : `$${(Number(d.amount_usd) || 0).toLocaleString()}`
+
+          // donor هو object فيه بيانات اليوزر (backendUser شكل)، مش donor_name جاهز
+          const donorName = (
+            d.donor?.name
+            ?? `${d.donor?.first_name ?? ''} ${d.donor?.last_name ?? ''}`.trim()
+          ) || (isAr ? 'مجهول' : 'Anonymous')
+          const targetLabel = d.donationable_type === 'Campaign'
+            ? (isAr ? 'حملة' : 'Campaign')
+            : (isAr ? 'طلب' : 'Request')
+
+          const beneficiaryName = d.beneficiary?.full_name ?? d.beneficiary?.name ?? '—'
+
+          return [
+            i + 1,
+            donorName,
+            amountStr,
+            targetLabel,
+            beneficiaryName,
+            d.date ? new Date(d.date).toLocaleDateString(isAr ? 'ar-EG' : 'en-US') : '—',
+          ]
+        }),
+      })
+
+      footer(doc)
+      previewDoc(doc, `donations-report-${reportData.period.replace('/', '-')}.pdf`)
     } finally {
       setIsExporting(false)
     }
   }, [isAr])
 
   return {
-    exportDonations, exportBeneficiaries, exportVolunteers, isExporting, previewUrl,
+    exportDonations,
+    exportBeneficiaries,
+    exportVolunteers,
+    exportMonthlyBeneficiariesReport,
+    exportMonthlyDonationsReport,
+    isExporting,
+    previewUrl,
     closePreview,
     confirmDownload,
-    previewDoc
+    previewDoc,
   }
 }

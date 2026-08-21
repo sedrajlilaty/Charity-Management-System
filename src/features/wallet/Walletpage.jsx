@@ -21,7 +21,7 @@ import {
   useDisburseRequest,
   useAdminWallet,
 } from '../../hooks/useDisburse'
-const fmt = (n) => 'ر.س ' + Number(n).toLocaleString('ar-SA', { maximumFractionDigits: 0 })
+const fmt = (n) => 'USD ' + Number(n).toLocaleString('ar-SA', { maximumFractionDigits: 0 })
 
 // ─── KPI Card ─────────────────────────────────────────────────
 function KpiCard({ label, value, icon: Icon }) {

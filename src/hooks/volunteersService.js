@@ -109,6 +109,12 @@ export const volunteersService = {
     // ============================================================
     suspendGeneralVolunteer: (volunteerId) =>
         api.post(`/volunteersuspend/${volunteerId}`).then((r) => r.data),
+
+    // ============================================================
+    // 7) التحقق من شهادة التطوع (Public - بدون تسجيل دخول)
+    // ============================================================
+    verifyCertificate: (token) =>
+        api.get(`/volunteers/certificates/${token}`).then((r) => r.data),
 }
 
 export const SKILLS_LABELS_AR = {
@@ -172,8 +178,6 @@ export const getVolunteerCampaignInfo = (row) => {
 
     return { campaignId, campaignName, isGeneral }
 }
-
-// ... (كل الكود السابق يبقى متل ما هو، فقط أضف هاد بالآخر)
 
 // تجميع صفوف المتطوعين: عام (سطر لحاله) VS حملات (مجمّعة بشخص واحد)
 export const groupVolunteersByPerson = (rows = []) => {

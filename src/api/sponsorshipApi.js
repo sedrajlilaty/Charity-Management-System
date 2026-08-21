@@ -1,32 +1,27 @@
-import axiosInstance from '../api/axiosInstance' // ⚠️ عدلي المسار حسب مكان axiosInstance عندك (متل باقي الـ api files)
-
-const BASE = '/sponsorships' // ⚠️ placeholder — بدّليه لما ياخد الباك اسمو النهائي
+import axiosInstance from '../api/axiosInstance'
 
 export const sponsorshipApi = {
-    /**
-     * المصدر الأساسي لجدول الداشبورد:
-     * يرجع كل يتيم + مين الكفيل تبعو (أو null إذا مش مكفول) + تاريخ بداية الكفالة + الحالة
-     */
-    getOrphansWithSponsors: async (params = {}) => {
-        const { data } = await axiosInstance.get(`${BASE}/orphans`, { params })
+    // كل اليتامى المكفولين حالياً — الباك بيرجعن كطلبات (requests) فيها بيانات اليتيم/الكفيل/التبرعات
+    getSponsoredOrphans: async () => {
+        const { data } = await axiosInstance.get('/orphans/sponsored/list')
         return data
     },
 
-    // يرجع كل اليتامى الكفالى بس (احتياطي لو احتجناه بمكان تاني)
-    getSponsoredOrphans: async (params = {}) => {
-        const { data } = await axiosInstance.get(`${BASE}/orphans/sponsored`, { params })
+    // كفالات المستخدم الحالي (احتياطي لصفحة "كفالاتي" مستقبلاً)
+    getMySponsoredOrphans: async () => {
+        const { data } = await axiosInstance.get('/orphans/my-sponsored/list')
         return data
     },
 
-    // يرجع بشو متكفل كفيل معين (مفيدة لصفحة تفاصيل الكفيل لاحقاً)
-    getSponsorSponsorships: async (sponsorId) => {
-        const { data } = await axiosInstance.get(`${BASE}/sponsors/${sponsorId}`)
+    // تفاصيل كفالة يتيم محدد — فيها next_monthly_deduction_at
+    getSponsorshipInfo: async (orphanId) => {
+        const { data } = await axiosInstance.get(`/orphanssponsorship-info/${orphanId}`)
         return data
     },
 
-    // إلغاء كفالة — لما الكفيل يوقف عن الدفع
-    cancelSponsorship: async (sponsorshipId) => {
-        const { data } = await axiosInstance.post(`${BASE}/${sponsorshipId}/cancel`)
+    // إلغاء الكفالة — بالـ orphan_id، DELETE
+    cancelSponsorship: async (orphanId) => {
+        const { data } = await axiosInstance.delete(`/orphanssponsor/${orphanId}`)
         return data
     },
 }

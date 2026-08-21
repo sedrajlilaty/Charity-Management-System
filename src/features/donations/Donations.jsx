@@ -1,7 +1,7 @@
-import { useState, useMemo   , useEffect  } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useSearchParams } from 'react-router-dom'
-import { Heart, Search, DollarSign, Hash, TrendingUp, Award } from 'lucide-react'
+import { Heart, Search, DollarSign, Hash, TrendingUp, Award, FileText } from 'lucide-react'
 import { formatCurrency, formatDate } from '../../utlis/helper'
 import { EmptyState } from '../../ui/EmptyState'
 import { SpinnerPage } from '../../ui/Spinner'
@@ -13,7 +13,11 @@ import ExportPDFPermissionButton from '../../ui/Pdfexportbutton'
 import { usePDFReport } from '../../hooks/Usepdfexport'
 import PermissionButton from '../../ui/PermissionButton'
 import { useDonations } from '../../hooks/useDonations'
+import { useMonthlyDonationsReport } from '../../hooks/useMonthlyReports'
 import PDFPreviewModal from '../../ui/PDFPreviewModal'
+import MonthYearPickerModal from '../../ui/MonthYearPickerModal'
+import toast from 'react-hot-toast'
+
 const LIMIT = 10
 
 /* ── Target-type tabs — الكل / حملة / طلب ── */
@@ -73,19 +77,19 @@ export default function Donations() {
   const typeTab = searchParams.get('type') || 'all'
 
   const [search, setSearch] = useState('')
+  const [reportModalOpen, setReportModalOpen] = useState(false)
 
   const {
-  exportDonations, isExporting,
-  previewUrl, closePreview, confirmDownload,
-} = usePDFReport()
+    exportDonations, isExporting,
+    exportMonthlyDonationsReport,
+    previewUrl, closePreview, confirmDownload,
+  } = usePDFReport()
+
+  const { mutateAsync: fetchMonthlyDonations, isPending: isFetchingReport } = useMonthlyDonationsReport()
 
   /* ── Fetch — الباك بيرجع كل التبرعات دفعة وحدة، مفلترة حسب target_type ── */
   const { data, isLoading } = useDonations({ donationableType: typeTab })
-console.log('Filtered fields:', data?.donations?.map(d => ({
-  id: d.id,
-  target_type: d.target_type,
-  target_name: d.target_name
-})))
+
   /* ── فلترة محلية إضافية: البحث باسم المتبرع ── */
   const filtered = useMemo(() => {
     if (!data?.donations) return []
@@ -94,9 +98,9 @@ console.log('Filtered fields:', data?.donations?.map(d => ({
       d.donor_name?.toLowerCase().includes(search.toLowerCase())
     )
   }, [data?.donations, search])
-const totalPages = Math.max(1, Math.ceil(filtered.length / LIMIT))
 
-  // 👇 هاد الجزء الجديد: يصحح الصفحة إذا صارت خارج النطاق
+  const totalPages = Math.max(1, Math.ceil(filtered.length / LIMIT))
+
   useEffect(() => {
     if (page > totalPages) {
       setSearchParams(prev => {
@@ -106,19 +110,18 @@ const totalPages = Math.max(1, Math.ceil(filtered.length / LIMIT))
       })
     }
   }, [filtered.length, page, totalPages])
-  /* ── Pagination محلي، لأنو الباك بيرجع كل الداتا مرة وحدة ── */
+
   const paginated = useMemo(() => {
     const start = (page - 1) * LIMIT
     return filtered.slice(start, start + LIMIT)
   }, [filtered, page])
 
-  /* ── Summary cards — محسوبة من نتيجة الفلترة الحالية ── */
+  /* ── Summary cards ── */
   const totalAmount = filtered.reduce((s, d) => s + (Number(d.amount_usd) || 0), 0)
   const count       = filtered.length
   const avg         = count > 0 ? Math.round(totalAmount / count) : 0
   const maxAmount   = count > 0 ? Math.max(...filtered.map(d => Number(d.amount_usd) || 0)) : 0
 
-  /* ── تبديل التبويب ── */
   const setTypeParam = (value) => {
     setSearch('')
     setSearchParams(prev => {
@@ -130,7 +133,17 @@ const totalPages = Math.max(1, Math.ceil(filtered.length / LIMIT))
     })
   }
 
-  /* ── Columns ── */
+  /* ── تقرير شهري ── */
+  const handleGenerateMonthlyReport = async ({ year, month }) => {
+    try {
+      const reportData = await fetchMonthlyDonations({ year, month })
+      await exportMonthlyDonationsReport(reportData)
+      setReportModalOpen(false)
+    } catch (err) {
+      toast.error(err?.response?.data?.message ?? t('reports.error', { defaultValue: 'فشل جلب التقرير' }))
+    }
+  }
+
   const columns = useMemo(() => [
     {
       title: t('donations.table.id'),
@@ -208,7 +221,6 @@ const totalPages = Math.max(1, Math.ceil(filtered.length / LIMIT))
     },
   ], [t])
 
-  /* ── Shared input style ── */
   const inputStyle = {
     padding: '9px 36px 9px 14px',
     borderRadius: '12px',
@@ -221,8 +233,8 @@ const totalPages = Math.max(1, Math.ceil(filtered.length / LIMIT))
     width: '260px',
     transition: 'border-color 0.2s',
   }
-console.log('RAW donations data:', data)
 
+ console.log(data?.donations?.filter(d => d.target_type === 'request'))
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', background: 'var(--bg-base)' }}>
 
@@ -231,12 +243,29 @@ console.log('RAW donations data:', data)
         title={t('donations.title')}
         subtitle={t('donations.subtitle', { count: data?.donationsCount ?? 0 })}
       >
-        <ExportPDFPermissionButton
-          onClick={() => exportDonations(paginated)}
-          loading={isExporting}
-          label={t('common.export')}
-        />
-        
+        <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+          <PermissionButton
+            onClick={() => setReportModalOpen(true)}
+            style={{
+              display: 'flex', alignItems: 'center', gap: '6px',
+              padding: '10px 16px', borderRadius: '12px',
+              border: '1px solid var(--border-subtle)',
+              background: 'var(--bg-surface)',
+              color: 'var(--color-primary-700)',
+              fontWeight: 700, fontSize: '0.85rem',
+              cursor: 'pointer', fontFamily: 'Cairo,sans-serif',
+            }}
+          >
+            <FileText size={15} />
+            {t('reports.monthlyReport', { defaultValue: 'تقرير شهري' })}
+          </PermissionButton>
+
+          <ExportPDFPermissionButton
+            onClick={() => exportDonations(paginated)}
+            loading={isExporting}
+            label={t('common.export')}
+          />
+        </div>
       </PageHeader>
 
       {/* ── Summary Cards ── */}
@@ -279,7 +308,6 @@ console.log('RAW donations data:', data)
           gap: '12px',
         }}>
 
-          {/* Type Tabs */}
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
             {TYPE_TABS.map((tab) => {
               const active = typeTab === tab
@@ -308,7 +336,6 @@ console.log('RAW donations data:', data)
             })}
           </div>
 
-          {/* Search */}
           <div style={{ position: 'relative' }}>
             <Search size={15} style={{
               position: 'absolute', top: '50%',
@@ -375,8 +402,16 @@ console.log('RAW donations data:', data)
           />
         </div>
       </Card>
+
       <PDFPreviewModal url={previewUrl} onClose={closePreview} onDownload={confirmDownload} />
+
+      <MonthYearPickerModal
+        open={reportModalOpen}
+        onClose={() => setReportModalOpen(false)}
+        onConfirm={handleGenerateMonthlyReport}
+        isLoading={isFetchingReport || isExporting}
+        title={t('reports.donationsTitle', { defaultValue: 'تقرير التبرعات الشهري' })}
+      />
     </div>
-    
   )
 }
